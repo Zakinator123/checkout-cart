@@ -10,6 +10,7 @@ module.exports = {
     },
     parser: '@typescript-eslint/parser',
     parserOptions: {
+        project: './frontend/tsconfig.json',
         ecmaFeatures: {
             jsx: true,
         },
@@ -19,6 +20,17 @@ module.exports = {
     plugins: ['@typescript-eslint', 'react', 'react-hooks'],
     rules: {
         'no-unused-vars': 'off',
+        "no-restricted-globals": [
+            "error",
+            "event",
+            "fdescribe",
+            {
+                name: 'isNaN',
+                message:
+                    'Use Number.isNaN instead https://github.com/airbnb/javascript#standard-library--isnan',
+            }
+        ],
+        "@typescript-eslint/strict-boolean-expressions": "warn",
         '@typescript-eslint/no-unused-vars': 'error',
         'react/prop-types': 0,
         'react-hooks/rules-of-hooks': 'error',
