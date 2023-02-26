@@ -72,7 +72,7 @@ function CheckoutWithCart() {
     const checkoutRecords = useRecords(checkoutsTable);
 
     const inventoryTable = base.tables.find(table => table.name === 'Gear Inventory');
-    const relevantInventoryTableFields : Array<Field> = getTableFields(inventoryTable,  ['Item/Gear Number', 'Item Type', 'Description', 'Checkout Status', 'Notes', 'Currently Checked Out To']);
+    const relevantInventoryTableFields: Array<Field> = getTableFields(inventoryTable, ['Item/Gear Number', 'Item Type', 'Description', 'Checkout Status', 'Notes', 'Currently Checked Out To']);
     const inventoryTableRecords = useRecords(inventoryTable, {fields: relevantInventoryTableFields});
     ///////////
 
@@ -94,16 +94,11 @@ function CheckoutWithCart() {
             return;
         }
 
-        const airtableChangeSets = computeAirtableChangeSets(transactionData, checkoutRecords);
-
-        airtableChangeSets.forEach(changeSet => {
-            checkoutsTable.updateRecordsAsync(changeSet.recordsToUpdate)
-                .then(() => {
-                    console.log('All previous checkouts marked as checked in.');
-                    checkoutsTable.createRecordAsync(changeSet.recordsToCreate[0])
-                        .then(recordId => console.log(recordId));
-                })
-        });
+        computeAirtableChangeSets(transactionData, checkoutRecords).then(changeSets =>
+            changeSets.forEach(changeSet => {
+                checkoutsTable.updateRecordsAsync(changeSet.recordsToUpdate)
+                    .then(() => checkoutsTable.createRecordAsync(changeSet.recordsToCreate[0]))
+            }));
     }
 
     // TODO: When selecting a member - show how many outstanding checkouts/overdue gear items they have
