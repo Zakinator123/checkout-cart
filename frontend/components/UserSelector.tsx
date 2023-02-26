@@ -1,4 +1,4 @@
-import {Box, Button, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
+import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
 
 loadCSSFromString(`
@@ -7,29 +7,28 @@ loadCSSFromString(`
     display: flex;
     flex-direction: row;
     align-items: center;
-    background-color: lightgray;
+    background-color: #e7ffe7;
     justify-content: center;
-    min-width: 683px;
-}
-
-.user-box {
-    width: 568px;
+    margin-bottom: 2rem;
 }
 
 .user-search-button {
     color: blue;
     margin: 1rem;
 }
-`);
+
+.user-selector-container {
+    width: 100%;
+}`);
 
 function UserSelector(props) {
-
-    return (
-        <Box className='user-selector' border='default'>
+    return <div className='user-selector-container'>
+        <Label> User Associated with Cart: </Label>
+        <Box className='user-selector' border='thick'>
             {props.currentTransactionUser === null
-                ? <Box className='user-box'> No user currently selected!</Box>
-                : <Box className='user-box'>
-                    <RecordCard record={props.currentTransactionUser}/>
+                ? <Box> No user is currently associated with the cart!</Box>
+                : <Box>
+                    <RecordCard width={props.viewportWidth - 130} record={props.currentTransactionUser}/>
                 </Box>}
             <Tooltip
                 content="Search Users"
@@ -45,7 +44,7 @@ function UserSelector(props) {
                 />
             </Tooltip>
         </Box>
-    );
+    </div>;
 }
 
 export default UserSelector;

@@ -3,15 +3,13 @@ import {Box, Button, Label, loadCSSFromString, RecordCard, Text, Tooltip} from "
 
 loadCSSFromString(`
 .cart {
-    border: thick;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: lightgray;
+    background-color: #e7ffe7;
     padding: 1rem;
     height: 80%;
-    min-width: 683px;
 }
 
 .cart-item {
@@ -23,25 +21,24 @@ loadCSSFromString(`
     background-color: white;
 }
 
-.cart-item-record {
-    width: 568px;
-}
-
 .cart-item-delete-button {
     margin: 1rem;
     color: red;
 }
-`);
+
+.cart-container {
+    width: 100%;
+}`);
 
 function Cart(props) {
-    return <div>
+    return <div className='cart-container'>
         <Label> Cart: </Label>
-        <Box className="cart" display='flex' flexDirection='column' alignItems='center' alignContent='center'>
+        <Box className="cart" border="thick">
             {props.cartRecords.length === 0
                 ? <Text className="cart-item-record">The cart is currently empty.</Text>
                 : props.cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
-                        <RecordCard className="cart-item-record" record={record}/>
+                        <RecordCard fields={props.fieldsToShow} width={props.viewportWidth - 130} record={record}/>
                         <Tooltip
                             content="Remove from Cart"
                             placementX={Tooltip.placements.CENTER}
@@ -59,7 +56,6 @@ function Cart(props) {
                     </Box>
                 )
             }
-
             <Button
                 onClick={props.addRecordToCart}
                 icon="plus"
@@ -67,7 +63,6 @@ function Cart(props) {
                 Add to Cart
             </Button>
         </Box>
-
     </div>;
 }
 
