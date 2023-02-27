@@ -1,5 +1,6 @@
 import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
+import {Record} from "@airtable/blocks/models";
 
 loadCSSFromString(`
 .user-selector {
@@ -22,13 +23,21 @@ loadCSSFromString(`
 }`);
 
 function UserSelector(props) {
+
+    // TODO: When selecting a member - show how many outstanding checkouts/overdue gear items they have
+    if (props.currentTransactionUser !== null) {
+        const test: Record = props.currentTransactionUser;
+        const currentCheckedOutGear = test.getCellValue('Current Check Outs');
+        console.log(currentCheckedOutGear);
+    }
+
     return <div className='user-selector-container'>
         <Label> User Associated with Cart: </Label>
         <Box className='user-selector' border='thick'>
             {props.currentTransactionUser === null
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
-                    <RecordCard width={props.viewportWidth - 130} record={props.currentTransactionUser}/>
+                    <RecordCard fields={props.fieldsToShow} width={props.viewportWidth - 130} record={props.currentTransactionUser}/>
                 </Box>}
             <Tooltip
                 content="Search Users"

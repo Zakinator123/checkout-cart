@@ -1,19 +1,20 @@
 import {AirtableChangeSet, RecordToUpdate, TransactionData, transactionTypes} from "../types";
 import {Record} from "@airtable/blocks/models";
+import {convertUTCDateToLocalDate} from "../utils/DateUtils";
 
 export const validateTransaction: (TransactionData) => Array<string> = (transactionData) => {
     let errorMessages = [];
 
     if (transactionData.cartRecords.length === 0) {
-        errorMessages.push("Please populate the cart to execute a transaction.");
+        errorMessages.push("Please populate the cart with items to execute a transaction.");
     }
 
     if (transactionData.transactionType === transactionTypes.checkout.value) {
         if (transactionData.transactionUser === null) {
-            errorMessages.push("Please select a member to associate with the checkout transaction.");
+            errorMessages.push("Please select a member to associate with the transaction.");
         }
 
-        if (new Date(transactionData.transactionDueDate) < new Date()) {
+        if ((transactionData.transactionDueDate) < convertUTCDateToLocalDate(new Date())) {
             errorMessages.push("Please change the due date to be in the future.")
         }
     }
@@ -27,7 +28,7 @@ const checkoutIsLinkedToItem: (checkoutRecord: Record, itemRecord: Record, linke
 );
 
 
-const getCheckoutRecordsToBeUpdated: (allCheckoutRecords: Record[], cartRecord: Record) => Promise<Array<RecordToUpdate>> = async (allCheckoutRecords, cartRecord) => {
+const getCheckoutRecordsToBeCheckedIn: (allCheckoutRecords: Record[], cartRecord: Record) => Promise<Array<RecordToUpdate>> = async (allCheckoutRecords, cartRecord) => {
     const promises = allCheckoutRecords.map(async (checkoutRecord) => (
         {
             value: checkoutRecord,
@@ -54,21 +55,19 @@ const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: Trans
 };
 
 export const computeAirtableChangeSets: (transactionData: TransactionData, allCheckoutRecords: Record[]) => Promise<Array<AirtableChangeSet>> | null = async (transactionData, allCheckoutRecords) => {
-
     const checkedOutRecords = allCheckoutRecords.filter(checkoutRecord => checkoutRecord.getCellValue('Checked In') === null);
+    return Promise.all(transactionData.cartRecords.map(async (cartRecord) => {
+        const recordsToUpdate = await getCheckoutRecordsToBeCheckedIn(checkedOutRecords, cartRecord);
+        let newCheckoutRecord;
 
-    if (transactionData.transactionType === 'checkout') {
-        const airtableChangeSets: Promise<Array<AirtableChangeSet>> = Promise.all(transactionData.cartRecords.map(async (cartRecord) => {
-            const newCheckoutRecord = getCheckoutRecordToBeCreated(cartRecord, transactionData);
-            return {
-                recordsToUpdate: await getCheckoutRecordsToBeUpdated(checkedOutRecords, cartRecord),
-                recordsToCreate: [newCheckoutRecord]
-            }
-        }));
+        if (transactionData.transactionType === 'checkout') {
+            newCheckoutRecord = [getCheckoutRecordToBeCreated(cartRecord, transactionData)];
+        } else if (transactionData.transactionType === 'checkin') {
+            newCheckoutRecord = [];
+        }
 
-        return airtableChangeSets;
-    }
-
-    // TODO: Implement Check-In
-    return null;
-};
+        return {
+            recordsToUpdate: recordsToUpdate,
+            recordsToCreate: newCheckoutRecord
+        }
+    }))};
