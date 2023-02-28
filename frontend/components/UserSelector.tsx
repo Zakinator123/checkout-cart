@@ -24,11 +24,9 @@ loadCSSFromString(`
 
 function UserSelector(props) {
 
-    // TODO: When selecting a member - show how many outstanding checkouts/overdue gear items they have
     if (props.currentTransactionUser !== null) {
         const test: Record = props.currentTransactionUser;
         const currentCheckedOutGear = test.getCellValue('Current Check Outs');
-        console.log(currentCheckedOutGear);
     }
 
     return <div className='user-selector-container'>

@@ -1,6 +1,10 @@
-import {AirtableChangeSet, RecordToUpdate, TransactionData, transactionTypes} from "../types";
-import {Record} from "@airtable/blocks/models";
+import {
+    TransactionData,
+    transactionTypes
+} from "../types";
+import {Record, Table} from "@airtable/blocks/models";
 import {convertUTCDateToLocalDate} from "../utils/DateUtils";
+import {RecordId} from "@airtable/blocks/types";
 
 export const validateTransaction: (TransactionData) => Array<string> = (transactionData) => {
     let errorMessages = [];
@@ -27,21 +31,15 @@ const checkoutIsLinkedToItem: (checkoutRecord: Record, itemRecord: Record, linke
         .then(linkedRecords => linkedRecords.hasRecord(itemRecord.id))
 );
 
-
-const getCheckoutRecordsToBeCheckedIn: (allCheckoutRecords: Record[], cartRecord: Record) => Promise<Array<RecordToUpdate>> = async (allCheckoutRecords, cartRecord) => {
-    const promises = allCheckoutRecords.map(async (checkoutRecord) => (
-        {
-            value: checkoutRecord,
-            include: await checkoutIsLinkedToItem(checkoutRecord, cartRecord, 'Gear Item')
-        }
-    ));
-
-    const openCheckouts = (await Promise.all(promises)).filter(resolvedPromise => resolvedPromise.include).map(data => data.value);
-
-    return openCheckouts.map(openCheckout => ({
-        id: openCheckout.id,
-        fields: {'Checked In': true}
-    }));
+const getCheckoutRecordsToBeCheckedIn: (allCheckoutRecords: Record[], cartRecord: Record) => Promise<Array<RecordId>> = async (allCheckoutRecords, cartRecord) => {
+    return (await Promise.all(allCheckoutRecords
+        .map(async (checkoutRecord) => (
+            {
+                value: checkoutRecord,
+                include: await checkoutIsLinkedToItem(checkoutRecord, cartRecord, 'Gear Item')
+            }))))
+        .filter(resolvedPromise => resolvedPromise.include)
+        .map(data => data.value.id);
 };
 
 const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: TransactionData) => {
@@ -54,20 +52,20 @@ const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: Trans
     };
 };
 
-export const computeAirtableChangeSets: (transactionData: TransactionData, allCheckoutRecords: Record[]) => Promise<Array<AirtableChangeSet>> | null = async (transactionData, allCheckoutRecords) => {
-    const checkedOutRecords = allCheckoutRecords.filter(checkoutRecord => checkoutRecord.getCellValue('Checked In') === null);
-    return Promise.all(transactionData.cartRecords.map(async (cartRecord) => {
-        const recordsToUpdate = await getCheckoutRecordsToBeCheckedIn(checkedOutRecords, cartRecord);
-        let newCheckoutRecord;
+export const executeTransaction = async (transactionData: TransactionData, checkoutsTable: Table) => {
+    const openCheckouts = await checkoutsTable.selectRecordsAsync()
+        .then(queryResult => queryResult.records)
+        .then(allCheckouts => allCheckouts.filter(checkoutRecord => checkoutRecord.getCellValue('Checked In') === null))
 
-        if (transactionData.transactionType === 'checkout') {
-            newCheckoutRecord = [getCheckoutRecordToBeCreated(cartRecord, transactionData)];
-        } else if (transactionData.transactionType === 'checkin') {
-            newCheckoutRecord = [];
-        }
+    await Promise.all(transactionData.cartRecords.map(async cartRecord => {
+        const checkoutRecordsToBeCheckedIn = await getCheckoutRecordsToBeCheckedIn(openCheckouts, cartRecord);
+        transactionData.deleteCheckoutsUponCheckIn
+            ? await checkoutsTable.deleteRecordsAsync(checkoutRecordsToBeCheckedIn)
+            : await checkoutsTable.updateRecordsAsync(checkoutRecordsToBeCheckedIn.map(checkoutRecordId => ({
+                id: checkoutRecordId,
+                fields: {'Checked In': true}
+            })));
 
-        return {
-            recordsToUpdate: recordsToUpdate,
-            recordsToCreate: newCheckoutRecord
-        }
-    }))};
+        if (transactionData.transactionType == 'checkout') await checkoutsTable.createRecordAsync(getCheckoutRecordToBeCreated(cartRecord, transactionData));
+    }));
+}

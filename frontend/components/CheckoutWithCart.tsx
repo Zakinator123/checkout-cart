@@ -18,7 +18,7 @@ import Cart from "./Cart";
 import {Field, Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
 import {TransactionData, TransactionType, transactionTypes} from "../types";
-import {computeAirtableChangeSets, validateTransaction} from "../services/TransactionService";
+import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {getTableFields} from "../utils/RandomUtils";
@@ -41,6 +41,20 @@ loadCSSFromString(`
     color: white;
 }`);
 
+/*
+    TODO:
+        1. Restructure logic of executing transactions to allow for showing failures/successes per record
+        2. Create snackbar or some other notification mechanism to show results of transaction
+        3. Add option for deleting checkouts instead of marking them as checked in (with warning).
+        4. Add computed field for checkouts being overdue.
+        5. Add views for grouping checkouts by user, by cart group, filtering only overdue
+        6. Add computed field for users to show how much value of gear they have checked out.
+        7. Finish overdue gear automation
+        8. Send users a receipt of checked out gear at the end of the transaction?
+        9. When selecting a member - show how many outstanding checkouts/overdue gear items they have
+        10. Create a cart group for every transaction
+        11. Make "delete checkouts upon checkin" configurable.
+ */
 
 function CheckoutWithCart() {
 
@@ -55,11 +69,14 @@ function CheckoutWithCart() {
     const [transactionUser, setTransactionUser] = useState<Record | null>(null);
     const [transactionDueDate, setTransactionDueDate] = useState(getDateTimeOneWeekFromToday());
 
+    const deleteCheckoutsUponCheckIn: boolean = true;
+
     const transactionData: TransactionData = {
         transactionType: transactionType,
         cartRecords: cartRecords,
         transactionUser: transactionUser,
-        transactionDueDate: transactionDueDate
+        transactionDueDate: transactionDueDate,
+        deleteCheckoutsUponCheckIn: deleteCheckoutsUponCheckIn
     };
 
     // Other State
@@ -71,10 +88,7 @@ function CheckoutWithCart() {
     const userTable = base.tables.find(table => table.name === 'Members');
     const relevantUserTableFields: Array<Field> = getTableFields(userTable, ['Full Name', 'Current Check Outs', 'Email', 'Current Check Outs Item Types'])
     const userRecords = useRecords(userTable, {fields: relevantUserTableFields});
-
     const checkoutsTable = base.tables.find(table => table.name === 'Checkouts');
-    const checkoutRecords = useRecords(checkoutsTable);
-
     const inventoryTable = base.tables.find(table => table.name === 'Gear Inventory');
     const relevantInventoryTableFields: Array<Field> = getTableFields(inventoryTable, ['Item/Gear Number', 'Item Type', 'Description', 'Checkout Status', 'Notes', 'Currently Checked Out To']);
     const inventoryTableRecords = useRecords(inventoryTable, {fields: relevantInventoryTableFields});
@@ -92,17 +106,13 @@ function CheckoutWithCart() {
         setTransactionUser(null);
     }
 
-    const executeTransaction = () => {
+    const attemptToExecuteTransaction = () => {
         const errorMessages = validateTransaction(transactionData);
         if (errorMessages.length === 0) {
             setTransactionIsProcessing(true);
-            computeAirtableChangeSets(transactionData, checkoutRecords).then(changeSets =>
-                changeSets.forEach(async changeSet => {
-                    await checkoutsTable.updateRecordsAsync(changeSet.recordsToUpdate);
-                    if (changeSet.recordsToCreate.length !== 0) await checkoutsTable.createRecordAsync(changeSet.recordsToCreate[0])
-                }))
+            executeTransaction(transactionData, checkoutsTable)
                 .then(() => clearTransactionData())
-                .then(() => setTimeout(() => setTransactionIsProcessing(false), 1000));
+                .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
         } else setErrorDialogMessages(errorMessages)
     }
 
@@ -133,7 +143,7 @@ function CheckoutWithCart() {
             type='submit'
             disabled={transactionIsProcessing}
             className='submit-button'
-            onClick={executeTransaction}
+            onClick={attemptToExecuteTransaction}
         >
             {transactionIsProcessing
                 ? <Loader scale={0.2} fillColor='white'/>
