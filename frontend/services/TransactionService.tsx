@@ -1,48 +1,33 @@
 import {
     TransactionData,
+    TransactionMetadata,
     transactionTypes
 } from "../types";
 import {Record, Table} from "@airtable/blocks/models";
 import {convertUTCDateToLocalDate} from "../utils/DateUtils";
 import {RecordId} from "@airtable/blocks/types";
+import {allSettled} from "../utils/RandomUtils";
 
 export const validateTransaction: (TransactionData) => Array<string> = (transactionData) => {
     let errorMessages = [];
-
-    if (transactionData.cartRecords.length === 0) {
-        errorMessages.push("Please populate the cart with items to execute a transaction.");
-    }
-
+    if (transactionData.cartRecords.length === 0) errorMessages.push("Please populate the cart with items to execute a transaction.");
     if (transactionData.transactionType === transactionTypes.checkout.value) {
-        if (transactionData.transactionUser === null) {
-            errorMessages.push("Please select a member to associate with the transaction.");
-        }
-
-        if ((transactionData.transactionDueDate) < convertUTCDateToLocalDate(new Date())) {
-            errorMessages.push("Please change the due date to be in the future.")
-        }
+        if (transactionData.transactionUser === null) errorMessages.push("Please select a member to associate with the transaction.");
+        if ((transactionData.transactionDueDate) < convertUTCDateToLocalDate(new Date())) errorMessages.push("Please change the due date to be in the future.")
     }
-
     return errorMessages;
 }
 
-const checkoutIsLinkedToItem: (checkoutRecord: Record, itemRecord: Record, linkedFieldName: string) => Promise<boolean> = async (checkoutRecord, itemRecord, linkedFieldName) => (
-    checkoutRecord.selectLinkedRecordsFromCellAsync(linkedFieldName)
-        .then(linkedRecords => linkedRecords.hasRecord(itemRecord.id))
-);
+const getOpenCheckoutsAssociatedWithCartRecord: (cartRecord: Record) => Promise<RecordId[]> = async cartRecord => {
+    // TODO: If there are performance issues with lots of old checkout records,
+    //  this could be optimized further if there was already a pre-configured linked record column in the inventory table that used an "open checkout" view filter.
+    //  However - if the open checkout view itself is modified to not do it's original job anymore, then the code relying on it would break..
+    return (await cartRecord.selectLinkedRecordsFromCellAsync('Checkouts')).records
+        .filter(record => record.getCellValue('Checked In') === null)
+        .map(record => record.id);
+}
 
-const getCheckoutRecordsToBeCheckedIn: (allCheckoutRecords: Record[], cartRecord: Record) => Promise<Array<RecordId>> = async (allCheckoutRecords, cartRecord) => {
-    return (await Promise.all(allCheckoutRecords
-        .map(async (checkoutRecord) => (
-            {
-                value: checkoutRecord,
-                include: await checkoutIsLinkedToItem(checkoutRecord, cartRecord, 'Gear Item')
-            }))))
-        .filter(resolvedPromise => resolvedPromise.include)
-        .map(data => data.value.id);
-};
-
-const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: TransactionData) => {
+const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: TransactionMetadata) => {
     return {
         'Gear Item': [{id: cartRecord.id}],
         'Checked Out To': [{id: transactionData.transactionUser.id}],
@@ -52,20 +37,33 @@ const getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: Trans
     };
 };
 
-export const executeTransaction = async (transactionData: TransactionData, checkoutsTable: Table) => {
-    const openCheckouts = await checkoutsTable.selectRecordsAsync()
-        .then(queryResult => queryResult.records)
-        .then(allCheckouts => allCheckouts.filter(checkoutRecord => checkoutRecord.getCellValue('Checked In') === null))
+const formatCheckoutRecordsToBeCheckedIn = (openCheckoutsAssociatedWithCartRecord: Array<RecordId>) =>
+    openCheckoutsAssociatedWithCartRecord.map(checkoutRecordId => ({
+        id: checkoutRecordId,
+        fields: {
+            'Checked In': true,
+            'Date Checked In': new Date()
+        }
+    }))
 
-    await Promise.all(transactionData.cartRecords.map(async cartRecord => {
-        const checkoutRecordsToBeCheckedIn = await getCheckoutRecordsToBeCheckedIn(openCheckouts, cartRecord);
-        transactionData.deleteCheckoutsUponCheckIn
-            ? await checkoutsTable.deleteRecordsAsync(checkoutRecordsToBeCheckedIn)
-            : await checkoutsTable.updateRecordsAsync(checkoutRecordsToBeCheckedIn.map(checkoutRecordId => ({
-                id: checkoutRecordId,
-                fields: {'Checked In': true}
-            })));
-
-        if (transactionData.transactionType == 'checkout') await checkoutsTable.createRecordAsync(getCheckoutRecordToBeCreated(cartRecord, transactionData));
-    }));
+async function handleOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record, checkoutsTable: Table, openCheckoutsShouldBeDeleted: boolean) {
+    const openCheckoutsAssociatedWithCartRecord = await getOpenCheckoutsAssociatedWithCartRecord(cartRecord);
+    if (openCheckoutsAssociatedWithCartRecord.length !== 0)
+        await (openCheckoutsShouldBeDeleted
+            ? checkoutsTable.deleteRecordsAsync(openCheckoutsAssociatedWithCartRecord)
+            : checkoutsTable.updateRecordsAsync(formatCheckoutRecordsToBeCheckedIn(openCheckoutsAssociatedWithCartRecord)));
 }
+
+const executeCheckInsAndCheckOutsForCartRecord = async (cartRecord: Record, transactionMetadata: TransactionMetadata, checkoutsTable: Table) => {
+    await handleOpenCheckoutsAssociatedWithCartRecord(cartRecord, checkoutsTable, transactionMetadata.openCheckoutsShouldBeDeleted);
+    if (transactionMetadata.transactionType == 'checkout') await checkoutsTable.createRecordAsync(getCheckoutRecordToBeCreated(cartRecord, transactionMetadata));
+    return cartRecord;
+}
+
+export const executeTransaction = async (transactionData: TransactionData, checkoutsTable: Table, removeRecordFromCart: (recordId: RecordId) => void) =>
+    await allSettled(
+        transactionData.cartRecords.map(cartRecord => {
+            executeCheckInsAndCheckOutsForCartRecord(cartRecord, transactionData, checkoutsTable)
+                .then(cartRecord => removeRecordFromCart(cartRecord.id))
+            return cartRecord;
+        }))

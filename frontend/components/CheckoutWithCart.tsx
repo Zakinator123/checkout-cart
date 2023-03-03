@@ -22,6 +22,7 @@ import {executeTransaction, validateTransaction} from "../services/TransactionSe
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {getTableFields} from "../utils/RandomUtils";
+import {RecordId} from "@airtable/blocks/types";
 
 loadCSSFromString(`
 .container {
@@ -43,17 +44,25 @@ loadCSSFromString(`
 
 /*
     TODO:
+
+    In Extension:
         1. Restructure logic of executing transactions to allow for showing failures/successes per record
         2. Create snackbar or some other notification mechanism to show results of transaction
-        3. Add option for deleting checkouts instead of marking them as checked in (with warning).
-        4. Add computed field for checkouts being overdue.
-        5. Add views for grouping checkouts by user, by cart group, filtering only overdue
-        6. Add computed field for users to show how much value of gear they have checked out.
-        7. Finish overdue gear automation
+        3. Add settings option for deleting checkouts instead of marking them as checked in (with warning).
         8. Send users a receipt of checked out gear at the end of the transaction?
         9. When selecting a member - show how many outstanding checkouts/overdue gear items they have
         10. Create a cart group for every transaction
         11. Make "delete checkouts upon checkin" configurable.
+        12. What happens when records limit is reached and a checkouts is created?
+        13. For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
+
+    Not in Extension:
+        6. Add computed field for users to show how much value of gear they have checked out.
+        4. Add computed field for checkouts being overdue.
+        7. Finish overdue email automation
+        5. Add views for grouping checkouts by user, by cart group, filtering only overdue
+
+
  */
 
 function CheckoutWithCart() {
@@ -69,14 +78,14 @@ function CheckoutWithCart() {
     const [transactionUser, setTransactionUser] = useState<Record | null>(null);
     const [transactionDueDate, setTransactionDueDate] = useState(getDateTimeOneWeekFromToday());
 
-    const deleteCheckoutsUponCheckIn: boolean = true;
+    const deleteCheckoutsUponCheckIn: boolean = false;
 
     const transactionData: TransactionData = {
         transactionType: transactionType,
         cartRecords: cartRecords,
         transactionUser: transactionUser,
         transactionDueDate: transactionDueDate,
-        deleteCheckoutsUponCheckIn: deleteCheckoutsUponCheckIn
+        openCheckoutsShouldBeDeleted: deleteCheckoutsUponCheckIn
     };
 
     // Other State
@@ -95,14 +104,16 @@ function CheckoutWithCart() {
 
     // Transaction State Mutators
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
-    const removeRecordFromCart = (recordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
+    const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
     const addRecordToCart = () => expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
         .then(record => {
             if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
         });
     const clearTransactionData = () => {
-        setCartRecords([]);
+        // TODO: Leave cart records when there are errors associated with their transaction?
+        // setCartRecords([]);
         setTransactionDueDate(getDateTimeOneWeekFromToday())
+        // TODO: If there are errors associated with the transaction, then perhaps the user should not be cleared?
         setTransactionUser(null);
     }
 
@@ -110,8 +121,11 @@ function CheckoutWithCart() {
         const errorMessages = validateTransaction(transactionData);
         if (errorMessages.length === 0) {
             setTransactionIsProcessing(true);
-            executeTransaction(transactionData, checkoutsTable)
-                .then(() => clearTransactionData())
+            executeTransaction(transactionData, checkoutsTable, removeRecordFromCart)
+                .then((settledPromises) => {
+                    // Show user notifications for settled Promises.
+                    clearTransactionData();
+                })
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
         } else setErrorDialogMessages(errorMessages)
     }
