@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Build
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js
+      - name:  Run npm install, linter, type checker, and tests
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'

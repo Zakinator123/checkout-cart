@@ -3,3 +3,4 @@
 /build
 /.idea
 .tmp/index.js
+.DS_Store
