@@ -74,9 +74,9 @@ function CheckoutWithCart() {
 
     // Transaction State
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
-    const [cartRecords, setCartRecords] = useState([]);
+    const [cartRecords, setCartRecords] = useState<Array<Record>>([]);
     const [transactionUser, setTransactionUser] = useState<Record | null>(null);
-    const [transactionDueDate, setTransactionDueDate] = useState(getDateTimeOneWeekFromToday());
+    const [transactionDueDate, setTransactionDueDate] = useState<Date>(getDateTimeOneWeekFromToday());
 
     const deleteCheckoutsUponCheckIn: boolean = false;
 
@@ -95,10 +95,13 @@ function CheckoutWithCart() {
     // Load data from Airtable
     const base = useBase();
     const userTable = base.tables.find(table => table.name === 'Members');
+    if (userTable === undefined) throw new Error();
     const relevantUserTableFields: Array<Field> = getTableFields(userTable, ['Full Name', 'Current Check Outs', 'Email', 'Current Check Outs Item Types'])
     const userRecords = useRecords(userTable, {fields: relevantUserTableFields});
     const checkoutsTable = base.tables.find(table => table.name === 'Checkouts');
+    if (checkoutsTable === undefined) throw new Error();
     const inventoryTable = base.tables.find(table => table.name === 'Gear Inventory');
+    if (inventoryTable === undefined) throw new Error();
     const relevantInventoryTableFields: Array<Field> = getTableFields(inventoryTable, ['Item/Gear Number', 'Item Type', 'Description', 'Checkout Status', 'Notes', 'Currently Checked Out To']);
     const inventoryTableRecords = useRecords(inventoryTable, {fields: relevantInventoryTableFields});
 
@@ -124,6 +127,7 @@ function CheckoutWithCart() {
             executeTransaction(transactionData, checkoutsTable, removeRecordFromCart)
                 .then((settledPromises) => {
                     // Show user notifications for settled Promises.
+                    console.log(settledPromises);
                     clearTransactionData();
                 })
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
