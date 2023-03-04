@@ -1,4 +1,5 @@
 /node_modules
 /.airtableblocksrc.json
 /build
-.idea/*
+/.idea
+.tmp/index.js
