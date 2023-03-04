@@ -1,6 +1,7 @@
 {
     "scripts": {
         "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
+        "type-check": "tsc --strict --noEmit --project ./src",
         "test": "jest --config=./test/jest.config.ts"
     },
     "dependencies": {

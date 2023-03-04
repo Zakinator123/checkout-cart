@@ -1,13 +1,14 @@
 import {Record} from "@airtable/blocks/models";
 
-export type TransactionMetadata = {
+export type CheckoutTransactionMetadata = {
     transactionType: TransactionType,
-    transactionUser: Record | null,
+    transactionUser: Record,
     transactionDueDate: Date,
     openCheckoutsShouldBeDeleted: boolean
 }
 
 export type TransactionCart = { cartRecords: Array<Record> }
+export type TransactionMetadata = Omit<CheckoutTransactionMetadata, "transactionUser"> & { transactionUser: Record | null };
 export type TransactionData = TransactionMetadata & TransactionCart;
 
 export type TransactionType = 'checkout' | 'checkin';

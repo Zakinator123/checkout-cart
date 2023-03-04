@@ -1,5 +1,7 @@
 import React from "react";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Text, Tooltip} from "@airtable/blocks/ui";
+import {Field} from "@airtable/blocks/models";
+import {RecordId} from "@airtable/blocks/types";
 
 loadCSSFromString(`
 .cart {
@@ -30,38 +32,45 @@ loadCSSFromString(`
     width: 100%;
 }`);
 
-const Cart = props => <div className='cart-container'>
-    <Label> Cart: </Label>
-    <Box className="cart" border="thick">
-        {props.cartRecords.length === 0
-            ? <Text className="cart-item-record">The cart is currently empty.</Text>
-            : props.cartRecords.map(record =>
-                <Box border='default' className="cart-item" key={record.id}>
-                    <RecordCard fields={props.fieldsToShow} width={props.viewportWidth - 130} record={record}/>
-                    <Tooltip
-                        content="Remove from Cart"
-                        placementX={Tooltip.placements.CENTER}
-                        placementY={Tooltip.placements.BOTTOM}
-                        shouldHideTooltipOnClick={true}
-                    >
-                        <Button
-                            onClick={() => props.removeRecordFromCart(record.id)}
-                            size='small'
-                            aria-label="Remove item from cart."
-                            className='cart-item-delete-button' icon='trash'
+const Cart = ({
+                  addRecordToCart,
+                  cartRecords,
+                  fieldsToShow,
+                  removeRecordFromCart,
+                  viewportWidth
+              }: { cartRecords: any[]; fieldsToShow: Field[]; viewportWidth: number; removeRecordFromCart: (recordId: RecordId) => void; addRecordToCart: () => Promise<void>; }) =>
+    <div className='cart-container'>
+        <Label> Cart: </Label>
+        <Box className="cart" border="thick">
+            {cartRecords.length === 0
+                ? <Text className="cart-item-record">The cart is currently empty.</Text>
+                : cartRecords.map(record =>
+                    <Box border='default' className="cart-item" key={record.id}>
+                        <RecordCard fields={fieldsToShow} width={viewportWidth - 130} record={record}/>
+                        <Tooltip
+                            content="Remove from Cart"
+                            placementX={Tooltip.placements.CENTER}
+                            placementY={Tooltip.placements.BOTTOM}
+                            shouldHideTooltipOnClick={true}
                         >
-                        </Button>
-                    </Tooltip>
-                </Box>
-            )
-        }
-        <Button
-            onClick={props.addRecordToCart}
-            icon="plus"
-            margin={3}>
-            Add to Cart
-        </Button>
-    </Box>
-</div>;
+                            <Button
+                                onClick={() => removeRecordFromCart(record.id)}
+                                size='small'
+                                aria-label="Remove item from cart."
+                                className='cart-item-delete-button' icon='trash'
+                            >
+                            </Button>
+                        </Tooltip>
+                    </Box>
+                )
+            }
+            <Button
+                onClick={addRecordToCart}
+                icon="plus"
+                margin={3}>
+                Add to Cart
+            </Button>
+        </Box>
+    </div>;
 
 export default Cart;

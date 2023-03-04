@@ -1,3 +1,4 @@
+import {Record, Field} from "@airtable/blocks/models";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
 
@@ -21,29 +22,35 @@ loadCSSFromString(`
     width: 100%;
 }`);
 
-const UserSelector = props => <div className='user-selector-container'>
-    <Label> User Associated with Cart: </Label>
-    <Box className='user-selector' border='thick'>
-        {props.currentTransactionUser === null
-            ? <Box> No user is currently associated with the cart!</Box>
-            : <Box>
-                <RecordCard fields={props.fieldsToShow} width={props.viewportWidth - 130}
-                            record={props.currentTransactionUser}/>
-            </Box>}
-        <Tooltip
-            content="Search Users"
-            placementX={Tooltip.placements.CENTER}
-            placementY={Tooltip.placements.BOTTOM}
-            shouldHideTooltipOnClick={true}
-        >
-            <Button
-                className='user-search-button'
-                aria-label="Search and select a user to associate with the transaction."
-                icon='search'
-                onClick={props.selectUser}
-            />
-        </Tooltip>
-    </Box>
-</div>;
+const UserSelector = ({
+                          currentTransactionUser,
+                          fieldsToShow,
+                          selectUser,
+                          viewportWidth
+                      }: { currentTransactionUser: Record | null; fieldsToShow: Field[]; viewportWidth: number; selectUser: () => Promise<void> }) =>
+    <div className='user-selector-container'>
+        <Label> User Associated with Cart: </Label>
+        <Box className='user-selector' border='thick'>
+            {currentTransactionUser === null
+                ? <Box> No user is currently associated with the cart!</Box>
+                : <Box>
+                    <RecordCard fields={fieldsToShow} width={viewportWidth - 130}
+                                record={currentTransactionUser}/>
+                </Box>}
+            <Tooltip
+                content="Search Users"
+                placementX={Tooltip.placements.CENTER}
+                placementY={Tooltip.placements.BOTTOM}
+                shouldHideTooltipOnClick={true}
+            >
+                <Button
+                    className='user-search-button'
+                    aria-label="Search and select a user to associate with the transaction."
+                    icon='search'
+                    onClick={selectUser}
+                />
+            </Tooltip>
+        </Box>
+    </div>;
 
 export default UserSelector;

@@ -6,7 +6,8 @@
         "allowSyntheticDefaultImports": true,
         "jsx": "react",
         "esModuleInterop": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "strict": true
     },
     "exclude": ["node_modules"]
 }
