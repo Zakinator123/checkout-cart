@@ -9,7 +9,7 @@ status=$?
 echo "\n"
 
 if [ $status -eq 0 ]; then
-  echo "***** Build Successful. Staging new coverage badge and committing the following changes: ******"
+  echo "***** Build Successful. Staging new coverage badge (if coverage changed) and committing the following changes: ******"
   git add assets/coverage-badge.svg
   git --no-pager diff --staged --name-only
 else
