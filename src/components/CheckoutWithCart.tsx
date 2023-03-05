@@ -7,21 +7,18 @@ import {
     Heading,
     Input,
     Loader,
-    useBase,
-    useRecords,
     useViewport,
     Text, FormField
 } from "@airtable/blocks/ui";
 import {loadCSSFromString} from '@airtable/blocks/ui';
 
 import Cart from "./Cart";
-import {Field, Record} from "@airtable/blocks/models";
+import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
-import {TransactionData, TransactionType, transactionTypes} from "../types";
+import {AirtableDataProps, TransactionData, TransactionType, transactionTypes} from "../types";
 import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
-import {getTableFields} from "../utils/RandomUtils";
 import {RecordId} from "@airtable/blocks/types";
 
 loadCSSFromString(`
@@ -62,7 +59,7 @@ loadCSSFromString(`
         5. Add views for grouping checkouts by user, by cart group, filtering only overdue
  */
 
-function CheckoutWithCart() {
+function CheckoutWithCart({airtableData: {checkoutsTable, inventoryTableRecords, relevantInventoryTableFields, relevantUserTableFields, userRecords}}: AirtableDataProps) {
 
     // Viewport Data
     const viewport = useViewport();
@@ -88,19 +85,6 @@ function CheckoutWithCart() {
     // Other State
     const [errorDialogMessages, setErrorDialogMessages] = useState<Array<string>>([]);
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
-
-    // Load data from Airtable
-    const base = useBase();
-    const userTable = base.tables.find(table => table.name === 'Members');
-    if (userTable === undefined) throw new Error();
-    const relevantUserTableFields: Array<Field> = getTableFields(userTable, ['Full Name', 'Current Check Outs', 'Email', 'Current Check Outs Item Types'])
-    const userRecords = useRecords(userTable, {fields: relevantUserTableFields});
-    const checkoutsTable = base.tables.find(table => table.name === 'Checkouts');
-    if (checkoutsTable === undefined) throw new Error();
-    const inventoryTable = base.tables.find(table => table.name === 'Gear Inventory');
-    if (inventoryTable === undefined) throw new Error();
-    const relevantInventoryTableFields: Array<Field> = getTableFields(inventoryTable, ['Item/Gear Number', 'Item Type', 'Description', 'Checkout Status', 'Notes', 'Currently Checked Out To']);
-    const inventoryTableRecords = useRecords(inventoryTable, {fields: relevantInventoryTableFields});
 
     // Transaction State Mutators
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));

@@ -1,4 +1,16 @@
-import {Record} from "@airtable/blocks/models";
+import {Field, Record, Table} from "@airtable/blocks/models";
+
+export type AirtableData = {
+    userRecords: Record[],
+    inventoryTableRecords: Record[]
+    checkoutsTable: Table,
+    relevantInventoryTableFields: Field[],
+    relevantUserTableFields: Field[]
+}
+
+export type AirtableDataProps = {
+    airtableData: AirtableData
+}
 
 export type CheckoutTransactionMetadata = {
     transactionType: TransactionType,
@@ -8,7 +20,9 @@ export type CheckoutTransactionMetadata = {
 }
 
 export type TransactionCart = { cartRecords: Array<Record> }
-export type TransactionMetadata = Omit<CheckoutTransactionMetadata, "transactionUser"> & { transactionUser: Record | null };
+export type TransactionMetadata =
+    Omit<CheckoutTransactionMetadata, "transactionUser">
+    & { transactionUser: Record | null };
 export type TransactionData = TransactionMetadata & TransactionCart;
 
 export type TransactionType = 'checkout' | 'checkin';
