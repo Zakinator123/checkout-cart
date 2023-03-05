@@ -1,11 +1,14 @@
 {
     "scripts": {
         "build": "npm run lint && npm run type-check && npm run test",
+        "install-pre-commit-hook": "cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo 'Pre-commit hook copied!'",
+
         "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
         "type-check": "tsc --strict --noEmit --project ./src",
         "test-with-coverage": "jest --coverage",
         "test": "jest",
-        "generate-coverage-badge": "npm run test-with-coverage && make-coverage-badge --report-path ./test/coverage/coverage-summary.json --output-path ./assets/coverage-badge.svg"
+        "generate-coverage-badge": "npm run test-with-coverage && make-coverage-badge --report-path ./test/coverage/coverage-summary.json --output-path ./assets/coverage-badge.svg",
+        "pre-commit": "npm run lint && npm run type-check && npm run generate-coverage-badge"
     },
     "dependencies": {
         "@airtable/blocks": "1.15.0",
