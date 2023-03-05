@@ -44,7 +44,6 @@ loadCSSFromString(`
 
 /*
     TODO:
-
     In Extension:
         1. Restructure logic of executing transactions to allow for showing failures/successes per record
         2. Create snackbar or some other notification mechanism to show results of transaction
@@ -61,8 +60,6 @@ loadCSSFromString(`
         4. Add computed field for checkouts being overdue.
         7. Finish overdue email automation
         5. Add views for grouping checkouts by user, by cart group, filtering only overdue
-
-
  */
 
 function CheckoutWithCart() {

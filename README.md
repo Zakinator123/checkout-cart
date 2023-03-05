@@ -24,6 +24,7 @@
 
 [![Project license](https://img.shields.io/github/license/Zakinator123/airtable-checkout-with-cart.svg?style=flat-square)](LICENSE)
 ![Build](https://github.com/Zakinator123/airtable-checkout-with-cart/actions/workflows/build.yml/badge.svg)
+![Code Coverage](https://raw.githubusercontent.com/Zakinator123/airtable-checkout-with-cart/main/assets/coverage-badge.svg)
 
 </div>
 
