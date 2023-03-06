@@ -4,7 +4,7 @@ import CheckoutWithCart from "./CheckoutWithCart";
 import {Field} from "@airtable/blocks/models";
 import {getTableFields} from "../utils/RandomUtils";
 import {AirtableData} from "../types";
-import {ExtensionSettings} from "./ExtensionSettings";
+import {Settings} from "./Settings";
 
 
 export function ExtensionWithSettings() {
@@ -31,6 +31,6 @@ export function ExtensionWithSettings() {
     const airtableData: AirtableData = {userRecords, checkoutsTable, inventoryTableRecords, relevantInventoryTableFields, relevantUserTableFields}
 
     return isShowingSettings
-        ? <ExtensionSettings globalConfig={globalConfig} base={base}/>
+        ? <Settings globalConfig={globalConfig} base={base}/>
         : <CheckoutWithCart airtableData={airtableData}/>;
 }
