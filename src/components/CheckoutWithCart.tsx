@@ -15,7 +15,7 @@ import {loadCSSFromString} from '@airtable/blocks/ui';
 import Cart from "./Cart";
 import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
-import {AirtableDataProps, TransactionData, TransactionType, transactionTypes} from "../types";
+import {AirtableDataProps, TransactionData, TransactionType, transactionTypes} from "../types/types";
 import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";

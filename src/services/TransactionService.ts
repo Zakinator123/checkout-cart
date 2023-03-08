@@ -3,7 +3,7 @@ import {
     TransactionData,
     TransactionMetadata,
     transactionTypes
-} from "../types";
+} from "../types/types";
 import {Record, Table} from "@airtable/blocks/models";
 import {convertUTCDateToLocalDate} from "../utils/DateUtils";
 import {RecordId} from "@airtable/blocks/types";

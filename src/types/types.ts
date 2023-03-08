@@ -1,4 +1,18 @@
-import {Field, Record, Table} from "@airtable/blocks/models";
+import {Field, FieldType, Record, Table} from "@airtable/blocks/models";
+
+export enum ExtensionTables {
+    inventoryTable = 'inventoryTable',
+    userTable = 'userTable',
+    checkoutsTable = 'checkoutsTable'
+}
+export enum CheckoutsTableFieldNames {
+    linkedInventoryTableField = 'linkedInventoryTableField',
+    linkedUserTableField = 'linkedUserTableField',
+    checkedInField = 'checkedInField',
+    dateCheckedOutField = 'dateCheckedOutField',
+    dateDueField = 'dateDueField',
+    dateCheckedInField = 'dateCheckedInField'
+}
 
 export type AirtableData = {
     userRecords: Record[],
@@ -33,6 +47,22 @@ export type TransactionTypes = {
     checkout: TransactionTypeWithLabel,
     checkin: TransactionTypeWithLabel
 }
+
+export type FieldConfiguration = {
+    fieldName: string,
+    expectedFieldType: FieldType,
+    fieldPrompt: string,
+    mustLinkTo: ExtensionTables | null
+}
+
+export type TableConfiguration = {
+    tableName: ExtensionTables,
+    tablePickerPrompt: string,
+    requiredFields: Array<FieldConfiguration>,
+    optionalFields: Array<FieldConfiguration>
+}
+
+export type SchemaConfiguration = Array<TableConfiguration>;
 
 export const transactionTypes: TransactionTypes = {
     checkout: {value: "checkout", label: "Check Out"},
