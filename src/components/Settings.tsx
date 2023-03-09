@@ -13,7 +13,7 @@ import {Base} from "@airtable/blocks/models";
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {ExtensionTables} from "../types/types";
 import {FieldSelectorGroup} from "./FieldSelectorGroup";
-import {requiredSchemaConfiguration} from "../utils/Constants";
+import {initialAppConfiguration} from "../utils/Constants";
 
 loadCSSFromString(`
 .container {
@@ -28,7 +28,7 @@ loadCSSFromString(`
     height: 100%
 }`)
 
-export const Settings = ({base, globalConfig}: { globalConfig: GlobalConfig, base: Base }) => {
+export const Settings = ({base, globalConfig}: { globalConfig: GlobalConfig, base: Base}) => {
 
     return <Box className='container' border='thick'>
         <Heading>🚀 Check Out with Cart 🚀</Heading>
@@ -37,8 +37,8 @@ export const Settings = ({base, globalConfig}: { globalConfig: GlobalConfig, bas
 
         <div>
             <Label>Extension Configuration</Label>
-            <Box padding='2rem' border='thick'>
-                {requiredSchemaConfiguration.map(({
+            <Box padding='2rem' maxWidth={800} border='thick'>
+                {initialAppConfiguration.schemaConfiguration.map(({
                                                       tableName,
                                                       tablePickerPrompt,
                                                       requiredFields,
@@ -46,7 +46,7 @@ export const Settings = ({base, globalConfig}: { globalConfig: GlobalConfig, bas
                                                   }, index) => {
                         const tablePicker = (
                             <FormField key={index} label={tablePickerPrompt}>
-                                <TablePickerSynced globalConfigKey={tableName} width="320px"/>
+                                <TablePickerSynced globalConfigKey={tableName}/>
                             </FormField>);
 
                         if (requiredFields.length !== 0 || optionalFields.length !== 0) {

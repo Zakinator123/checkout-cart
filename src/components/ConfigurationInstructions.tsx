@@ -3,7 +3,7 @@ import React from "react";
 
 export const ConfigurationInstructions = () =>
     <Text>
-        This extension requires your base to have a certain 'minimum' schema to work properly. This schema may be
+        This extension requires your base to have a certain minimum schema to work properly. This schema may be
         pre-existing, or you can have this extension create it for you. <br/>
 
         <h4>Required Minimum Schema</h4>
@@ -30,9 +30,9 @@ export const ConfigurationInstructions = () =>
                     <br/>
                     This extension can also be configured to work with a few optional fields as well:
                     <ul>
-                        <li>A 'Date Checked Out' field to indicate when a checkout record was created.</li>
-                        <li>A 'Date Due' field to track when outstanding checked out items are due.</li>
-                        <li>A 'Date Checked In' field to track when items are checked in.</li>
+                        <li>A {'Date Checked Out'} field to indicate when a checkout record was created.</li>
+                        <li>A {'Date Due'} field to track when outstanding checked out items are due.</li>
+                        <li>A {'Date Checked In'} field to track when items are checked in.</li>
                     </ul>
                 </div>
 

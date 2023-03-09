@@ -17,7 +17,7 @@ export const FieldSelectorGroup = ({
         return !fieldSwitchIsEnabled
     }
 
-    const getFieldOptionsForFieldSelector = (table: Table, expectedFieldType: FieldType, mustLinkTo: string | null) =>
+    const getFieldOptionsForFieldSelector = (table: Table, expectedFieldType: FieldType, mustLinkTo: string | null, globalConfig: GlobalConfig) =>
         table.fields.map((field: Field) => {
             let fieldOptionDisabled: boolean;
             if (field.type !== expectedFieldType) fieldOptionDisabled = true;
@@ -34,18 +34,24 @@ export const FieldSelectorGroup = ({
 
     return <>
         <Label paddingLeft='1.5rem'>{required ? 'Required' : 'Optional'} Fields</Label>
-        <Box padding='1rem' paddingLeft='3rem'>
+        <Box padding='1rem' paddingLeft='1rem'>
             {fields.map(({fieldName, expectedFieldType, fieldPrompt, mustLinkTo}) =>
                 <FormField key={fieldName} label={fieldPrompt}>
-                    <div style={{display: 'flex', gap: '2rem'}}>
-                        <SelectSynced
-                            disabled={fieldIsDisabled(required, fieldName)}
-                            globalConfigKey={fieldName}
-                            options={getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo)}
-                            width="220px"
-                        />
+                    <div style={{display: 'flex', gap: '1rem'}}>
+
+                        {/*{*/}
+                        {/*    const selectOptions = getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo, globalConfig);*/}
+                        {/*}*/}
+                        <Box border='default' borderColor='red'>
+                            <SelectSynced
+                                disabled={fieldIsDisabled(required, fieldName)}
+                                globalConfigKey={fieldName}
+                                options={getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo, globalConfig)}
+                            />
+                        </Box>
+
                         {!required && <SwitchSynced
-                            label="Enable/Disable this Field"
+                            label="Enable/Disable"
                             globalConfigKey={fieldName + 'Enabled'}
                             key={fieldName + 'Enabled'}
                         />}

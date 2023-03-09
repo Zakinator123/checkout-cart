@@ -7,7 +7,6 @@ import {
     Heading,
     Input,
     Loader,
-    useViewport,
     Text, FormField
 } from "@airtable/blocks/ui";
 import {loadCSSFromString} from '@airtable/blocks/ui';
@@ -59,12 +58,16 @@ loadCSSFromString(`
         5. Add views for grouping checkouts by user, by cart group, filtering only overdue
  */
 
-function CheckoutWithCart({airtableData: {checkoutsTable, inventoryTableRecords, relevantInventoryTableFields, relevantUserTableFields, userRecords}}: AirtableDataProps) {
-
-    // Viewport Data
-    const viewport = useViewport();
-    const viewportWidth = viewport.size.width;
-    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({height: 800, width: 800});
+function CheckoutWithCart({
+                              airtableData: {
+                                  checkoutsTable,
+                                  inventoryTableRecords,
+                                  relevantInventoryTableFields,
+                                  relevantUserTableFields,
+                                  userRecords,
+                                  viewportWidth,
+                              }
+                          }: AirtableDataProps) {
 
     // Transaction State
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
