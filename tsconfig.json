@@ -6,7 +6,8 @@
         "allowSyntheticDefaultImports": true,
         "jsx": "react",
         "esModuleInterop": true,
-        "strict": true
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
     },
     "exclude": ["node_modules", "assets"]
 }

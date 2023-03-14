@@ -10,3 +10,15 @@ export function allSettled(promises: Promise<any>[]) {
             err => ({ status: 'rejected', reason: err })));
     return Promise.all(wrappedPromises);
 }
+
+export function mapValues<T extends object, V>(obj: T, valueMapper: (k: T[keyof T]) => V) {
+    return Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k, valueMapper(v)])
+    ) as { [K in keyof T]: V };
+}
+
+type Entries<T> = {
+    [K in keyof T]: [K, T[K]];
+}[keyof T][];
+
+export const getEntries = <T extends object>(obj: T) => Object.entries(obj) as Entries<T>;

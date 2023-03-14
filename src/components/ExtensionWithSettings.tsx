@@ -1,9 +1,16 @@
-import {useBase, useGlobalConfig, useSettingsButton, useViewport} from '@airtable/blocks/ui';
+import {useBase, useGlobalConfig, useSettingsButton} from '@airtable/blocks/ui';
 import React, {useState} from 'react';
-import {Field, Table} from "@airtable/blocks/models";
-import {AppConfig, FieldNames} from "../types/types";
+import {Field, FieldType, Table} from "@airtable/blocks/models";
+import {
+    AppConfigIds,
+    TableName,
+    ValidatedAppConfig
+} from "../types/types";
 import {Settings} from "./Settings";
-import {AppConfigKeys, ExpectedAppConfigFieldTypeMapping} from "../utils/Constants";
+import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
+import {FieldId, TableId} from "@airtable/blocks/types";
+import {getEntries, mapValues} from "../utils/RandomUtils";
+import CheckoutWithCart from "./CheckoutWithCart";
 
 
 export function ExtensionWithSettings() {
@@ -12,72 +19,61 @@ export function ExtensionWithSettings() {
     const [isShowingSettings, setIsShowingSettings] = useState(true);
     useSettingsButton(() => setIsShowingSettings(!isShowingSettings));
 
-    // Viewport Data
-    const viewport = useViewport();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const viewportWidth = viewport.size.width;
-    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
+
 
     const globalConfig = useGlobalConfig();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const extensionConfig = globalConfig.get('extensionConfiguration') as AppConfig | undefined;
+    const extensionConfig = globalConfig.get('extensionConfiguration') as AppConfigIds | undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    type ValidatedExtensionConfig = {
-        tables: {
-            [AppConfigKeys.inventoryTable]: { table: Table, fields: { required: {}, optional: {} } },
-            [AppConfigKeys.userTable]: { table: Table, fields: { required: {}, optional: {} } },
-            [AppConfigKeys.checkoutsTable]: {
-                table: Table, fields: {
-                    required: {
-                        [AppConfigKeys.linkedInventoryTableField]: Field,
-                        [AppConfigKeys.linkedUserTableField]: Field,
-                        [AppConfigKeys.checkedInField]: Field,
-                    },
-                    optional: {
-                        [AppConfigKeys.dateCheckedOutField]: Field | undefined,
-                        [AppConfigKeys.dateDueField]: Field | undefined,
-                        [AppConfigKeys.dateCheckedInField]: Field | undefined,
-                    }
-                },
-            },
-        },
-        deleteCheckoutsUponCheckInBoolean: false
-    }
+    /*
+        Get AppConfig from GlobalConfig
+            if empty take user to settings page and hydrate form state with reducer state initializer
+            if present, validate. If valid take user to
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const validateConfig: (extensionConfig: AppConfig) => any = (extensionConfig) => {
+            // Form validation scenarios:
+                - If no tables exist in base, show error message
+                - If one table is already used for X table, cannot also use that table as the Y table.
+                - If checkouts table does not have any valid linked records, or date records, or checkbox records, show error on that field
+     */
+
+
+    const validateConfig: ((extensionConfig: AppConfigIds) => ValidatedAppConfig) = (extensionConfig) => {
         try {
-            const tables = Object.fromEntries(
-                Object.entries(extensionConfig.tables)
-                    .map(([tableName, {tableId, fieldIds}]) => {
-                        if (tableId === undefined) throw new Error();
-                        const table = base.getTableById(tableId);
 
-                        const requiredFields = Object.fromEntries(Object.entries(fieldIds.required).map(([fieldName, fieldId]) => {
-                            if (fieldId === undefined) throw new Error();
-                            const field = table.getField(fieldId);
-                            // TODO: Remove type assertion here.
-                            if (field.type !== ExpectedAppConfigFieldTypeMapping[fieldName as FieldNames]) throw new Error();
-                            return [fieldName, field];
-                        }));
+            const tables: ValidatedAppConfig['tables'] = mapValues(extensionConfig.tables, (tableId: TableId): Table => base.getTableById(tableId));
+            const checkoutsTable: Table = tables.checkoutsTable;
+            const checkoutTableRequiredFields: ValidatedAppConfig['checkoutTableFields']['required'] =
+                mapValues(
+                    extensionConfig.checkoutTableFields.required,
+                    (fieldId: FieldId): Field => checkoutsTable.getFieldById(fieldId)
+                );
 
-                        const optionalFields = Object.fromEntries(Object.entries(fieldIds.required).map(([fieldName, fieldId]) => {
-                            if (fieldId === undefined) return [fieldName, undefined]
-                            const field = table.getField(fieldId);
-                            return [fieldName, field];
-                        }));
+            const checkoutTableOptionalFields: ValidatedAppConfig['checkoutTableFields']['optional'] =
+                mapValues(
+                    extensionConfig.checkoutTableFields.optional,
+                    (fieldId?: FieldId): Field | undefined => (fieldId != null) ? checkoutsTable.getFieldByIdIfExists(fieldId) ?? undefined : undefined
+                );
 
-                        return [tableName, {
-                            table: table, fields: {
-                                required: requiredFields,
-                                optional: optionalFields
-                            }
-                        }];
-                    }));
+            // const fields = {...checkoutTableRequiredFields, ...checkoutTableOptionalFields}
+            getEntries(checkoutTableRequiredFields).forEach(([fieldName, field]) => {
+                if (field.type !== ExpectedAppConfigFieldTypeMapping[fieldName]) throw new Error();
+                if (field.config.type === FieldType.MULTIPLE_RECORD_LINKS) {
+                    const tableName = fieldTypeLinks[fieldName] as TableName;
+                    if (field.config.options.linkedTableId !== tables[tableName].id) throw new Error();
+                }
+            });
+
+            // TODO: Figure out how to simplify this
+            getEntries(checkoutTableOptionalFields).forEach(optionalField => {
+                if (optionalField === undefined) return;
+                const [fieldName, field] = optionalField;
+                if (field === undefined || fieldName === undefined) return;
+                if (field.type !== ExpectedAppConfigFieldTypeMapping[fieldName]) throw new Error();
+            });
 
             return {
                 tables: tables,
+                checkoutTableFields: {required: checkoutTableRequiredFields, optional: checkoutTableOptionalFields},
                 deleteCheckoutsUponCheckInBoolean: extensionConfig.deleteCheckoutsUponCheckInBoolean
             }
         } catch {
@@ -86,18 +82,12 @@ export function ExtensionWithSettings() {
     }
 
 
-    // if (extensionConfig) {
-    //     const validConfig = validateConfig(extensionConfig);
-    // }
+    let validConfig = undefined;
+    if (extensionConfig) {
+        validConfig = validateConfig(extensionConfig);
+    }
 
-
-    // const userRecords = useRecords(userTable, {fields: relevantUserTableFields});
-    // const inventoryTableRecords = useRecords(inventoryTable, {fields: relevantInventoryTableFields});
-    // const airtableData: AirtableData = {userRecords, checkoutsTable, inventoryTableRecords, relevantInventoryTableFields, relevantUserTableFields, viewportWidth}
-
-    return isShowingSettings
+    return isShowingSettings || !validConfig
         ? <Settings globalConfig={globalConfig} base={base}/>
-        : null
-// :
-//     <CheckoutWithCart airtableData={airtableData}/>;
+        : <CheckoutWithCart config={validConfig}/>;
 }

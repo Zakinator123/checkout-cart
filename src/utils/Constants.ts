@@ -1,5 +1,9 @@
 import {FieldType} from "@airtable/blocks/models";
-import {FieldNames, ExtensionTables, ExtensionConfiguration, AppConfig} from "../types/types";
+import {
+    TableName,
+    ExtensionConfiguration,
+    CheckoutTableRequiredFieldName, CheckoutTableOptionalFieldName
+} from "../types/types";
 
 export enum AppConfigKeys {
     inventoryTable = 'inventoryTable',
@@ -14,36 +18,25 @@ export enum AppConfigKeys {
     deleteCheckoutsUponCheckInBoolean = 'deleteCheckoutsUponCheckInBoolean'
 }
 
-export const InitialAppConfig: AppConfig = {
-    tables: {
-        [AppConfigKeys.inventoryTable]: {tableId: undefined, fieldIds: {required: {}, optional: {}}},
-        [AppConfigKeys.userTable]: {tableId: undefined, fieldIds: {required: {}, optional: {}}},
-        [AppConfigKeys.checkoutsTable]: {
-            tableId: undefined, fieldIds: {
-                required: {
-                    [AppConfigKeys.linkedInventoryTableField]: undefined,
-                    [AppConfigKeys.linkedUserTableField]: undefined,
-                    [AppConfigKeys.checkedInField]: undefined,
-                },
-                optional: {
-                    [AppConfigKeys.dateCheckedOutField]: undefined,
-                    [AppConfigKeys.dateDueField]: undefined,
-                    [AppConfigKeys.dateCheckedInField]: undefined,
-                }
-            }
-        },
-    },
-    deleteCheckoutsUponCheckInBoolean: false
+export const ExpectedAppConfigFieldTypeMapping = {
+    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldType.MULTIPLE_RECORD_LINKS,
+    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldType.MULTIPLE_RECORD_LINKS,
+    [CheckoutTableRequiredFieldName.checkedInField]: FieldType.CHECKBOX,
+    [CheckoutTableOptionalFieldName.dateCheckedOutField]: FieldType.DATE,
+    [CheckoutTableOptionalFieldName.dateDueField]: FieldType.DATE,
+    [CheckoutTableOptionalFieldName.dateCheckedInField]: FieldType.DATE,
 }
 
-export const ExpectedAppConfigFieldTypeMapping = {
-    [FieldNames.linkedInventoryTableField]: FieldType.MULTIPLE_RECORD_LINKS,
-    [FieldNames.linkedUserTableField]: FieldType.MULTIPLE_RECORD_LINKS,
-    [FieldNames.checkedInField]: FieldType.CHECKBOX,
-    [FieldNames.dateCheckedOutField]: FieldType.DATE,
-    [FieldNames.dateDueField]: FieldType.DATE,
-    [FieldNames.dateCheckedInField]: FieldType.DATE,
+export const fieldTypeLinks = {
+    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: TableName.inventoryTable,
+    [CheckoutTableRequiredFieldName.linkedUserTableField]: TableName.userTable,
+    [CheckoutTableRequiredFieldName.checkedInField]: undefined,
+    [CheckoutTableOptionalFieldName.dateCheckedOutField]: undefined,
+    [CheckoutTableOptionalFieldName.dateDueField]: undefined,
+    [CheckoutTableOptionalFieldName.dateCheckedInField]: undefined,
 }
+
+
 
 export const initialAppConfiguration: ExtensionConfiguration = {
     hasErrors: false,
@@ -51,83 +44,81 @@ export const initialAppConfiguration: ExtensionConfiguration = {
     schemaConfiguration:
         [
             {
-                tableName: ExtensionTables.inventoryTable,
+                tableName: TableName.inventoryTable,
                 tablePickerPrompt: 'Select your inventory table:',
                 requiredFields: [],
                 optionalFields: [],
-                tableId: null,
+                tableId: undefined,
                 errors: []
             },
             {
-                tableName: ExtensionTables.userTable,
+                tableName: TableName.userTable,
                 tablePickerPrompt: 'Select your user table:',
                 requiredFields: [],
                 optionalFields: [],
-                tableId: null,
+                tableId: undefined,
                 errors: []
             },
             {
-                tableName: ExtensionTables.checkoutsTable,
+                tableName: TableName.checkoutsTable,
                 tablePickerPrompt: 'Select your checkouts table:',
                 requiredFields: [
                     {
-                        fieldName: FieldNames.linkedInventoryTableField,
+                        fieldName: CheckoutTableRequiredFieldName.linkedInventoryTableField,
                         expectedFieldType: FieldType.MULTIPLE_RECORD_LINKS,
                         fieldPrompt: 'Select the linked record field linking this table to the inventory table.',
-                        mustLinkTo: ExtensionTables.inventoryTable,
-                        fieldId: null,
+                        mustLinkTo: TableName.inventoryTable,
+                        fieldId: undefined,
                         errors: []
                     },
                     {
-                        fieldName: FieldNames.linkedUserTableField,
+                        fieldName: CheckoutTableRequiredFieldName.linkedUserTableField,
                         expectedFieldType: FieldType.MULTIPLE_RECORD_LINKS,
                         fieldPrompt: 'Select the linked record field linking this table to the users table.',
-                        mustLinkTo: ExtensionTables.userTable,
-                        fieldId: null,
+                        mustLinkTo: TableName.userTable,
+                        fieldId: undefined,
                         errors: []
                     },
                     {
-                        fieldName: FieldNames.checkedInField,
+                        fieldName: CheckoutTableRequiredFieldName.checkedInField,
                         expectedFieldType: FieldType.CHECKBOX,
                         fieldPrompt:
                             'Select the checkbox field representing whether or not a checkout is still checked out or checked in.',
-                        mustLinkTo:
-                            null,
-                        fieldId:
-                            null,
+                        mustLinkTo: undefined,
+                        fieldId: undefined,
                         errors: []
                     },
                 ],
                 optionalFields: [
                     {
-                        fieldName: FieldNames.dateCheckedOutField,
+                        fieldName: CheckoutTableOptionalFieldName.dateCheckedOutField,
                         expectedFieldType: FieldType.DATE,
                         fieldPrompt: `(Optional) Enable if you want to track when items are checked out.
                                   Select the date field representing when a checkout is created.`,
-                        mustLinkTo: null,
-                        fieldId: null,
+                        mustLinkTo: undefined,
+                        fieldId: undefined,
                         errors: []
                     },
                     {
-                        fieldName: FieldNames.dateDueField,
+                        fieldName: CheckoutTableOptionalFieldName.dateDueField,
                         expectedFieldType: FieldType.DATE,
                         fieldPrompt: `(Optional) Enable if you want to track when checkouts are due.
                                   Select the date field representing when items are due for return.`,
-                        mustLinkTo: null,
-                        fieldId: null,
+                        mustLinkTo: undefined,
+                        fieldId: undefined,
                         errors: []
                     },
                     {
-                        fieldName: FieldNames.dateCheckedInField,
+                        fieldName: CheckoutTableOptionalFieldName.dateCheckedInField,
                         expectedFieldType: FieldType.DATE,
                         fieldPrompt: `(Optional) Enable if you want to track when items are checked in. 
                                   Select the date field representing when items are checked in.`,
-                        mustLinkTo: null,
-                        fieldId: null,
+                        mustLinkTo: undefined,
+                        fieldId: undefined,
                         errors: []
                     }
                 ],
-                tableId: null,
+                tableId: undefined,
                 errors: []
             }
         ]

@@ -11,7 +11,7 @@ import {GlobalConfig} from "@airtable/blocks/types";
 import {Base} from "@airtable/blocks/models";
 
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
-import {ExtensionTables} from "../types/types";
+import {TableName} from "../types/types";
 import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {initialAppConfiguration} from "../utils/Constants";
 
@@ -56,14 +56,14 @@ export const Settings = ({base, globalConfig}: { globalConfig: GlobalConfig, bas
                                     <br/>
                                     <FieldSelectorGroup
                                         required={true}
-                                        table={base.getTableById(globalConfig.get(ExtensionTables.checkoutsTable) as string)}
+                                        table={base.getTableById(globalConfig.get(TableName.checkoutsTable) as string)}
                                         globalConfig={globalConfig}
                                         fields={requiredFields}
                                     />
 
                                     <FieldSelectorGroup
                                         required={false}
-                                        table={base.getTableById(globalConfig.get(ExtensionTables.checkoutsTable) as string)}
+                                        table={base.getTableById(globalConfig.get(TableName.checkoutsTable) as string)}
                                         globalConfig={globalConfig}
                                         fields={optionalFields}
                                     />

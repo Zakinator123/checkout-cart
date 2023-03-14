@@ -7,14 +7,19 @@ import {
     Heading,
     Input,
     Loader,
-    Text, FormField
+    Text, FormField, useRecords, useViewport
 } from "@airtable/blocks/ui";
 import {loadCSSFromString} from '@airtable/blocks/ui';
 
 import Cart from "./Cart";
 import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
-import {AirtableDataProps, TransactionData, TransactionType, transactionTypes} from "../types/types";
+import {
+    TransactionData,
+    TransactionType,
+    transactionTypes,
+    ValidatedAppConfig
+} from "../types/types";
 import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
@@ -58,16 +63,19 @@ loadCSSFromString(`
         5. Add views for grouping checkouts by user, by cart group, filtering only overdue
  */
 
-function CheckoutWithCart({
-                              airtableData: {
-                                  checkoutsTable,
-                                  inventoryTableRecords,
-                                  relevantInventoryTableFields,
-                                  relevantUserTableFields,
-                                  userRecords,
-                                  viewportWidth,
-                              }
-                          }: AirtableDataProps) {
+// TODO: Figure out how to clean up props signature to remove unnecessary key?
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function CheckoutWithCart({config: {checkoutTableFields, deleteCheckoutsUponCheckInBoolean, tables: {checkoutsTable, inventoryTable, userTable}}}:{config: ValidatedAppConfig}) {
+
+    // Viewport Data
+    const viewport = useViewport();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const viewportWidth = viewport.size.width;
+    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
+
+    // TODO: Filter out unwanted fields (e.g. linked fields)
+    const userRecords = useRecords(userTable);
+    const inventoryTableRecords = useRecords(inventoryTable);
 
     // Transaction State
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
@@ -118,13 +126,14 @@ function CheckoutWithCart({
         } else setErrorDialogMessages(errorMessages)
     }
 
+    // @ts-ignore
     return <Box className="container" border="thick">
         <Heading>🚀 Check Out with Cart 🚀</Heading>
         <TransactionTypeSelector currentOption={transactionType} options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}/>
 
         <Cart viewportWidth={viewportWidth}
-              fieldsToShow={relevantInventoryTableFields}
+              fieldsToShow={[]}
               cartRecords={cartRecords} addRecordToCart={addRecordToCart}
               removeRecordFromCart={removeRecordFromCart}/>
 
@@ -132,7 +141,7 @@ function CheckoutWithCart({
             <UserSelector viewportWidth={viewportWidth}
                           currentTransactionUser={transactionUser}
                           selectUser={selectUserForTransaction}
-                          fieldsToShow={relevantUserTableFields}
+                          fieldsToShow={[]}
             />
 
             <FormField label="Due Date (Default is 1 week from today):">

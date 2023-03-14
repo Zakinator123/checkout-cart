@@ -38,15 +38,11 @@ export const FieldSelectorGroup = ({
             {fields.map(({fieldName, expectedFieldType, fieldPrompt, mustLinkTo}) =>
                 <FormField key={fieldName} label={fieldPrompt}>
                     <div style={{display: 'flex', gap: '1rem'}}>
-
-                        {/*{*/}
-                        {/*    const selectOptions = getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo, globalConfig);*/}
-                        {/*}*/}
                         <Box border='default' borderColor='red'>
                             <SelectSynced
                                 disabled={fieldIsDisabled(required, fieldName)}
                                 globalConfigKey={fieldName}
-                                options={getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo, globalConfig)}
+                                options={getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo ?? null, globalConfig)}
                             />
                         </Box>
 

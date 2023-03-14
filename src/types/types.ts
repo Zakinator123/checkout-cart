@@ -1,43 +1,35 @@
 import {Field, FieldType, Record, Table} from "@airtable/blocks/models";
 import {FieldId, TableId} from "@airtable/blocks/types";
-import {AppConfigKeys} from "../utils/Constants";
 
-export enum ExtensionTables {
+export enum TableName {
     inventoryTable = 'inventoryTable',
     userTable = 'userTable',
     checkoutsTable = 'checkoutsTable'
 }
 
-export enum FieldNames {
+export enum CheckoutTableRequiredFieldName {
     linkedInventoryTableField = 'linkedInventoryTableField',
     linkedUserTableField = 'linkedUserTableField',
     checkedInField = 'checkedInField',
+}
+
+export enum CheckoutTableOptionalFieldName {
     dateCheckedOutField = 'dateCheckedOutField',
     dateDueField = 'dateDueField',
     dateCheckedInField = 'dateCheckedInField'
 }
 
-export type AppConfig = {
-    tables: {
-        [AppConfigKeys.inventoryTable]: { tableId: TableId | undefined, fieldIds: { required: {}, optional: {} } },
-        [AppConfigKeys.userTable]: { tableId: TableId | undefined, fieldIds: { required: {}, optional: {} } },
-        [AppConfigKeys.checkoutsTable]: {
-            tableId: TableId | undefined, fieldIds: {
-                required: {
-                    [AppConfigKeys.linkedInventoryTableField]: FieldId | undefined
-                    [AppConfigKeys.linkedUserTableField]: FieldId | undefined,
-                    [AppConfigKeys.checkedInField]: FieldId | undefined
-                },
-                optional: {
-                    [AppConfigKeys.dateCheckedOutField]: FieldId | undefined,
-                    [AppConfigKeys.dateDueField]: FieldId | undefined,
-                    [AppConfigKeys.dateCheckedInField]: FieldId | undefined,
-                }
-            }
-        },
+type AppConfig<TableOrTableId, FieldOrFieldId> = {
+    tables: { [tableName in TableName]: TableOrTableId },
+    checkoutTableFields: {
+        required: { [requiredFieldName in CheckoutTableRequiredFieldName]: FieldOrFieldId},
+        optional: { [optionalFieldName in CheckoutTableOptionalFieldName]?: FieldOrFieldId }
     },
-    [AppConfigKeys.deleteCheckoutsUponCheckInBoolean]: boolean,
+    deleteCheckoutsUponCheckInBoolean: boolean,
 }
+
+export type AppConfigIds = AppConfig<TableId, FieldId>;
+export type ValidatedAppConfig = AppConfig<Table, Field>;
 
 export type AirtableData = {
     userRecords: Record[],
@@ -75,20 +67,20 @@ export type TransactionTypes = {
 }
 
 export type FieldConfiguration = {
-    fieldName: FieldNames,
+    fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
     expectedFieldType: FieldType,
     fieldPrompt: string,
-    mustLinkTo: ExtensionTables | null,
-    fieldId: FieldId | null,
+    mustLinkTo?: TableName,
+    fieldId?: FieldId,
     errors: Array<string>
 }
 
 export type TableConfiguration = {
-    tableName: ExtensionTables,
+    tableName: TableName,
     tablePickerPrompt: string,
     requiredFields: Array<FieldConfiguration>,
     optionalFields: Array<FieldConfiguration>,
-    tableId: TableId | null,
+    tableId?: TableId,
     errors: Array<string>
 }
 
