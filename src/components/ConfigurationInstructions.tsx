@@ -1,8 +1,7 @@
-import {Text} from "@airtable/blocks/ui";
 import React from "react";
 
 export const ConfigurationInstructions = () =>
-    <Text>
+    <div>
         This extension requires your base to have a certain minimum schema to work properly. This schema may be
         pre-existing, or you can have this extension create it for you. <br/>
 
@@ -38,5 +37,5 @@ export const ConfigurationInstructions = () =>
 
             </li>
         </ol>
-    </Text>
+    </div>
 ;

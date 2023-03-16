@@ -1,28 +1,31 @@
-import {Box, FormField, Label, SelectSynced, SwitchSynced} from "@airtable/blocks/ui";
-import {FieldConfiguration} from "../types/types";
+import {Box, FormField, Label, Select, Switch, Text} from "@airtable/blocks/ui";
 import {Field, FieldType, Table} from "@airtable/blocks/models";
 import React from "react";
-import {GlobalConfig, TableId} from "@airtable/blocks/types";
+import {TableId} from "@airtable/blocks/types";
+import {FieldConfigurationV3} from "../types/ConfigurationTypes";
+import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
 
 export const FieldSelectorGroup = ({
                                        required,
                                        table,
-                                       globalConfig,
-                                       fields
-                                   }: { required: boolean, table: Table, globalConfig: GlobalConfig, fields: Array<FieldConfiguration> }) => {
-
-    const fieldIsDisabled: (fieldIsRequired: boolean, fieldName: string) => boolean = (fieldIsRequired, fieldName) => {
-        if (fieldIsRequired) return false;
-        const fieldSwitchIsEnabled = globalConfig.get(fieldName + 'Enabled') as boolean;
-        return !fieldSwitchIsEnabled
-    }
-
-    const getFieldOptionsForFieldSelector = (table: Table, expectedFieldType: FieldType, mustLinkTo: string | null, globalConfig: GlobalConfig) =>
+                                       fields,
+                                       formState,
+                                       formErrorState,
+                                       selectorChangeHandler
+                                   }: {
+    required: boolean,
+    table: Table,
+    fields: Array<FieldConfigurationV3>,
+    formState: any,
+    formErrorState: any,
+    selectorChangeHandler: any
+}) => {
+    const getFieldOptionsForFieldSelector = (table: Table, expectedFieldType: FieldType, mustLinkTo: string | undefined) =>
         table.fields.map((field: Field) => {
             let fieldOptionDisabled: boolean;
             if (field.type !== expectedFieldType) fieldOptionDisabled = true;
-            else if (mustLinkTo !== null && field.config.type === FieldType.MULTIPLE_RECORD_LINKS) {
-                const mustLinkToTableId: TableId = globalConfig.get(mustLinkTo) as TableId;
+            else if (mustLinkTo !== undefined && field.config.type === FieldType.MULTIPLE_RECORD_LINKS) {
+                const mustLinkToTableId: TableId = formState[mustLinkTo] as TableId;
                 fieldOptionDisabled = field.config.options.linkedTableId !== mustLinkToTableId;
             } else fieldOptionDisabled = false;
             return {
@@ -35,20 +38,23 @@ export const FieldSelectorGroup = ({
     return <>
         <Label paddingLeft='1.5rem'>{required ? 'Required' : 'Optional'} Fields</Label>
         <Box padding='1rem' paddingLeft='1rem'>
-            {fields.map(({fieldName, expectedFieldType, fieldPrompt, mustLinkTo}) =>
+            {fields.map(({fieldName, fieldPrompt}) =>
                 <FormField key={fieldName} label={fieldPrompt}>
                     <div style={{display: 'flex', gap: '1rem'}}>
-                        <Box border='default' borderColor='red'>
-                            <SelectSynced
-                                disabled={fieldIsDisabled(required, fieldName)}
-                                globalConfigKey={fieldName}
-                                options={getFieldOptionsForFieldSelector(table, expectedFieldType, mustLinkTo ?? null, globalConfig)}
+                        <Box border='default'>
+                            <Select
+                                disabled={false}
+                                options={getFieldOptionsForFieldSelector(table, ExpectedAppConfigFieldTypeMapping[fieldName], fieldTypeLinks[fieldName])}
+                                onChange={selectedOption => selectorChangeHandler(fieldName, selectedOption)}
+                                value={formState[fieldName]}
                             />
+                            <Text textColor='red'>{formErrorState[fieldName]}</Text>
+
                         </Box>
 
-                        {!required && <SwitchSynced
+                        {!required && <Switch
+                            value={true}
                             label="Enable/Disable"
-                            globalConfigKey={fieldName + 'Enabled'}
                             key={fieldName + 'Enabled'}
                         />}
                     </div>

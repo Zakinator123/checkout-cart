@@ -18,12 +18,12 @@ import {
     TransactionData,
     TransactionType,
     transactionTypes,
-    ValidatedAppConfig
-} from "../types/types";
+} from "../types/TransactionTypes";
 import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
+import {ValidatedAppConfig} from "../types/ConfigurationTypes";
 
 loadCSSFromString(`
 .container {
