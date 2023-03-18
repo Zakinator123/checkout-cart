@@ -4,26 +4,25 @@ import {
     Box,
     Button,
     expandRecordPickerAsync,
+    FormField,
     Heading,
     Input,
+    loadCSSFromString,
     Loader,
-    Text, FormField, useRecords, useViewport
+    Text,
+    useRecords,
+    useViewport
 } from "@airtable/blocks/ui";
-import {loadCSSFromString} from '@airtable/blocks/ui';
 
 import Cart from "./Cart";
 import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
-import {
-    TransactionData,
-    TransactionType,
-    transactionTypes,
-} from "../types/TransactionTypes";
+import {TransactionData, TransactionType, transactionTypes,} from "../types/TransactionTypes";
 import {executeTransaction, validateTransaction} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
-import {ValidatedAppConfig} from "../types/ConfigurationTypes";
+import {ValidatedExtensionConfiguration} from "../types/ConfigurationTypes";
 
 loadCSSFromString(`
 .container {
@@ -65,7 +64,7 @@ loadCSSFromString(`
 
 // TODO: Figure out how to clean up props signature to remove unnecessary key?
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function CheckoutWithCart({config: {checkoutTableFields, deleteCheckoutsUponCheckInBoolean, tables: {checkoutsTable, inventoryTable, userTable}}}:{config: ValidatedAppConfig}) {
+function CheckoutWithCart({config}: {config: ValidatedExtensionConfiguration}) {
 
     // Viewport Data
     const viewport = useViewport();
@@ -74,7 +73,13 @@ function CheckoutWithCart({config: {checkoutTableFields, deleteCheckoutsUponChec
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
     // TODO: Filter out unwanted fields (e.g. linked fields)
+    // eslint-disable-next-line no-undef
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
     const userRecords = useRecords(userTable);
+    // eslint-disable-next-line no-undef
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
     const inventoryTableRecords = useRecords(inventoryTable);
 
     // Transaction State
@@ -98,8 +103,10 @@ function CheckoutWithCart({config: {checkoutTableFields, deleteCheckoutsUponChec
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     // Transaction State Mutators
+    // @ts-ignore
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
+    // @ts-ignore
     const addRecordToCart = () => expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
         .then(record => {
             if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
@@ -116,6 +123,8 @@ function CheckoutWithCart({config: {checkoutTableFields, deleteCheckoutsUponChec
         const errorMessages = validateTransaction(transactionData);
         if (errorMessages.length === 0) {
             setTransactionIsProcessing(true);
+            // @ts-ignore
+            // eslint-disable-next-line no-undef
             executeTransaction(transactionData, checkoutsTable, removeRecordFromCart)
                 .then((settledPromises) => {
                     // Show user notifications for settled Promises.

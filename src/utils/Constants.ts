@@ -1,23 +1,20 @@
 import {FieldType} from "@airtable/blocks/models";
 import {
+    ExtensionConfigurationIds,
     CheckoutTableOptionalFieldName,
     CheckoutTableRequiredFieldName,
-    ExtensionConfiguration,
+    ExtensionConfigurationFormSchema,
     TableName
 } from "../types/ConfigurationTypes";
 
-export enum AppConfigKeys {
-    inventoryTable = 'inventoryTable',
-    userTable = 'userTable',
-    checkoutsTable = 'checkoutsTable',
-    linkedInventoryTableField = 'linkedInventoryTableField',
-    linkedUserTableField = 'linkedUserTableField',
-    checkedInField = 'checkedInField',
-    dateCheckedOutField = 'dateCheckedOutField',
-    dateDueField = 'dateDueField',
-    dateCheckedInField = 'dateCheckedInField',
-    deleteCheckoutsUponCheckInBoolean = 'deleteCheckoutsUponCheckInBoolean'
-}
+export const blankConfigurationState: ExtensionConfigurationIds = {
+    [TableName.inventoryTable]: '',
+    [TableName.userTable]: '',
+    [TableName.checkoutsTable]: '',
+    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: '',
+    [CheckoutTableRequiredFieldName.linkedUserTableField]: '',
+    [CheckoutTableRequiredFieldName.checkedInField]: '',
+};
 
 export const ExpectedAppConfigFieldTypeMapping = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldType.MULTIPLE_RECORD_LINKS,
@@ -37,8 +34,7 @@ export const fieldTypeLinks = {
     [CheckoutTableOptionalFieldName.dateCheckedInField]: undefined,
 }
 
-
-export const configurationFormData: ExtensionConfiguration = {
+export const configurationFormData: ExtensionConfigurationFormSchema = {
     deleteCheckoutsUponCheckin: false,
     schemaConfiguration:
         [

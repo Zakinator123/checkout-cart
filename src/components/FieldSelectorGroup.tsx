@@ -2,7 +2,7 @@ import {Box, FormField, Label, Select, Switch, Text} from "@airtable/blocks/ui";
 import {Field, FieldType, Table} from "@airtable/blocks/models";
 import React from "react";
 import {TableId} from "@airtable/blocks/types";
-import {FieldConfigurationV3} from "../types/ConfigurationTypes";
+import {FieldConfiguration} from "../types/ConfigurationTypes";
 import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
 
 export const FieldSelectorGroup = ({
@@ -15,7 +15,7 @@ export const FieldSelectorGroup = ({
                                    }: {
     required: boolean,
     table: Table,
-    fields: Array<FieldConfigurationV3>,
+    fields: Array<FieldConfiguration>,
     formState: any,
     formErrorState: any,
     selectorChangeHandler: any

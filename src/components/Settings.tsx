@@ -1,11 +1,16 @@
 import React, {useState} from "react";
 import {Box, Button, FormField, Heading, Label, loadCSSFromString, Select, Text} from "@airtable/blocks/ui";
 import {Base} from "@airtable/blocks/models";
-import {Schema, ValidationError} from 'yup';
+import {ValidationError} from 'yup';
 
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
-import {configurationFormData} from "../utils/Constants";
-import {CheckoutTableOptionalFieldName, CheckoutTableRequiredFieldName, TableName} from "../types/ConfigurationTypes";
+import {blankConfigurationState, configurationFormData} from "../utils/Constants";
+import {
+    ExtensionConfigurationIds,
+    CheckoutTableOptionalFieldName,
+    CheckoutTableRequiredFieldName,
+    TableName, ValidatedExtensionConfiguration
+} from "../types/ConfigurationTypes";
 import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
 
@@ -22,63 +27,66 @@ loadCSSFromString(`
     height: 100%
 }`)
 
+const entireFormSubmissionErrorStateGenerator = (validationErrors: ValidationError[]) =>
+    (validationErrors.reduce((currentFormErrorState: Object, error: ValidationError) => {
+        return error.path
+            ? {...currentFormErrorState, [error.path]: error.message}
+            : {...currentFormErrorState};
+    }, blankConfigurationState) as ExtensionConfigurationIds)
 
-export const Settings = ({
-                             configurationIdsSchema,
-                             configurationTablesAndFieldsSchema,
-                             base
-                         }: { configurationIdsSchema: Schema, configurationTablesAndFieldsSchema: Schema, base: Base}) => {
+const validateConfigAndGetValidationErrors = (configurationValidator: (appConfigIds: ExtensionConfigurationIds) => ValidatedExtensionConfiguration, configurationData: ExtensionConfigurationIds, formErrorStateGenerator: ((validationErrors: ValidationError[]) => ExtensionConfigurationIds)) => {
+    try {
+        configurationValidator(configurationData);
+        return blankConfigurationState
+    } catch (e) {
+        let topLevelValidationError = e as ValidationError;
+        let innerValidationErrors = topLevelValidationError.inner ?? [];
+        let allValidationErrors = [topLevelValidationError, ...innerValidationErrors]
+        return formErrorStateGenerator(allValidationErrors);
+    }
+}
 
-    const initialFormState = {
-        [TableName.inventoryTable]: '',
-        [TableName.userTable]: '',
-        [TableName.checkoutsTable]: '',
-        [CheckoutTableRequiredFieldName.linkedInventoryTableField]: '',
-        [CheckoutTableRequiredFieldName.linkedUserTableField]: '',
-        [CheckoutTableRequiredFieldName.checkedInField]: '',
-    };
+const selectorChangeFormErrorStateGenerator = (formErrorState: ExtensionConfigurationIds, fieldOrTableName: TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName) =>
+    (validationErrors: ValidationError[]) => {
+        console.log(validationErrors);
+        const fieldErrors = validationErrors.find((error: ValidationError) => error.path === fieldOrTableName) ?? {message: ''}
+        // TODO: Make this more readable.
+        const fieldKeysWithErrorsThatAreNowEmpty = Object.keys(blankConfigurationState).filter(key => ![...new Set(validationErrors.map(error => error.path))].includes(key));
+        const fieldsWithNoErrors = fieldKeysWithErrorsThatAreNowEmpty.reduce((currentKeys: Object, key: string) => ({
+            ...currentKeys,
+            [key]: ""
+        }), {});
 
-    const [formState, setFormState] = useState(initialFormState);
-    const [formErrorState, setFormErrorState] = useState(initialFormState);
-
-    const submitForm = () => configurationIdsSchema.validate(formState, {abortEarly: false})
-        .then(() => setFormErrorState(initialFormState))
-        .catch(errors => {
-            const formattedErrors = errors.inner.reduce((currentFormErrorState: Object, error: ValidationError) =>
-                error.path
-                    ? {...currentFormErrorState, [error.path]: error.message}
-                    : {...currentFormErrorState}, {});
-            setFormErrorState(formattedErrors);
-        })
-
-    const selectorChangeHandler = async (fieldOrTableName: TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, selectedOption: SelectOptionValue) => {
-        const newFormState = {...formState, [fieldOrTableName]: selectedOption};
-        setFormState(newFormState)
-
-        try {
-            await configurationIdsSchema.validate(newFormState, {abortEarly: false})
-            await configurationTablesAndFieldsSchema.validate(newFormState, {abortEarly: false})
-            setFormErrorState(initialFormState);
-        } catch (e) {
-            let topLevelValidationError = e as ValidationError;
-            let innerValidationErrors = topLevelValidationError.inner ?? [];
-            let allValidationErrors = [topLevelValidationError, ...innerValidationErrors]
-            const fieldErrors = allValidationErrors.find((error: ValidationError) => error.path === fieldOrTableName) ?? {message: ''}
-            // TODO: Make this more readable.
-            const fieldKeysWithErrorsThatAreNowEmpty = Object.keys(initialFormState).filter(key => ![...new Set(allValidationErrors.map(error => error.path))].includes(key));
-            const fieldsWithNoErrors = fieldKeysWithErrorsThatAreNowEmpty.reduce((currentKeys: Object, key: string) => ({
-                ...currentKeys,
-                [key]: ""
-            }), {});
-            setFormErrorState({
-                    ...formErrorState,
-                    ...fieldsWithNoErrors,
-                    [fieldOrTableName]: fieldErrors.message
-                }
-            );
+        return {
+            ...formErrorState,
+            ...fieldsWithNoErrors,
+            [fieldOrTableName]: fieldErrors.message
         }
     }
 
+export const Settings = ({
+                             currentConfiguration,
+                             base,
+                             configurationValidator,
+                         }:
+                             {
+                                 currentConfiguration: ExtensionConfigurationIds,
+                                 base: Base,
+                                 configurationValidator: (configurationData: ExtensionConfigurationIds) => ValidatedExtensionConfiguration
+                             }) => {
+    const [formState, setFormState] = useState(currentConfiguration);
+    const [formErrorState, setFormErrorState] = useState(
+        currentConfiguration === blankConfigurationState
+            ? blankConfigurationState
+            : validateConfigAndGetValidationErrors(configurationValidator, currentConfiguration, entireFormSubmissionErrorStateGenerator)
+    );
+
+    const submitForm = () => setFormErrorState(validateConfigAndGetValidationErrors(configurationValidator, formState, entireFormSubmissionErrorStateGenerator))
+    const selectorChangeHandler = (fieldOrTableName: TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, selectedOption: SelectOptionValue) => {
+        const newFormState = {...formState, [fieldOrTableName]: selectedOption}
+        setFormState(newFormState)
+        setFormErrorState(validateConfigAndGetValidationErrors(configurationValidator, newFormState, selectorChangeFormErrorStateGenerator(formErrorState, fieldOrTableName)))
+    }
 
     return <Box className='container' border='thick'>
         <Heading>🚀 Check Out with Cart 🚀</Heading>

@@ -1,4 +1,4 @@
-import {Field, FieldType, Table} from "@airtable/blocks/models";
+import {Field, Table} from "@airtable/blocks/models";
 import {FieldId, TableId} from "@airtable/blocks/types";
 
 export enum TableName {
@@ -19,28 +19,19 @@ export enum CheckoutTableOptionalFieldName {
     dateCheckedInField = 'dateCheckedInField'
 }
 
-type AppConfig<TableOrTableId, FieldOrFieldId> = {
-    tables: Record<TableName, TableOrTableId>
-    checkoutTableFields: {
-        required: { [requiredFieldName in CheckoutTableRequiredFieldName]: FieldOrFieldId},
-        optional: { [optionalFieldName in CheckoutTableOptionalFieldName]?: FieldOrFieldId }
-    },
-    deleteCheckoutsUponCheckInBoolean: boolean,
+type ExtensionConfiguration<TableOrTableId, FieldOrFieldId> = {
+    [TableName.inventoryTable]: TableOrTableId,
+    [TableName.userTable]: TableOrTableId,
+    [TableName.checkoutsTable]: TableOrTableId,
+    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldOrFieldId,
+    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldOrFieldId,
+    [CheckoutTableRequiredFieldName.checkedInField]: FieldOrFieldId,
 }
 
-export type AppConfigIds = AppConfig<TableId, FieldId>;
-export type ValidatedAppConfig = AppConfig<Table, Field>;
+export type ExtensionConfigurationIds = ExtensionConfiguration<TableId, FieldId>;
+export type ValidatedExtensionConfiguration = ExtensionConfiguration<Table, Field>;
 
-export type FieldConfigurationV2 = {
-    fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
-    expectedFieldType: FieldType,
-    fieldPrompt: string,
-    mustLinkTo?: TableName,
-    fieldId?: FieldId,
-    errors: Array<string>
-}
-
-export type FieldConfigurationV3 = {
+export type FieldConfiguration = {
     fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
     fieldPrompt: string,
 }
@@ -48,13 +39,13 @@ export type FieldConfigurationV3 = {
 export type TableConfiguration = {
     tableName: TableName,
     tablePickerPrompt: string,
-    requiredFields?: Array<FieldConfigurationV3>,
-    optionalFields?: Array<FieldConfigurationV3>,
+    requiredFields?: Array<FieldConfiguration>,
+    optionalFields?: Array<FieldConfiguration>,
 }
 
 export type SchemaConfiguration = Array<TableConfiguration>;
 
-export type ExtensionConfiguration = {
+export type ExtensionConfigurationFormSchema = {
     schemaConfiguration: SchemaConfiguration,
     deleteCheckoutsUponCheckin: boolean,
 }
