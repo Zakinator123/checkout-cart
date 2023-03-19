@@ -96,7 +96,8 @@ export const getConfigurationValidatorForBase = (base: Base) => {
         [CheckoutTableRequiredFieldName.checkedInField]: checkoutTableRequiredFieldIsPresentAndUnique,
         [CheckoutTableOptionalFieldName.dateCheckedOutField]: checkoutTableOptionalFieldIsPresentAndUnique,
         [CheckoutTableOptionalFieldName.dateDueField]: checkoutTableOptionalFieldIsPresentAndUnique,
-        [CheckoutTableOptionalFieldName.dateCheckedInField]: checkoutTableOptionalFieldIsPresentAndUnique
+        [CheckoutTableOptionalFieldName.dateCheckedInField]: checkoutTableOptionalFieldIsPresentAndUnique,
+        [CheckoutTableOptionalFieldName.cartGroupField]: checkoutTableOptionalFieldIsPresentAndUnique
         // deleteCheckoutsUponCheckIn: boolean().required()
     })
 
@@ -109,7 +110,8 @@ export const getConfigurationValidatorForBase = (base: Base) => {
         [CheckoutTableRequiredFieldName.checkedInField]: fieldExistsAndIsValidIfRequired(true) as any as Yup.MixedSchema<Field>,
         [CheckoutTableOptionalFieldName.dateCheckedOutField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>,
         [CheckoutTableOptionalFieldName.dateDueField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>,
-        [CheckoutTableOptionalFieldName.dateCheckedInField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>
+        [CheckoutTableOptionalFieldName.dateCheckedInField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>,
+        [CheckoutTableOptionalFieldName.cartGroupField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>
     });
 
     return {

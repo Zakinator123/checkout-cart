@@ -17,6 +17,7 @@ export const blankConfigurationState: ExtensionConfigurationIds = {
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: '',
     [CheckoutTableOptionalFieldName.dateDueField]: '',
     [CheckoutTableOptionalFieldName.dateCheckedInField]: '',
+    [CheckoutTableOptionalFieldName.cartGroupField]: '',
 };
 
 export const ExpectedAppConfigFieldTypeMapping = {
@@ -26,6 +27,7 @@ export const ExpectedAppConfigFieldTypeMapping = {
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: FieldType.DATE,
     [CheckoutTableOptionalFieldName.dateDueField]: FieldType.DATE,
     [CheckoutTableOptionalFieldName.dateCheckedInField]: FieldType.DATE,
+    [CheckoutTableOptionalFieldName.cartGroupField]: FieldType.NUMBER,
 }
 
 export const fieldTypeLinks = {
@@ -35,6 +37,7 @@ export const fieldTypeLinks = {
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: undefined,
     [CheckoutTableOptionalFieldName.dateDueField]: undefined,
     [CheckoutTableOptionalFieldName.dateCheckedInField]: undefined,
+    [CheckoutTableOptionalFieldName.cartGroupField]: undefined
 }
 
 export const configurationFormData: ExtensionConfigurationFormSchema = {
@@ -82,6 +85,11 @@ export const configurationFormData: ExtensionConfigurationFormSchema = {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedInField,
                         fieldPrompt: `(Optional) Enable to record date when items are checked in. 
                                   Select the date field representing when items are checked in.`,
+                    },
+                    {
+                        fieldName: CheckoutTableOptionalFieldName.cartGroupField,
+                        fieldPrompt: `(Optional) Enable to have cart group numbers generated for every checkout transaction. 
+                                  Select the number field representing cart group numbers.`,
                     }
                 ],
             }

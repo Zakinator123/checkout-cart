@@ -16,7 +16,8 @@ export enum CheckoutTableRequiredFieldName {
 export enum CheckoutTableOptionalFieldName {
     dateCheckedOutField = 'dateCheckedOutField',
     dateDueField = 'dateDueField',
-    dateCheckedInField = 'dateCheckedInField'
+    dateCheckedInField = 'dateCheckedInField',
+    cartGroupField = 'cartGroupField'
 }
 
 type ExtensionConfiguration<TableOrTableId, FieldOrFieldId> = {
@@ -29,6 +30,7 @@ type ExtensionConfiguration<TableOrTableId, FieldOrFieldId> = {
     [CheckoutTableOptionalFieldName.dateCheckedOutField]?: FieldOrFieldId,
     [CheckoutTableOptionalFieldName.dateDueField]?: FieldOrFieldId,
     [CheckoutTableOptionalFieldName.dateCheckedInField]?: FieldOrFieldId,
+    [CheckoutTableOptionalFieldName.cartGroupField]?: FieldOrFieldId
 }
 
 export type ExtensionConfigurationIds = ExtensionConfiguration<TableId, FieldId>;
