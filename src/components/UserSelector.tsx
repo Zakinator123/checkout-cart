@@ -1,4 +1,4 @@
-import {Record, Field} from "@airtable/blocks/models";
+import {Record} from "@airtable/blocks/models";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
 
@@ -24,18 +24,16 @@ loadCSSFromString(`
 
 const UserSelector = ({
                           currentTransactionUser,
-                          fieldsToShow,
                           selectUser,
                           viewportWidth
-                      }: { currentTransactionUser: Record | null; fieldsToShow: Field[]; viewportWidth: number; selectUser: () => Promise<void> }) =>
+                      }: { currentTransactionUser: Record | null; viewportWidth: number; selectUser: () => Promise<void> }) =>
     <div className='user-selector-container'>
         <Label> User Associated with Cart: </Label>
         <Box className='user-selector' border='thick'>
             {currentTransactionUser === null
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
-                    <RecordCard fields={fieldsToShow} width={viewportWidth - 130}
-                                record={currentTransactionUser}/>
+                    <RecordCard width={viewportWidth - 130} record={currentTransactionUser}/>
                 </Box>}
             <Tooltip
                 content="Search Users"

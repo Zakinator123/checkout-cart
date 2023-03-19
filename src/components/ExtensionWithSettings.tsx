@@ -5,10 +5,11 @@ import CheckoutWithCart from "./CheckoutWithCart";
 import {ExtensionConfigurationIds, ValidatedExtensionConfiguration} from "../types/ConfigurationTypes";
 import {blankConfigurationState} from "../utils/Constants";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationService";
+import {TransactionService} from "../services/TransactionService";
 
 export function ExtensionWithSettings(this: any) {
     const base = useBase();
-    const [isShowingSettings, setIsShowingSettings] = useState(true);
+    const [isShowingSettings, setIsShowingSettings] = useState(false);
     useSettingsButton(() => setIsShowingSettings(!isShowingSettings));
 
     const configurationValidator = getConfigurationValidatorForBase(base);
@@ -16,17 +17,23 @@ export function ExtensionWithSettings(this: any) {
     const globalConfig = useGlobalConfig();
     let extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfigurationIds | undefined;
     let validConfig: ValidatedExtensionConfiguration | undefined;
-    if (extensionConfig) {
+
+    if (!extensionConfig) {
+        extensionConfig = blankConfigurationState;
+        if (!isShowingSettings) setIsShowingSettings(true);
+    }
+
+    if (extensionConfig && !isShowingSettings) {
         try {
-            validConfig = configurationValidator.validateIdsAndTransformToTablesAndFieldsOrThrow(extensionConfig)
+            validConfig = configurationValidator.validateIdsAndTransformToTablesAndFieldsOrThrow(extensionConfig, false);
+            const transactionService = new TransactionService(validConfig);
+            return <CheckoutWithCart transactionService={transactionService} config={validConfig}/>;
         } catch (e) {
             setIsShowingSettings(true);
         }
-    } else {
-        extensionConfig = blankConfigurationState;
     }
 
-    return isShowingSettings || validConfig === undefined
-        ? <Settings currentConfiguration={extensionConfig} base={base} configurationValidator={configurationValidator.validateIdsAndTransformToTablesAndFieldsOrThrow}/>
-        : <CheckoutWithCart config={validConfig}/>;
+    return <Settings currentConfiguration={extensionConfig} base={base}
+                  configurationValidator={configurationValidator.validateIdsAndTransformToTablesAndFieldsOrThrow}
+                  globalConfig={globalConfig}/>
 }

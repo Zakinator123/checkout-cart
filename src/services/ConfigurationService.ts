@@ -2,8 +2,9 @@ import {FieldId, TableId} from "@airtable/blocks/types";
 import {Base, Field, FieldType, Table} from "@airtable/blocks/models";
 import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
 import {
-    ExtensionConfigurationIds,
+    CheckoutTableOptionalFieldName,
     CheckoutTableRequiredFieldName,
+    ExtensionConfigurationIds,
     TableName,
     ValidatedExtensionConfiguration
 } from "../types/ConfigurationTypes";
@@ -11,7 +12,10 @@ import * as Yup from "yup";
 import {mixed, string, TestContext} from "yup";
 
 
-const airtableIdIsDistinctFromOtherIdsInForm = (airtableId: string, context: TestContext) => {
+const airtableIdIsDistinctFromOtherIdsInForm = (airtableId: string | undefined, context: TestContext) => {
+    // Empty optional fields do not need to be distinct.
+    if (!airtableId) return true;
+
     const currentSchemaKey = context.path;
     let idsAreUnique: boolean = true;
     for (const schemaKey of Object.keys(context.parent)) {
@@ -35,40 +39,52 @@ export const getConfigurationValidatorForBase = (base: Base) => {
         .required()
         .test('UniqueField', 'Configured fields must be distinct.', airtableIdIsDistinctFromOtherIdsInForm)
 
+    const checkoutTableOptionalFieldIsPresentAndUnique = string()
+        .optional()
+        .test('UniqueField', 'Configured fields must be distinct.', airtableIdIsDistinctFromOtherIdsInForm)
+
     const tableExists = mixed((input): input is Table => input instanceof Table)
-        .strict(true)
         .transform(tableId => getTableByIdFromBase(base, tableId))
         .required()
 
-    const fieldExistsAndIsValid = string()
-        .strict(true)
-        .when(TableName.checkoutsTable, ([checkoutsTable], fieldSchema) => fieldSchema
-            .transform((fieldId: FieldId): Field | undefined => getFieldByIdFromTable(checkoutsTable, fieldId))
-            .required()
-            .test('Correct Field Type',
-                'The selected field type is incorrect.',
-                (field: any, context) => {
-                    const assertedField = field as Field;
-                    const requiredFieldName = context.path as CheckoutTableRequiredFieldName;
-                    return assertedField.type === ExpectedAppConfigFieldTypeMapping[requiredFieldName];
-                })
-            .test('Proper Field Type Link',
-                'The selected linked record field links to the wrong table.',
-                (field: any, context) => {
-                    const assertedField = field as Field;
-                    if (assertedField.config.type !== FieldType.MULTIPLE_RECORD_LINKS)
-                        return true;
-                    const requiredFieldName = context.path as CheckoutTableRequiredFieldName;
-                    const mustLinkTo: TableName | undefined = fieldTypeLinks[requiredFieldName];
-                    if (mustLinkTo === undefined)
-                        return false;
-                    console.log(`${requiredFieldName} must link to ${mustLinkTo} with id ${context.parent[mustLinkTo].id}`);
-                    const currentlyLinkedTo: TableId = assertedField.config.options.linkedTableId;
-                    console.log(`It currently links to ${currentlyLinkedTo}`);
-                    return assertedField.config.options.linkedTableId === context.parent[mustLinkTo].id;
-                }
+    const fieldExistsAndIsValidIfRequired = (fieldIsRequired: boolean) =>
+        mixed()
+            .when(TableName.checkoutsTable, ([checkoutsTable], fieldSchema) => fieldSchema
+                .transform((fieldId: FieldId | ''): Field | undefined => (fieldId === '' || fieldId === undefined) ? undefined : getFieldByIdFromTable(checkoutsTable, fieldId))
+                .test('Field Required.', 'Field is required.', (field: any) => !(fieldIsRequired && field === undefined))
+                .test('Correct Field Type',
+                    'The selected field type is incorrect.',
+                    (field: any, context) => {
+                        try {
+                            if (!fieldIsRequired && field === undefined || field === '') return true;
+                            const assertedField = field as Field;
+                            const requiredFieldName = context.path as CheckoutTableRequiredFieldName;
+                            return assertedField.type === ExpectedAppConfigFieldTypeMapping[requiredFieldName];
+                        } catch (e) {
+                            return false;
+                        }
+                    })
+                .test('Proper Field Type Link',
+                    'The selected linked record field links to the wrong table.',
+                    (field: any, context) => {
+                        try {
+                            if (!fieldIsRequired && (field === undefined || field === '')) return true;
+
+                            const assertedField = field as Field;
+                            if (assertedField.config.type !== FieldType.MULTIPLE_RECORD_LINKS)
+                                return true;
+                            const requiredFieldName = context.path as CheckoutTableRequiredFieldName;
+                            const mustLinkTo: TableName | undefined = fieldTypeLinks[requiredFieldName];
+                            if (mustLinkTo === undefined)
+                                return false;
+                            const currentlyLinkedTo: TableId = assertedField.config.options.linkedTableId;
+                            return currentlyLinkedTo === context.parent[mustLinkTo].id;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                )
             )
-        ) as any as Yup.MixedSchema<Field>
 
 
     const configurationIdsSchema = Yup.object({
@@ -78,9 +94,9 @@ export const getConfigurationValidatorForBase = (base: Base) => {
         [CheckoutTableRequiredFieldName.linkedInventoryTableField]: checkoutTableRequiredFieldIsPresentAndUnique,
         [CheckoutTableRequiredFieldName.linkedUserTableField]: checkoutTableRequiredFieldIsPresentAndUnique,
         [CheckoutTableRequiredFieldName.checkedInField]: checkoutTableRequiredFieldIsPresentAndUnique,
-        // [CheckoutTableOptionalFieldName.dateCheckedOutField]: string().optional(),
-        // [CheckoutTableOptionalFieldName.dateDueField]: string().optional(),
-        // [CheckoutTableOptionalFieldName.dateCheckedInField]: string().optional(),
+        [CheckoutTableOptionalFieldName.dateCheckedOutField]: checkoutTableOptionalFieldIsPresentAndUnique,
+        [CheckoutTableOptionalFieldName.dateDueField]: checkoutTableOptionalFieldIsPresentAndUnique,
+        [CheckoutTableOptionalFieldName.dateCheckedInField]: checkoutTableOptionalFieldIsPresentAndUnique
         // deleteCheckoutsUponCheckIn: boolean().required()
     })
 
@@ -88,15 +104,19 @@ export const getConfigurationValidatorForBase = (base: Base) => {
         [TableName.inventoryTable]: tableExists,
         [TableName.userTable]: tableExists,
         [TableName.checkoutsTable]: tableExists,
-        [CheckoutTableRequiredFieldName.linkedInventoryTableField]: fieldExistsAndIsValid,
-        [CheckoutTableRequiredFieldName.linkedUserTableField]: fieldExistsAndIsValid,
-        [CheckoutTableRequiredFieldName.checkedInField]: fieldExistsAndIsValid,
+        [CheckoutTableRequiredFieldName.linkedInventoryTableField]: fieldExistsAndIsValidIfRequired(true) as any as Yup.MixedSchema<Field>,
+        [CheckoutTableRequiredFieldName.linkedUserTableField]: fieldExistsAndIsValidIfRequired(true) as any as Yup.MixedSchema<Field>,
+        [CheckoutTableRequiredFieldName.checkedInField]: fieldExistsAndIsValidIfRequired(true) as any as Yup.MixedSchema<Field>,
+        [CheckoutTableOptionalFieldName.dateCheckedOutField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>,
+        [CheckoutTableOptionalFieldName.dateDueField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>,
+        [CheckoutTableOptionalFieldName.dateCheckedInField]: fieldExistsAndIsValidIfRequired(false) as any as Yup.MixedSchema<Field | undefined>
     });
 
     return {
-        validateIdsAndTransformToTablesAndFieldsOrThrow(configurationIds: ExtensionConfigurationIds): ValidatedExtensionConfiguration {
-            const validatedConfigIds = configurationIdsSchema.validateSync(configurationIds, {abortEarly: false})
-            return configurationTablesAndFieldsSchema.validateSync(validatedConfigIds, {abortEarly: false});
+        validateIdsAndTransformToTablesAndFieldsOrThrow(configurationIds: ExtensionConfigurationIds, abortEarly: boolean): ValidatedExtensionConfiguration {
+            const validatedConfigIds = configurationIdsSchema.validateSync(configurationIds, {abortEarly})
+            let validateSync = configurationTablesAndFieldsSchema.validateSync(validatedConfigIds, {abortEarly});
+            return validateSync;
         }
     }
 }

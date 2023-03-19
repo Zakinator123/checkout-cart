@@ -18,11 +18,12 @@ import Cart from "./Cart";
 import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
 import {TransactionData, TransactionType, transactionTypes,} from "../types/TransactionTypes";
-import {executeTransaction, validateTransaction} from "../services/TransactionService";
+import {TransactionService} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
 import {ValidatedExtensionConfiguration} from "../types/ConfigurationTypes";
+import toast from "react-hot-toast";
 
 loadCSSFromString(`
 .container {
@@ -38,7 +39,7 @@ loadCSSFromString(`
 }
 
 .submit-button {
-    background-color: green;
+    background-color: teal;
     color: white;
 }`);
 
@@ -46,7 +47,6 @@ loadCSSFromString(`
     TODO:
     In Extension:
         1. Restructure logic of executing transactions to allow for showing failures/successes per record
-        2. Create snackbar or some other notification mechanism to show results of transaction
         3. Add settings option for deleting checkouts instead of marking them as checked in (with warning).
         8. Send users a receipt of checked out gear at the end of the transaction?
         9. When selecting a member - show how many outstanding checkouts/overdue gear items they have
@@ -56,30 +56,26 @@ loadCSSFromString(`
         13. For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
 
     Not in Extension:
-        6. Add computed field for users to show how much value of gear they have checked out.
         4. Add computed field for checkouts being overdue.
         7. Finish overdue email automation
         5. Add views for grouping checkouts by user, by cart group, filtering only overdue
  */
 
-// TODO: Figure out how to clean up props signature to remove unnecessary key?
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function CheckoutWithCart({config}: {config: ValidatedExtensionConfiguration}) {
+function CheckoutWithCart({
+                              transactionService,
+                              config: {
+                                  inventoryTable,
+                                  userTable
+                              }
+                          }: { transactionService: TransactionService, config: ValidatedExtensionConfiguration }) {
 
     // Viewport Data
     const viewport = useViewport();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const viewportWidth = viewport.size.width;
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
     // TODO: Filter out unwanted fields (e.g. linked fields)
-    // eslint-disable-next-line no-undef
-    // @ts-ignore
-    // eslint-disable-next-line no-undef
     const userRecords = useRecords(userTable);
-    // eslint-disable-next-line no-undef
-    // @ts-ignore
-    // eslint-disable-next-line no-undef
     const inventoryTableRecords = useRecords(inventoryTable);
 
     // Transaction State
@@ -103,46 +99,43 @@ function CheckoutWithCart({config}: {config: ValidatedExtensionConfiguration}) {
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     // Transaction State Mutators
-    // @ts-ignore
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
-    // @ts-ignore
     const addRecordToCart = () => expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
         .then(record => {
             if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
         });
     const clearTransactionData = () => {
         // TODO: Leave cart records when there are errors associated with their transaction?
-        // setCartRecords([]);
         setTransactionDueDate(getDateTimeOneWeekFromToday())
         // TODO: If there are errors associated with the transaction, then perhaps the user should not be cleared?
         setTransactionUser(null);
     }
 
     const attemptToExecuteTransaction = () => {
-        const errorMessages = validateTransaction(transactionData);
+        const errorMessages = transactionService.validateTransaction(transactionData);
         if (errorMessages.length === 0) {
             setTransactionIsProcessing(true);
-            // @ts-ignore
-            // eslint-disable-next-line no-undef
-            executeTransaction(transactionData, checkoutsTable, removeRecordFromCart)
-                .then((settledPromises) => {
-                    // Show user notifications for settled Promises.
-                    console.log(settledPromises);
-                    clearTransactionData();
-                })
+
+            // Show user notifications for settled Promises.
+            const transactionPromise = transactionService.executeTransaction(transactionData, removeRecordFromCart)
+                .then(() => clearTransactionData())
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
+
+            toast.promise(transactionPromise, {
+                loading: 'Attempting to execute transaction.',
+                success: () => `${transactionTypes[transactionData.transactionType].label} successful!`,
+                error: 'An error occurred with the transaction.',
+            });
         } else setErrorDialogMessages(errorMessages)
     }
 
-    // @ts-ignore
     return <Box className="container" border="thick">
         <Heading>🚀 Check Out with Cart 🚀</Heading>
         <TransactionTypeSelector currentOption={transactionType} options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}/>
 
         <Cart viewportWidth={viewportWidth}
-              fieldsToShow={[]}
               cartRecords={cartRecords} addRecordToCart={addRecordToCart}
               removeRecordFromCart={removeRecordFromCart}/>
 
@@ -150,7 +143,6 @@ function CheckoutWithCart({config}: {config: ValidatedExtensionConfiguration}) {
             <UserSelector viewportWidth={viewportWidth}
                           currentTransactionUser={transactionUser}
                           selectUser={selectUserForTransaction}
-                          fieldsToShow={[]}
             />
 
             <FormField label="Due Date (Default is 1 week from today):">

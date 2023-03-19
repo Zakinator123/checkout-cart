@@ -13,6 +13,7 @@
         "@airtable/blocks": "1.15.0",
         "react": "^16.9.0",
         "react-dom": "^16.9.0",
+        "react-hot-toast": "^2.4.0",
         "yup": "^1.0.2"
     },
     "devDependencies": {

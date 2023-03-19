@@ -26,6 +26,9 @@ type ExtensionConfiguration<TableOrTableId, FieldOrFieldId> = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldOrFieldId,
     [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldOrFieldId,
     [CheckoutTableRequiredFieldName.checkedInField]: FieldOrFieldId,
+    [CheckoutTableOptionalFieldName.dateCheckedOutField]?: FieldOrFieldId,
+    [CheckoutTableOptionalFieldName.dateDueField]?: FieldOrFieldId,
+    [CheckoutTableOptionalFieldName.dateCheckedInField]?: FieldOrFieldId,
 }
 
 export type ExtensionConfigurationIds = ExtensionConfiguration<TableId, FieldId>;

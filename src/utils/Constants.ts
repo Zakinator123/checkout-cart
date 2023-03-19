@@ -14,6 +14,9 @@ export const blankConfigurationState: ExtensionConfigurationIds = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: '',
     [CheckoutTableRequiredFieldName.linkedUserTableField]: '',
     [CheckoutTableRequiredFieldName.checkedInField]: '',
+    [CheckoutTableOptionalFieldName.dateCheckedOutField]: '',
+    [CheckoutTableOptionalFieldName.dateDueField]: '',
+    [CheckoutTableOptionalFieldName.dateCheckedInField]: '',
 };
 
 export const ExpectedAppConfigFieldTypeMapping = {
@@ -67,17 +70,17 @@ export const configurationFormData: ExtensionConfigurationFormSchema = {
                 optionalFields: [
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedOutField,
-                        fieldPrompt: `(Optional) Enable if you want to track when items are checked out.
+                        fieldPrompt: `(Optional) Enable to record the date items are checked out.
                                   Select the date field representing when a checkout is created.`,
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateDueField,
-                        fieldPrompt: `(Optional) Enable if you want to track when checkouts are due.
+                        fieldPrompt: `(Optional) Enable to record the date items are due.
                                   Select the date field representing when items are due for return.`,
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedInField,
-                        fieldPrompt: `(Optional) Enable if you want to track when items are checked in. 
+                        fieldPrompt: `(Optional) Enable to record date when items are checked in. 
                                   Select the date field representing when items are checked in.`,
                     }
                 ],

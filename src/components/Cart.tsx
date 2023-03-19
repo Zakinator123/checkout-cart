@@ -1,6 +1,5 @@
 import React from "react";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Text, Tooltip} from "@airtable/blocks/ui";
-import {Field} from "@airtable/blocks/models";
 import {RecordId} from "@airtable/blocks/types";
 
 loadCSSFromString(`
@@ -35,10 +34,9 @@ loadCSSFromString(`
 const Cart = ({
                   addRecordToCart,
                   cartRecords,
-                  fieldsToShow,
                   removeRecordFromCart,
                   viewportWidth
-              }: { cartRecords: any[]; fieldsToShow: Field[]; viewportWidth: number; removeRecordFromCart: (recordId: RecordId) => void; addRecordToCart: () => Promise<void>; }) =>
+              }: { cartRecords: any[]; viewportWidth: number; removeRecordFromCart: (recordId: RecordId) => void; addRecordToCart: () => Promise<void>; }) =>
     <div className='cart-container'>
         <Label> Cart: </Label>
         <Box className="cart" border="thick">
@@ -46,7 +44,7 @@ const Cart = ({
                 ? <Text className="cart-item-record">The cart is currently empty.</Text>
                 : cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
-                        <RecordCard fields={fieldsToShow} width={viewportWidth - 130} record={record}/>
+                        <RecordCard width={viewportWidth - 130} record={record}/>
                         <Tooltip
                             content="Remove from Cart"
                             placementX={Tooltip.placements.CENTER}

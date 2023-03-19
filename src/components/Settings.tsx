@@ -6,13 +6,16 @@ import {ValidationError} from 'yup';
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {blankConfigurationState, configurationFormData} from "../utils/Constants";
 import {
-    ExtensionConfigurationIds,
     CheckoutTableOptionalFieldName,
     CheckoutTableRequiredFieldName,
-    TableName, ValidatedExtensionConfiguration
+    ExtensionConfigurationIds,
+    TableName,
+    ValidatedExtensionConfiguration
 } from "../types/ConfigurationTypes";
 import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
+import {GlobalConfig} from "@airtable/blocks/types";
+import toast from "react-hot-toast";
 
 loadCSSFromString(`
 .container {
@@ -34,9 +37,11 @@ const entireFormSubmissionErrorStateGenerator = (validationErrors: ValidationErr
             : {...currentFormErrorState};
     }, blankConfigurationState) as ExtensionConfigurationIds)
 
-const validateConfigAndGetValidationErrors = (configurationValidator: (appConfigIds: ExtensionConfigurationIds) => ValidatedExtensionConfiguration, configurationData: ExtensionConfigurationIds, formErrorStateGenerator: ((validationErrors: ValidationError[]) => ExtensionConfigurationIds)) => {
+const validateConfigAndGetValidationErrors = (configurationValidator: (appConfigIds: ExtensionConfigurationIds, abortEarly: boolean) => ValidatedExtensionConfiguration,
+                                              configurationData: ExtensionConfigurationIds,
+                                              formErrorStateGenerator: ((validationErrors: ValidationError[]) => ExtensionConfigurationIds)) => {
     try {
-        configurationValidator(configurationData);
+        configurationValidator(configurationData, false);
         return blankConfigurationState
     } catch (e) {
         let topLevelValidationError = e as ValidationError;
@@ -48,9 +53,8 @@ const validateConfigAndGetValidationErrors = (configurationValidator: (appConfig
 
 const selectorChangeFormErrorStateGenerator = (formErrorState: ExtensionConfigurationIds, fieldOrTableName: TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName) =>
     (validationErrors: ValidationError[]) => {
-        console.log(validationErrors);
         const fieldErrors = validationErrors.find((error: ValidationError) => error.path === fieldOrTableName) ?? {message: ''}
-        // TODO: Make this more readable.
+        // TODO: Make this more readable. This code updates the form error state to remove all errors for keys that don't have errors anymore.
         const fieldKeysWithErrorsThatAreNowEmpty = Object.keys(blankConfigurationState).filter(key => ![...new Set(validationErrors.map(error => error.path))].includes(key));
         const fieldsWithNoErrors = fieldKeysWithErrorsThatAreNowEmpty.reduce((currentKeys: Object, key: string) => ({
             ...currentKeys,
@@ -68,11 +72,13 @@ export const Settings = ({
                              currentConfiguration,
                              base,
                              configurationValidator,
+                             globalConfig
                          }:
                              {
                                  currentConfiguration: ExtensionConfigurationIds,
                                  base: Base,
-                                 configurationValidator: (configurationData: ExtensionConfigurationIds) => ValidatedExtensionConfiguration
+                                 configurationValidator: (configurationData: ExtensionConfigurationIds, abortEarly: boolean) => ValidatedExtensionConfiguration,
+                                 globalConfig: GlobalConfig
                              }) => {
     const [formState, setFormState] = useState(currentConfiguration);
     const [formErrorState, setFormErrorState] = useState(
@@ -80,8 +86,18 @@ export const Settings = ({
             ? blankConfigurationState
             : validateConfigAndGetValidationErrors(configurationValidator, currentConfiguration, entireFormSubmissionErrorStateGenerator)
     );
-
-    const submitForm = () => setFormErrorState(validateConfigAndGetValidationErrors(configurationValidator, formState, entireFormSubmissionErrorStateGenerator))
+    const submitForm = () => {
+        const formErrorState = validateConfigAndGetValidationErrors(configurationValidator, formState, entireFormSubmissionErrorStateGenerator);
+        setFormErrorState(formErrorState);
+        if (Object.entries(formErrorState).find(([, formErrorValue]) => formErrorValue !== '') === undefined) {
+            const submissionPromise = globalConfig.setAsync('extensionConfiguration', formState)
+            toast.promise(submissionPromise, {
+                loading: 'Attempting to save configuration.',
+                success: 'Configuration saved successfully!',
+                error: 'An error occurred saving the configuration.',
+            });
+        } else toast("There are error(s) with your configuration.")
+    }
     const selectorChangeHandler = (fieldOrTableName: TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, selectedOption: SelectOptionValue) => {
         const newFormState = {...formState, [fieldOrTableName]: selectedOption}
         setFormState(newFormState)
@@ -96,14 +112,16 @@ export const Settings = ({
         <div>
             <Label>Extension Configuration</Label>
             <Box padding='2rem' maxWidth={800} border='thick'>
+
                 {configurationFormData.schemaConfiguration.map(({
                                                                     tableName,
                                                                     tablePickerPrompt,
                                                                     requiredFields = [],
                                                                     optionalFields = []
                                                                 }, index) => {
-                        const jsx = (
-                            <FormField key={index} label={tablePickerPrompt}>
+                    const jsx = (
+                        <FormField key={index} label={tablePickerPrompt}>
+                            <Box border='default' borderColor={formErrorState[tableName] !== '' ? 'red': ''}>
                                 <Select
                                     options={base.tables.map(table => ({
                                         value: table.id,
@@ -114,15 +132,18 @@ export const Settings = ({
                                     onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
                                     value={formState[tableName]}
                                 />
-                                <Text textColor='red'>{formErrorState[tableName]}</Text>
-                            </FormField>
-                        )
+                            </Box>
+                            <Text textColor='red'>{formErrorState[tableName]}</Text>
+                        </FormField>
+                    )
 
-                        if ((requiredFields.length !== 0 || optionalFields.length !== 0) && formState[tableName] !== '') {
-                            return (
-                                <Box border='thick' padding='1rem'>
-                                    {jsx}
-                                    <br/>
+
+                    return (requiredFields.length !== 0 || optionalFields.length !== 0)
+                        ? (<Box key={index} maxWidth={500} border='thick' padding='1rem'>
+                                {jsx}
+                                <br/>
+
+                                {formState[tableName] !== '' && <>
                                     <FieldSelectorGroup
                                         required={true}
                                         table={base.getTable(formState[tableName])}
@@ -132,21 +153,23 @@ export const Settings = ({
                                         selectorChangeHandler={selectorChangeHandler}
                                     />
 
-                                    {/*<FieldSelectorGroup*/}
-                                    {/*    required={false}*/}
-                                    {/*    table={base.getTable(formState[tableName])}*/}
-                                    {/*    fields={optionalFields}*/}
-                                    {/*    currentFormState={formState}*/}
-                                    {/*/>*/}
-                                </Box>
-                            )
-                        } else {
-                            return jsx;
-                        }
+                                    <FieldSelectorGroup
+                                        required={false}
+                                        table={base.getTable(formState[tableName])}
+                                        fields={optionalFields}
+                                        formState={formState}
+                                        formErrorState={formErrorState}
+                                        selectorChangeHandler={selectorChangeHandler}/>
+                                </>}
+                            </Box>
+                        )
+                        : jsx;
 
-                    }
+                }
                 )}
-                <Button onClick={submitForm}>Submit Config</Button>
+                <br/>
+                <br/>
+                <Button onClick={submitForm}>Submit Extension Configuration</Button>
             </Box>
         </div>
     </Box>;
