@@ -11,9 +11,9 @@ export const allSettled = (promises: Promise<any>[]) => {
     return Promise.all(wrappedPromises);
 };
 
-export function mapValues<T extends object, V>(obj: T, valueMapper: (k: T[keyof T]) => V) {
+export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T, v: T[keyof T]) => V) {
     return Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => [k, valueMapper(v)])
+        Object.entries(obj).map(([k, v]) => [k, valueMapper(k as keyof T, v)])
     ) as { [K in keyof T]: V };
 }
 

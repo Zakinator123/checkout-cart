@@ -20,37 +20,56 @@ export enum CheckoutTableOptionalFieldName {
     cartGroupField = 'cartGroupField'
 }
 
-type ExtensionConfiguration<TableOrTableId, FieldOrFieldId> = {
-    [TableName.inventoryTable]: TableOrTableId,
-    [TableName.userTable]: TableOrTableId,
-    [TableName.checkoutsTable]: TableOrTableId,
-    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldOrFieldId,
-    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldOrFieldId,
-    [CheckoutTableRequiredFieldName.checkedInField]: FieldOrFieldId,
-    [CheckoutTableOptionalFieldName.dateCheckedOutField]?: FieldOrFieldId,
-    [CheckoutTableOptionalFieldName.dateDueField]?: FieldOrFieldId,
-    [CheckoutTableOptionalFieldName.dateCheckedInField]?: FieldOrFieldId,
-    [CheckoutTableOptionalFieldName.cartGroupField]?: FieldOrFieldId
+export enum OtherConfigurationKey {
+    deleteOpenCheckoutsUponCheckin = 'deleteOpenCheckoutsUponCheckin',
+    defaultNumberOfDaysFromTodayForDueDate = 'defaultNumberOfDaysFromTodayForDueDate',
+    premiumLicenseKey = 'premiumLicenseKey'
 }
 
-export type ExtensionConfigurationIds = ExtensionConfiguration<TableId, FieldId>;
-export type ValidatedExtensionConfiguration = ExtensionConfiguration<Table, Field>;
+export type TableAndFieldsConfigurationKey = TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName;
+
+type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOrErrorMessage, OptionalFieldOrFieldIdOrErrorMessage> = {
+    [TableName.inventoryTable]: TableOrTableIdOrErrorMessage,
+    [TableName.userTable]: TableOrTableIdOrErrorMessage,
+    [TableName.checkoutsTable]: TableOrTableIdOrErrorMessage,
+    [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldOrFieldIdOrErrorMessage,
+    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldOrFieldIdOrErrorMessage,
+    [CheckoutTableRequiredFieldName.checkedInField]: FieldOrFieldIdOrErrorMessage,
+    [CheckoutTableOptionalFieldName.dateCheckedOutField]: OptionalFieldOrFieldIdOrErrorMessage,
+    [CheckoutTableOptionalFieldName.dateDueField]: OptionalFieldOrFieldIdOrErrorMessage,
+    [CheckoutTableOptionalFieldName.dateCheckedInField]: OptionalFieldOrFieldIdOrErrorMessage,
+    [CheckoutTableOptionalFieldName.cartGroupField]: OptionalFieldOrFieldIdOrErrorMessage
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars,no-unused-vars
+type OtherExtensionConfiguration = {
+    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: boolean,
+    [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: number,
+    [OtherConfigurationKey.premiumLicenseKey]: string | undefined,
+}
+
+export type TablesAndFieldsConfigurationIds = TablesAndFieldsConfiguration<TableId, FieldId, string>;
+export type TablesAndFieldsConfigurationErrors = TablesAndFieldsConfiguration<string, string, string>;
+export type ValidatedTablesAndFieldsConfiguration = Readonly<TablesAndFieldsConfiguration<Table, Field, Field | undefined>>;
+
+export type ValidationResult = {errorsPresent: true, errors: TablesAndFieldsConfigurationErrors}
+    | {errorsPresent: false, configuration: ValidatedTablesAndFieldsConfiguration}
 
 export type FieldConfiguration = {
-    fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
-    fieldPrompt: string,
+    readonly fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
+    readonly fieldPrompt: string,
 }
 
 export type TableConfiguration = {
-    tableName: TableName,
-    tablePickerPrompt: string,
-    requiredFields?: Array<FieldConfiguration>,
-    optionalFields?: Array<FieldConfiguration>,
+    readonly tableName: TableName,
+    readonly tablePickerPrompt: string,
+    readonly requiredFields?: ReadonlyArray<FieldConfiguration>,
+    readonly optionalFields?: ReadonlyArray<FieldConfiguration>,
 }
 
-export type SchemaConfiguration = Array<TableConfiguration>;
+export type SchemaConfiguration = ReadonlyArray<TableConfiguration>;
 
 export type ExtensionConfigurationFormSchema = {
-    schemaConfiguration: SchemaConfiguration,
-    deleteCheckoutsUponCheckin: boolean,
+    readonly schemaConfiguration: SchemaConfiguration,
+    readonly deleteCheckoutsUponCheckin: boolean,
 }

@@ -3,7 +3,10 @@ module.exports = {
         browser: true,
         es6: true,
     },
-    extends: ['eslint:recommended', 'plugin:react/recommended'],
+    extends: [
+        'eslint:recommended',
+        'plugin:react/recommended',
+    ],
     globals: {
         Atomics: 'readonly',
         SharedArrayBuffer: 'readonly',
@@ -19,7 +22,7 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'react', 'react-hooks'],
     rules: {
-        'no-unused-vars': 'off',
+        'guard-for-in': 'error',
         "no-restricted-globals": [
             "error",
             "event",

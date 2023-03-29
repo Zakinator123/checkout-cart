@@ -7,7 +7,7 @@ import {
 import {Field, FieldType, Record, Table} from "@airtable/blocks/models";
 import {RecordId} from "@airtable/blocks/types";
 import {allSettled} from "../utils/RandomUtils";
-import {ValidatedExtensionConfiguration} from "../types/ConfigurationTypes";
+import {ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
 
 export class TransactionService {
     private readonly checkoutsTable: Table;
@@ -28,7 +28,7 @@ export class TransactionService {
                     linkedInventoryTableField,
                     linkedUserTableField,
                     cartGroupField
-                }: ValidatedExtensionConfiguration) {
+                }: ValidatedTablesAndFieldsConfiguration) {
         this.checkoutsTable = checkoutsTable;
         this.checkedInField = checkedInField;
         this.dateCheckedInField = dateCheckedInField;

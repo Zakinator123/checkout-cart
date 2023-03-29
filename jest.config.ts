@@ -10,7 +10,8 @@ const config: Config = {
     '!**/vendor/**',
   ],
   coverageDirectory: "test/coverage",
-  coverageReporters: ['text', 'text-summary', 'json-summary']
+  coverageReporters: ['text', 'text-summary', 'json-summary'],
+  testMatch: ['**/test/**/*.test.{ts,tsx}']
 };
 
 export default config;

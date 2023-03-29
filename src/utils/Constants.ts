@@ -1,13 +1,13 @@
 import {FieldType} from "@airtable/blocks/models";
 import {
-    ExtensionConfigurationIds,
+    TablesAndFieldsConfigurationIds,
     CheckoutTableOptionalFieldName,
     CheckoutTableRequiredFieldName,
     ExtensionConfigurationFormSchema,
-    TableName
+    TableName, TablesAndFieldsConfigurationErrors
 } from "../types/ConfigurationTypes";
 
-export const blankConfigurationState: ExtensionConfigurationIds = {
+export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> = {
     [TableName.inventoryTable]: '',
     [TableName.userTable]: '',
     [TableName.checkoutsTable]: '',
@@ -20,7 +20,11 @@ export const blankConfigurationState: ExtensionConfigurationIds = {
     [CheckoutTableOptionalFieldName.cartGroupField]: '',
 };
 
-export const ExpectedAppConfigFieldTypeMapping = {
+export const combinedRequiredConfigKeys = {...TableName, ...CheckoutTableRequiredFieldName};
+export const combinedConfigKeys = {...combinedRequiredConfigKeys, ...CheckoutTableOptionalFieldName}
+export const blankErrorState: Readonly<TablesAndFieldsConfigurationErrors> = blankConfigurationState;
+
+export const ExpectedAppConfigFieldTypeMapping: Readonly<Record<CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, FieldType>> = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldType.MULTIPLE_RECORD_LINKS,
     [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldType.MULTIPLE_RECORD_LINKS,
     [CheckoutTableRequiredFieldName.checkedInField]: FieldType.CHECKBOX,
@@ -30,7 +34,7 @@ export const ExpectedAppConfigFieldTypeMapping = {
     [CheckoutTableOptionalFieldName.cartGroupField]: FieldType.NUMBER,
 }
 
-export const fieldTypeLinks = {
+export const fieldTypeLinks: Readonly<Record<CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, TableName | undefined>> = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: TableName.inventoryTable,
     [CheckoutTableRequiredFieldName.linkedUserTableField]: TableName.userTable,
     [CheckoutTableRequiredFieldName.checkedInField]: undefined,

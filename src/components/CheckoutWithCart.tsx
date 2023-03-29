@@ -22,7 +22,7 @@ import {TransactionService} from "../services/TransactionService";
 import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
-import {ValidatedExtensionConfiguration} from "../types/ConfigurationTypes";
+import {ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
 import toast from "react-hot-toast";
 
 loadCSSFromString(`
@@ -43,38 +43,20 @@ loadCSSFromString(`
     color: white;
 }`);
 
-/*
-    TODO:
-    In Extension:
-        1. Restructure logic of executing transactions to allow for showing failures/successes per record
-        3. Add settings option for deleting checkouts instead of marking them as checked in (with warning).
-        8. Send users a receipt of checked out gear at the end of the transaction?
-        9. When selecting a member - show how many outstanding checkouts/overdue gear items they have
-        10. Create a cart group for every transaction
-        11. Make "delete checkouts upon checkin" configurable.
-        12. What happens when records limit is reached and a checkouts is created?
-        13. For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
-
-    Not in Extension:
-        4. Add computed field for checkouts being overdue.
-        7. Finish overdue email automation
-        5. Add views for grouping checkouts by user, by cart group, filtering only overdue
- */
-
 function CheckoutWithCart({
                               transactionService,
                               config: {
                                   inventoryTable,
                                   userTable
                               }
-                          }: { transactionService: TransactionService, config: ValidatedExtensionConfiguration }) {
+                          }: { transactionService: TransactionService, config: ValidatedTablesAndFieldsConfiguration }) {
 
     // Viewport Data
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
-    // TODO: Filter out unwanted fields (e.g. linked fields)
+    // TODO: Filter out unwanted fields (e.g. reverse linked fields?)
     const userRecords = useRecords(userTable);
     const inventoryTableRecords = useRecords(inventoryTable);
 
