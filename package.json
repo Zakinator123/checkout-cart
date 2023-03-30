@@ -10,10 +10,11 @@
         "pre-commit": "npm run lint && npm run type-check && npm run generate-coverage-badge"
     },
     "dependencies": {
-        "@airtable/blocks": "1.15.0",
+        "@airtable/blocks": "1.16.0",
         "react": "^16.9.0",
         "react-dom": "^16.9.0",
-        "react-hot-toast": "^2.4.0"
+        "react-hot-toast": "^2.4.0",
+        "react-tabs": "4.2.1"
     },
     "devDependencies": {
         "@airtable/blocks-testing": "^0.0.5",
@@ -21,6 +22,7 @@
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^12.1.5",
         "@testing-library/user-event": "^14.4.3",
+        "@types/react-tabs": "^5.0.5",
         "@typescript-eslint/eslint-plugin": "^5.54.0",
         "@typescript-eslint/parser": "^5.54.0",
         "eslint": "^6.3.0",

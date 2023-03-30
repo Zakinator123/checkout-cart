@@ -5,7 +5,6 @@ import {
     Button,
     expandRecordPickerAsync,
     FormField,
-    Heading,
     Input,
     loadCSSFromString,
     Loader,
@@ -47,7 +46,8 @@ function CheckoutWithCart({
                               transactionService,
                               config: {
                                   inventoryTable,
-                                  userTable
+                                  userTable,
+                                  dateDueField,
                               }
                           }: { transactionService: TransactionService, config: ValidatedTablesAndFieldsConfiguration }) {
 
@@ -55,7 +55,7 @@ function CheckoutWithCart({
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
-
+    console.log(viewportWidth);
     // TODO: Filter out unwanted fields (e.g. reverse linked fields?)
     const userRecords = useRecords(userTable);
     const inventoryTableRecords = useRecords(inventoryTable);
@@ -112,8 +112,7 @@ function CheckoutWithCart({
         } else setErrorDialogMessages(errorMessages)
     }
 
-    return <Box className="container" border="thick">
-        <Heading>🚀 Check Out with Cart 🚀</Heading>
+    return <Box className="container">
         <TransactionTypeSelector currentOption={transactionType} options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}/>
 
@@ -127,10 +126,13 @@ function CheckoutWithCart({
                           selectUser={selectUserForTransaction}
             />
 
-            <FormField label="Due Date (Default is 1 week from today):">
-                <Input type='datetime-local' value={getIsoDateString(transactionDueDate)}
-                       onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}/>
-            </FormField></>
+            {dateDueField !== undefined &&
+                <FormField label="Due Date (Default is 1 week from today):">
+                    <Input type='datetime-local' value={getIsoDateString(transactionDueDate)}
+                           onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}/>
+                </FormField>
+            }
+        </>
         }
 
         <Button

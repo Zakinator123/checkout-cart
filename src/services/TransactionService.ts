@@ -47,10 +47,8 @@ export class TransactionService {
                                                                                 }) => {
         let errorMessages: Array<string> = [];
         if (cartRecords.length === 0) errorMessages.push("Please populate the cart with items to execute a transaction.");
-        if (transactionType === transactionTypes.checkout.value) {
-            if (transactionUser === null) errorMessages.push("Please select a member to associate with the transaction.");
-            // TODO: Make this configurable or remove altogether?
-            // if ((transactionDueDate) < convertUTCDateToLocalDate(new Date())) errorMessages.push("Please change the due date to be in the future.")
+        if (transactionType === transactionTypes.checkout.value && transactionUser === null) {
+            errorMessages.push("Please select a member to associate with the transaction.");
         }
         return errorMessages;
     }
@@ -122,7 +120,7 @@ export class TransactionService {
     }
 
     async executeTransaction(transactionData: TransactionData, removeRecordFromCart: (recordId: RecordId) => void) {
-        const cartGroupNumber = Math.floor(Math.random() * 1000000);
+        const cartGroupNumber = Math.floor(Math.random() * 1000000000);
 
         await allSettled(
             transactionData.cartRecords.map(cartRecord =>

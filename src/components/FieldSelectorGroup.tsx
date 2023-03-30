@@ -35,6 +35,7 @@ const getValidFieldOptionsForFieldSelector = (table: Table,
     };
 
     if (!atLeastOneFieldIsEnabled) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         const message = (mustLinkTo ?? false)
             ? `ERROR: No fields exist that link to the configured ${mustLinkTo} table`
             : `ERROR: No fields exist of type ${expectedFieldType}`;

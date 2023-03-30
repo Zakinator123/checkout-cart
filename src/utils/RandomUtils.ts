@@ -1,7 +1,3 @@
-import {Table} from "@airtable/blocks/models";
-
-export const getTableFields = (table: Table, fieldNames: string[]) => fieldNames.map(fieldName => table.getField(fieldName));
-
 // "Polyfill" for Promise.allSettled
 export const allSettled = (promises: Promise<any>[]) => {
     let wrappedPromises = promises.map(p => Promise.resolve(p)
@@ -16,9 +12,3 @@ export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T,
         Object.entries(obj).map(([k, v]) => [k, valueMapper(k as keyof T, v)])
     ) as { [K in keyof T]: V };
 }
-
-type Entries<T> = {
-    [K in keyof T]: [K, T[K]];
-}[keyof T][];
-
-export const getEntries = <T extends object>(obj: T) => Object.entries(obj) as Entries<T>;

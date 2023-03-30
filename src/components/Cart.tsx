@@ -44,7 +44,7 @@ const Cart = ({
                 ? <Text className="cart-item-record">The cart is currently empty.</Text>
                 : cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
-                        <RecordCard width={viewportWidth - 130} record={record}/>
+                        <RecordCard width={viewportWidth > 1050 ? viewportWidth - 350 : viewportWidth - 250} record={record}/>
                         <Tooltip
                             content="Remove from Cart"
                             placementX={Tooltip.placements.CENTER}

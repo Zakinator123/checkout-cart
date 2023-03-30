@@ -4,7 +4,7 @@ import {
     CheckoutTableOptionalFieldName,
     CheckoutTableRequiredFieldName,
     ExtensionConfigurationFormSchema,
-    TableName, TablesAndFieldsConfigurationErrors
+    TableName, TablesAndFieldsConfigurationErrors, OtherExtensionConfiguration, OtherConfigurationKey
 } from "../types/ConfigurationTypes";
 
 export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> = {
@@ -19,6 +19,12 @@ export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> 
     [CheckoutTableOptionalFieldName.dateCheckedInField]: '',
     [CheckoutTableOptionalFieldName.cartGroupField]: '',
 };
+
+export const defaultOtherConfigurationState: Readonly<OtherExtensionConfiguration> = {
+    [OtherConfigurationKey.premiumLicenseVerified]: false,
+    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: false,
+    [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: 7,
+}
 
 export const combinedRequiredConfigKeys = {...TableName, ...CheckoutTableRequiredFieldName};
 export const combinedConfigKeys = {...combinedRequiredConfigKeys, ...CheckoutTableOptionalFieldName}

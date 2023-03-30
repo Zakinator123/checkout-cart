@@ -96,7 +96,7 @@ const checkIfRequiredIdsPresentAndAllIdsAreUnique: (configurationIds: TablesAndF
     let errorsPresent = false;
     const potentialErrorSet: TablesAndFieldsConfigurationErrors = mapValues(configurationIds,
         (configKey, tableOrFieldId) => {
-            if (configKey in combinedRequiredConfigKeys && tableOrFieldId === '') {
+            if (configKey in combinedRequiredConfigKeys && tableOrFieldId === '' || tableOrFieldId === undefined) {
                 errorsPresent = true;
                 return 'This value is required.';
             }

@@ -1,10 +1,28 @@
 import React, {useState} from "react";
-import {Box, Button, FormField, Heading, Label, loadCSSFromString, Select, Text} from "@airtable/blocks/ui";
+import {
+    Box,
+    Button,
+    FormField,
+    Heading,
+    Input,
+    Label,
+    loadCSSFromString,
+    Select,
+    Switch,
+    Text
+} from "@airtable/blocks/ui";
 import {Base} from "@airtable/blocks/models";
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
-import {blankConfigurationState, blankErrorState, configurationFormData} from "../utils/Constants";
 import {
-    TableAndFieldsConfigurationKey, TablesAndFieldsConfigurationErrors,
+    blankConfigurationState,
+    blankErrorState,
+    configurationFormData,
+    defaultOtherConfigurationState
+} from "../utils/Constants";
+import {
+    OtherConfigurationKey,
+    TableAndFieldsConfigurationKey,
+    TablesAndFieldsConfigurationErrors,
     TablesAndFieldsConfigurationIds,
     ValidationResult
 } from "../types/ConfigurationTypes";
@@ -45,27 +63,29 @@ function getNewFormErrorStateForSelectorChange(currentFormErrorState: Readonly<T
 export const Settings = ({
                              currentConfiguration,
                              base,
-                             configurationValidator,
+                             validateTablesAndFields,
                              globalConfig
                          }:
                              {
                                  currentConfiguration: TablesAndFieldsConfigurationIds,
                                  base: Base,
-                                 configurationValidator: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
+                                 validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
                                  globalConfig: GlobalConfig
                              }) => {
-    const [formState, setFormState] = useState(currentConfiguration);
+    const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentConfiguration);
     const [currentFormErrorState, setFormErrorState] = useState(
-        currentConfiguration === blankConfigurationState ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, configurationValidator));
+        currentConfiguration === blankConfigurationState ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
+    const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(defaultOtherConfigurationState);
+
 
     const submitForm = () => {
-        const validationResult = configurationValidator(formState);
+        const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
         if (validationResult.errorsPresent) {
             setFormErrorState(validationResult.errors);
             toast("There are error(s) with your configuration.");
         } else {
             setFormErrorState(blankErrorState);
-            const submissionPromise = globalConfig.setAsync('extensionConfiguration', formState)
+            const submissionPromise = globalConfig.setAsync('extensionConfiguration', tablesAndFieldsFormState)
             toast.promise(submissionPromise, {
                 loading: 'Attempting to save configuration.',
                 success: 'Configuration saved successfully!',
@@ -75,15 +95,14 @@ export const Settings = ({
     }
 
     const selectorChangeHandler = (fieldOrTableName: TableAndFieldsConfigurationKey, selectedOption: SelectOptionValue) => {
-        const newFormState = {...formState, [fieldOrTableName]: selectedOption}
-        setFormState(newFormState)
-        const formValidationErrors = validateFormAndGetFormValidationErrors(newFormState, configurationValidator);
+        const newFormState = {...tablesAndFieldsFormState, [fieldOrTableName]: selectedOption}
+        setTablesAndFieldsFormState(newFormState)
+        const formValidationErrors = validateFormAndGetFormValidationErrors(newFormState, validateTablesAndFields);
         const newFormErrorState = getNewFormErrorStateForSelectorChange(currentFormErrorState, fieldOrTableName, formValidationErrors);
         setFormErrorState(newFormErrorState)
     }
 
-    return <Box className='container' border='thick'>
-        <Heading>🚀 Check Out with Cart 🚀</Heading>
+    return <Box className='container'>
         <Heading as='h4'>Settings/Setup</Heading>
         <ConfigurationInstructions/>
 
@@ -108,7 +127,7 @@ export const Settings = ({
                                         name={tableName}
                                         id={tableName}
                                         onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
-                                        value={formState[tableName]}
+                                        value={tablesAndFieldsFormState[tableName]}
                                     />
                                 </Box>
                                 <Text textColor='red'>{currentFormErrorState[tableName]}</Text>
@@ -121,21 +140,21 @@ export const Settings = ({
                                     {jsx}
                                     <br/>
 
-                                    {formState[tableName] !== '' && <>
+                                    {tablesAndFieldsFormState[tableName] !== '' && <>
                                         <FieldSelectorGroup
                                             required={true}
-                                            table={base.getTable(formState[tableName])}
+                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
                                             fields={requiredFields}
-                                            formState={formState}
+                                            formState={tablesAndFieldsFormState}
                                             formErrorState={currentFormErrorState}
                                             selectorChangeHandler={selectorChangeHandler}
                                         />
 
                                         <FieldSelectorGroup
                                             required={false}
-                                            table={base.getTable(formState[tableName])}
+                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
                                             fields={optionalFields}
-                                            formState={formState}
+                                            formState={tablesAndFieldsFormState}
                                             formErrorState={currentFormErrorState}
                                             selectorChangeHandler={selectorChangeHandler}/>
                                     </>}
@@ -147,7 +166,35 @@ export const Settings = ({
                 )}
                 <br/>
                 <br/>
-                <Button onClick={submitForm}>Submit Extension Configuration</Button>
+                <FormField label='Delete open checkouts upon check-in'>
+                    <Switch
+                        value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin}
+                        onChange={newValue => setOtherConfigurationFormState({
+                            ...otherConfigurationFormState,
+                            [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: newValue
+                        })}
+                        label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin ? 'Enabled' : 'Disabled'}
+                    />
+                </FormField>
+                <br/>
+                <br/>
+
+                <FormField label='Default number of days from today for due date field (only applicable if enabled)'>
+                    <Input
+                        value={tablesAndFieldsFormState.dateDueField === '' ? '': otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
+                        onChange={e => setOtherConfigurationFormState({
+                            ...otherConfigurationFormState,
+                            [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: Number(e.target.value)
+                        })}
+                        placeholder='N/A: Enable the "Date Due" field to populate this.'
+                        type='number'
+                        min={0}
+                        disabled={tablesAndFieldsFormState.dateDueField === ''}
+                    />
+                </FormField>
+                <br/>
+                <br/>
+                <Button onClick={submitForm}>Save Configuration</Button>
             </Box>
         </div>
     </Box>;

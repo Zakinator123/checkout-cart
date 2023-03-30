@@ -23,7 +23,7 @@ export enum CheckoutTableOptionalFieldName {
 export enum OtherConfigurationKey {
     deleteOpenCheckoutsUponCheckin = 'deleteOpenCheckoutsUponCheckin',
     defaultNumberOfDaysFromTodayForDueDate = 'defaultNumberOfDaysFromTodayForDueDate',
-    premiumLicenseKey = 'premiumLicenseKey'
+    premiumLicenseVerified = 'premiumLicenseVerified'
 }
 
 export type TableAndFieldsConfigurationKey = TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName;
@@ -41,11 +41,15 @@ type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOr
     [CheckoutTableOptionalFieldName.cartGroupField]: OptionalFieldOrFieldIdOrErrorMessage
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars,no-unused-vars
-type OtherExtensionConfiguration = {
+export type OtherExtensionConfiguration = {
+    [OtherConfigurationKey.premiumLicenseVerified]: boolean,
     [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: boolean,
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: number,
-    [OtherConfigurationKey.premiumLicenseKey]: string | undefined,
+}
+
+export type ExtensionConfiguration = {
+    tableAndFieldIds: TablesAndFieldsConfigurationIds,
+    otherConfiguration: OtherExtensionConfiguration,
 }
 
 export type TablesAndFieldsConfigurationIds = TablesAndFieldsConfiguration<TableId, FieldId, string>;

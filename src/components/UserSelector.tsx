@@ -33,7 +33,7 @@ const UserSelector = ({
             {currentTransactionUser === null
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
-                    <RecordCard width={viewportWidth - 130} record={currentTransactionUser}/>
+                    <RecordCard width={viewportWidth > 1050 ? viewportWidth - 350 : viewportWidth - 250} record={currentTransactionUser}/>
                 </Box>}
             <Tooltip
                 content="Search Users"
