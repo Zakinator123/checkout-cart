@@ -1,31 +1,13 @@
-import {Heading, loadCSSFromString, useBase, useGlobalConfig} from '@airtable/blocks/ui';
-import React, {useState} from 'react';
+import {Box, Heading, Icon, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
+import React, {Suspense} from 'react';
 import {Settings} from "./Settings";
-import CheckoutWithCart from "./CheckoutWithCart";
-import {TablesAndFieldsConfigurationIds, ValidatedTablesAndFieldsConfiguration,} from "../types/ConfigurationTypes";
-import {blankConfigurationState} from "../utils/Constants";
-import {TransactionService} from "../services/TransactionService";
+import {TablesAndFieldsConfigurationIds,} from "../types/ConfigurationTypes";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationValidatorService";
 // @ts-ignore
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-
-/*
-    TODO:
-        - Make "delete checkouts upon checkin" configurable.
-        - Make default due date configurable and hide date field if feature flag is off
-        - Add premium license option/logic for doing checkouts with 5+ items.
-        ---
-        - How to deal with inventories where there are quantities of items??
-        - Increase test coverage of extension
-        - Show failures/successes per record for executeTransaction.
-        - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
-        - Make config explanation menu minimizable
-        - Investigate use of base template instead of "create schema for me" button?
-        - Add in a "How this extension works" description.
-        - What happens when records limit is reached and a checkouts is created?
-        - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
-        - Add in developer info/feature request/donate link to the extension
- */
+import CheckoutWithCartWrapper from "./CheckoutWithCartWrapper";
+import {About} from "./About";
+import {Premium} from "./Premium";
 
 loadCSSFromString(`
 .container {
@@ -36,13 +18,13 @@ loadCSSFromString(`
     justify-content: center;
     background-color: white;
     overflow: auto;
-    gap: 2rem;
+    gap: 1.5rem;
     height: 100%;
 }
 
 .react-tabs {
     -webkit-tap-highlight-color: transparent;
-    width: 90%;
+    width: 80%
 }
 
 .react-tabs__tab-list {
@@ -85,14 +67,15 @@ loadCSSFromString(`
 }
 
 .react-tabs__tab-panel--selected {
-    display: block;
+    display: flex;
+    justify-content: center;
     border-color: black;
     border-left: 1px solid #aaa;
     border-right: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
 }
 
-@media (min-width: 386px) {
+@media (min-width: 515px) {
     .react-tabs__tab-list {
         flex-direction: row;
         padding: 0;
@@ -106,69 +89,72 @@ loadCSSFromString(`
         border-radius: 5px 5px 0 0;
     }
 }
+
+.tab-loading-state {
+        display: flex;
+        align-content: center;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        padding: 5rem;
+}
 `);
+
+/*
+    TODO:
+        - Make "delete checkouts upon checkin" configurable.
+        - Make default due date configurable and hide date field if feature flag is off
+        - Add premium license option/logic for doing checkouts with 5+ items.
+        ---
+        - How to deal with inventories where there are quantities of items??
+        - Increase test coverage of extension
+        - Show failures/successes per record for executeTransaction.
+        - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
+        - Make config explanation menu minimizable
+        - Investigate use of base template instead of "create schema for me" button?
+        - Add in a "How this extension works" description.
+        - What happens when records limit is reached and a checkouts is created?
+        - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
+        - Add in developer info/feature request/donate link to the extension
+ */
 
 export function ExtensionWithSettings() {
     const base = useBase();
-    const [tabIndex, setTabIndex] = useState(1);
     const globalConfig = useGlobalConfig();
 
     const configurationValidator = getConfigurationValidatorForBase(base);
-    let extensionConfig = globalConfig.get('extensionConfiguration') as TablesAndFieldsConfigurationIds | undefined;
+    const extensionConfig = globalConfig.get('extensionConfiguration') as TablesAndFieldsConfigurationIds | undefined;
+    const isPremiumUser: boolean = (globalConfig.get('isPremiumUser') as boolean | undefined) ?? false;
 
-    type ConfigurationState =
-        { state: 'empty', configuration: TablesAndFieldsConfigurationIds }
-        | { state: 'invalid', configuration: TablesAndFieldsConfigurationIds }
-        | { state: 'valid', configuration: TablesAndFieldsConfigurationIds, tablesAndFields: ValidatedTablesAndFieldsConfiguration };
-
-    const configurationState: ConfigurationState = (() => {
-        if (extensionConfig === undefined) {
-            return {state: 'empty', configuration: blankConfigurationState};
-        } else {
-            const validationResult = configurationValidator(extensionConfig);
-            return validationResult.errorsPresent ? {
-                state: 'invalid',
-                configuration: extensionConfig
-            } : {
-                state: 'valid',
-                configuration: extensionConfig,
-                tablesAndFields: validationResult.configuration
-            };
-        }
-    })();
-
-
-    const getCheckOutWithCartTabComponent = () => {
-        switch (configurationState.state) {
-            case "invalid":
-                return <div>Something has changed and your configuration is now invalid. Please correct it in the
-                    settings page.</div>;
-            case "valid":
-                return <CheckoutWithCart transactionService={new TransactionService(configurationState.tablesAndFields)}
-                                         config={configurationState.tablesAndFields}/>;
-            case 'empty':
-                return <div>You must configure this component under the settings menu before you can use it!.</div>;
-        }
-    }
-
+    console.log(`Network status: ${navigator.onLine}`);
     return <div className='container'>
-        <Heading>🚀 Check Out with Cart 🚀</Heading>
-        <Tabs selectedIndex={tabIndex} onSelect={(index: number) => setTabIndex(index)}>
+        <Heading>🚀 Checkout Cart 🚀</Heading>
+        <Tabs defaultIndex={extensionConfig === undefined ? 3 : 0}>
             <TabList>
-                <Tab>Checkout Interface</Tab>
-                <Tab>Settings</Tab>
-                <Tab>How This Extension Works</Tab>
-                <Tab>Upgrade to Premium</Tab>
+                <Tab>🛒 Checkout Cart </Tab>
+                <Tab><Icon name="cog" size={12}/> Settings</Tab>
+                <Tab><Icon name="premium" size={12}/> Premium <Icon fillColor='black' name="premium" size={12}/></Tab>
+                <Tab><Icon name="help" size={12}/> About</Tab>
             </TabList>
-            <TabPanel>{getCheckOutWithCartTabComponent()}</TabPanel>
             <TabPanel>
-                <Settings currentConfiguration={configurationState.configuration}
+                <Suspense fallback={
+                    <Box className='tab-loading-state'>
+                        <Loader scale={0.5}/>
+                    </Box>
+                }>
+                    <CheckoutWithCartWrapper
+                        extensionConfiguration={extensionConfig}
+                        configurationValidator={configurationValidator}/>
+                </Suspense>
+            </TabPanel>
+            <TabPanel>
+                <Settings currentConfiguration={extensionConfig}
                           base={base}
                           validateTablesAndFields={configurationValidator}
                           globalConfig={globalConfig}/>
             </TabPanel>
-            <TabPanel></TabPanel>
-            <TabPanel></TabPanel>
+            <TabPanel><Premium isPremiumUser={isPremiumUser} globalConfig={globalConfig}/></TabPanel>
+            <TabPanel><About/></TabPanel>
         </Tabs>
-    </div>;
+    </div>
 }

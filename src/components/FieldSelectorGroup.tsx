@@ -1,9 +1,10 @@
-import {Box, FormField, Label, Select, Text} from "@airtable/blocks/ui";
+import {Box, FormField, Select, Text} from "@airtable/blocks/ui";
 import {Field, FieldType, Table} from "@airtable/blocks/models";
 import React from "react";
 import {TableId} from "@airtable/blocks/types";
 import {FieldConfiguration, TableName, TablesAndFieldsConfigurationIds} from "../types/ConfigurationTypes";
 import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
+import {SelectorLabelWithTooltip} from "./SelectorLabelWithTooltip";
 
 const getValidFieldOptionsForFieldSelector = (table: Table,
                                               expectedFieldType: FieldType,
@@ -48,50 +49,52 @@ const getValidFieldOptionsForFieldSelector = (table: Table,
         return fieldIsRequired ? [errorOption] : [disabledOption, errorOption];
     }
 
-        return !fieldIsRequired
-            ? [{
-                disabled: false,
-                label: 'DISABLED - Extension Will Not Use This Field',
-                value: ''
-            }, ...options]
-            : options;
-    }
+    return !fieldIsRequired
+        ? [{
+            disabled: false,
+            label: 'DISABLED - Extension Will Not Use This Field',
+            value: ''
+        }, ...options]
+        : options;
+}
 
-    export const FieldSelectorGroup = ({
-                                           required,
-                                           table,
-                                           fields,
-                                           formState,
-                                           formErrorState,
-                                           selectorChangeHandler
-                                       }: {
-        required: boolean,
-        table: Table,
-        fields: ReadonlyArray<FieldConfiguration>,
-        formState: any,
-        formErrorState: any,
-        selectorChangeHandler: any
-    }) => {
+export const FieldSelectorGroup = ({
+                                       required,
+                                       table,
+                                       fields,
+                                       formState,
+                                       formErrorState,
+                                       selectorChangeHandler
+                                   }: {
+    required: boolean,
+    table: Table,
+    fields: ReadonlyArray<FieldConfiguration>,
+    formState: any,
+    formErrorState: any,
+    selectorChangeHandler: any
+}) => {
 
-        return <>
-            <Label paddingLeft='1rem'>{required ? 'Required' : 'Optional'} Fields</Label>
-            <Box padding='1rem' paddingLeft='1rem'>
-                {fields.map(({fieldName, fieldPrompt}) => (
-                    <FormField key={fieldName} paddingLeft='1.5rem' label={fieldPrompt}>
-                        <div style={{display: 'flex', gap: '1rem'}}>
-                            <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
-                                <Select
-                                    disabled={false}
-                                    options={getValidFieldOptionsForFieldSelector(table, ExpectedAppConfigFieldTypeMapping[fieldName], fieldTypeLinks[fieldName], formState, required)}
-                                    onChange={selectedOption => selectorChangeHandler(fieldName, selectedOption)}
-                                    value={formState[fieldName]}
-                                />
-                            </Box>
-                            <Text textColor='red'>{formErrorState[fieldName]}</Text>
-                        </div>
-                        <br/>
-                    </FormField>))
-                }
-            </Box>
-        </>
-    }
+    return <>
+        <Text textDecoration='underline' as='strong' fontWeight='600'
+              paddingLeft='1rem'>{required ? 'Required' : 'Optional'} Fields</Text>
+        <Box padding='1rem' paddingLeft='1rem'>
+            {fields.map(({fieldName, fieldPickerLabel, fieldPickerTooltip}) =>
+                (<FormField key={fieldName} paddingLeft='1.5rem' label={<SelectorLabelWithTooltip selectorLabel={fieldPickerLabel}
+                                                                                                  selectorLabelTooltip={fieldPickerTooltip}/>}>
+                    <div style={{display: 'flex', gap: '1rem'}}>
+                        <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
+                            <Select
+                                disabled={false}
+                                options={getValidFieldOptionsForFieldSelector(table, ExpectedAppConfigFieldTypeMapping[fieldName], fieldTypeLinks[fieldName], formState, required)}
+                                onChange={selectedOption => selectorChangeHandler(fieldName, selectedOption)}
+                                value={formState[fieldName]}
+                            />
+                        </Box>
+                        <Text textColor='red'>{formErrorState[fieldName]}</Text>
+                    </div>
+                    <br/>
+                </FormField>))
+            }
+        </Box>
+    </>
+}

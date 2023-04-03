@@ -29,6 +29,7 @@ loadCSSFromString(`
 
 .cart-container {
     width: 100%;
+    max-width: 1000px;
 }`);
 
 const Cart = ({
@@ -44,7 +45,9 @@ const Cart = ({
                 ? <Text className="cart-item-record">The cart is currently empty.</Text>
                 : cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
-                        <RecordCard width={viewportWidth > 1050 ? viewportWidth - 350 : viewportWidth - 250} record={record}/>
+                        <RecordCard
+                            width={Math.min(800, (viewportWidth > 600 ? viewportWidth - 340: viewportWidth - 240))}
+                            record={record}/>
                         <Tooltip
                             content="Remove from Cart"
                             placementX={Tooltip.placements.CENTER}

@@ -1,27 +1,20 @@
 import React, {useState} from "react";
-import {
-    Box,
-    Button,
-    FormField,
-    Heading,
-    Input,
-    Label,
-    loadCSSFromString,
-    Select,
-    Switch,
-    Text
-} from "@airtable/blocks/ui";
+import {Box, Button, FormField, Input, loadCSSFromString, Select, Switch, Text} from "@airtable/blocks/ui";
 import {Base} from "@airtable/blocks/models";
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {
     blankConfigurationState,
     blankErrorState,
+    combinedCheckoutsTableFields,
     configurationFormData,
     defaultOtherConfigurationState
 } from "../utils/Constants";
 import {
+    CheckoutTableOptionalFieldName,
+    CheckoutTableRequiredFieldName,
     OtherConfigurationKey,
     TableAndFieldsConfigurationKey,
+    TableName,
     TablesAndFieldsConfigurationErrors,
     TablesAndFieldsConfigurationIds,
     ValidationResult
@@ -31,18 +24,20 @@ import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_s
 import {GlobalConfig} from "@airtable/blocks/types";
 import toast from "react-hot-toast";
 import {mapValues} from "../utils/RandomUtils";
+import {SelectorLabelWithTooltip} from "./SelectorLabelWithTooltip";
 
 loadCSSFromString(`
-.container {
+.settings-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: white;
-    padding: 1rem;
+    padding: 2rem;
     overflow: auto;
-    gap: 2rem;
-    height: 100%
+    gap: 1.5rem;
+    height: 100%;
+    max-width: 1000px;
 }`)
 
 const validateFormAndGetFormValidationErrors = (formState: TablesAndFieldsConfigurationIds, configurationValidator: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult) => {
@@ -67,16 +62,36 @@ export const Settings = ({
                              globalConfig
                          }:
                              {
-                                 currentConfiguration: TablesAndFieldsConfigurationIds,
+                                 currentConfiguration: TablesAndFieldsConfigurationIds | undefined
                                  base: Base,
                                  validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
                                  globalConfig: GlobalConfig
                              }) => {
-    const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentConfiguration);
+    const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentConfiguration === undefined ? blankConfigurationState : currentConfiguration);
     const [currentFormErrorState, setFormErrorState] = useState(
-        currentConfiguration === blankConfigurationState ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
+        currentConfiguration === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
     const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(defaultOtherConfigurationState);
 
+    // TODO: See if this is still needed?
+    // If currentFormErrorState has any entries with values that are not empty, call validateFormAndGetFormValidationErrors with the currentConfiguration and if there are
+    // errors in the currentFormErrorState that no longer exist in the validationResult, call setFormErrorState to remove the error from the currentFormErrorState.
+    // This is to handle the case where the user has corrected the error in the form and the error is no longer present in the validationResult.
+    if (currentFormErrorState !== blankErrorState) {
+        const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
+        if (validationResult.errorsPresent) {
+            let thereAreErrorsToBeCleared: boolean = false;
+            const newFormErrorState = mapValues(currentFormErrorState, (key, value) => {
+                if (validationResult.errors[key as TableAndFieldsConfigurationKey] === '' && value !== '') {
+                    console.log('Clearing error for key: ' + key)
+                    thereAreErrorsToBeCleared = true;
+                    return '';
+                } else return value;
+            });
+            if (thereAreErrorsToBeCleared) setFormErrorState(newFormErrorState);
+        } else {
+            setFormErrorState(blankErrorState);
+        }
+    }
 
     const submitForm = () => {
         const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
@@ -95,78 +110,91 @@ export const Settings = ({
     }
 
     const selectorChangeHandler = (fieldOrTableName: TableAndFieldsConfigurationKey, selectedOption: SelectOptionValue) => {
-        const newFormState = {...tablesAndFieldsFormState, [fieldOrTableName]: selectedOption}
+        let newFormState = {...tablesAndFieldsFormState, [fieldOrTableName]: selectedOption}
+
+        //TODO: See if there's a programmatic way to do this with more mappings.
+        if (fieldOrTableName === TableName.checkoutsTable) {
+            newFormState = {
+                ...newFormState, ...mapValues(combinedCheckoutsTableFields, (key,) =>
+                    newFormState[key as CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName] = '')
+            }
+        }
         setTablesAndFieldsFormState(newFormState)
         const formValidationErrors = validateFormAndGetFormValidationErrors(newFormState, validateTablesAndFields);
         const newFormErrorState = getNewFormErrorStateForSelectorChange(currentFormErrorState, fieldOrTableName, formValidationErrors);
         setFormErrorState(newFormErrorState)
     }
 
-    return <Box className='container'>
-        <Heading as='h4'>Settings/Setup</Heading>
+    return <Box className='settings-container'>
         <ConfigurationInstructions/>
-
         <div>
-            <Label>Extension Configuration</Label>
-            <Box padding='2rem' maxWidth={800} border='thick'>
+            <Text as='strong' fontWeight='600' fontSize={14}>Extension Configuration</Text>
+            <Box padding='1.5rem' maxWidth={800}>
 
                 {configurationFormData.schemaConfiguration.map(({
                                                                     tableName,
-                                                                    tablePickerPrompt,
+                                                                    tablePickerLabel,
+                                                                    tablePickerTooltip,
                                                                     requiredFields = [],
                                                                     optionalFields = []
                                                                 }, index) => {
-                        const jsx = (
-                            <FormField key={index} label={tablePickerPrompt}>
-                                <Box border='default' borderColor={currentFormErrorState[tableName] !== '' ? 'red' : ''}>
-                                    <Select
-                                        options={base.tables.map(table => ({
-                                            value: table.id,
-                                            label: table.name
-                                        }))}
-                                        name={tableName}
-                                        id={tableName}
-                                        onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
-                                        value={tablesAndFieldsFormState[tableName]}
+                    const jsx = (
+                        <FormField key={index}
+                                   label={<SelectorLabelWithTooltip selectorLabel={tablePickerLabel}
+                                                                    selectorLabelTooltip={tablePickerTooltip}/>}>
+                            <Box border='default' borderColor={currentFormErrorState[tableName] !== '' ? 'red' : ''}>
+                                <Select
+                                    options={base.tables.map(table => ({
+                                        value: table.id,
+                                        label: table.name
+                                    }))}
+                                    name={tableName}
+                                    id={tableName}
+                                    onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
+                                    value={tablesAndFieldsFormState[tableName]}
+                                />
+                            </Box>
+                            <Text textColor='red'>{currentFormErrorState[tableName]}</Text>
+                        </FormField>
+                    )
+
+
+                    if (requiredFields.length !== 0 || optionalFields.length !== 0) {
+                        const table = base.getTableByIdIfExists(tablesAndFieldsFormState[tableName]) ?? undefined;
+
+                        return <Box key={index} maxWidth={500} border='thick' padding='1rem'>
+                            {jsx}
+                            <br/>
+
+                            {
+                                table && <>
+                                    <FieldSelectorGroup
+                                        required={true}
+                                        table={base.getTable(tablesAndFieldsFormState[tableName])}
+                                        fields={requiredFields}
+                                        formState={tablesAndFieldsFormState}
+                                        formErrorState={currentFormErrorState}
+                                        selectorChangeHandler={selectorChangeHandler}
                                     />
-                                </Box>
-                                <Text textColor='red'>{currentFormErrorState[tableName]}</Text>
-                            </FormField>
-                        )
 
-
-                        return (requiredFields.length !== 0 || optionalFields.length !== 0)
-                            ? (<Box key={index} maxWidth={500} border='thick' padding='1rem'>
-                                    {jsx}
-                                    <br/>
-
-                                    {tablesAndFieldsFormState[tableName] !== '' && <>
-                                        <FieldSelectorGroup
-                                            required={true}
-                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
-                                            fields={requiredFields}
-                                            formState={tablesAndFieldsFormState}
-                                            formErrorState={currentFormErrorState}
-                                            selectorChangeHandler={selectorChangeHandler}
-                                        />
-
-                                        <FieldSelectorGroup
-                                            required={false}
-                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
-                                            fields={optionalFields}
-                                            formState={tablesAndFieldsFormState}
-                                            formErrorState={currentFormErrorState}
-                                            selectorChangeHandler={selectorChangeHandler}/>
-                                    </>}
-                                </Box>
-                            )
-                            : jsx;
-
+                                    <FieldSelectorGroup
+                                        required={false}
+                                        table={base.getTable(tablesAndFieldsFormState[tableName])}
+                                        fields={optionalFields}
+                                        formState={tablesAndFieldsFormState}
+                                        formErrorState={currentFormErrorState}
+                                        selectorChangeHandler={selectorChangeHandler}/>
+                                </>}
+                        </Box>;
+                    } else {
+                        return jsx;
                     }
+
+                }
                 )}
                 <br/>
                 <br/>
-                <FormField label='Delete open checkouts upon check-in'>
+                <FormField label={<Text textColor='red'>CAUTION: Delete Open Checkouts upon Check-In</Text>}>
                     <Switch
                         value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin}
                         onChange={newValue => setOtherConfigurationFormState({
@@ -174,14 +202,16 @@ export const Settings = ({
                             [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: newValue
                         })}
                         label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin ? 'Enabled' : 'Disabled'}
+                        variant='danger'
                     />
                 </FormField>
                 <br/>
                 <br/>
 
-                <FormField label='Default number of days from today for due date field (only applicable if enabled)'>
+                <FormField
+                    label='Default Due Date (expressed in # of days from checkout date) for new Checkouts. Only applicable if Due-Date field is enabled'>
                     <Input
-                        value={tablesAndFieldsFormState.dateDueField === '' ? '': otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
+                        value={tablesAndFieldsFormState.dateDueField === '' ? '' : otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
                         onChange={e => setOtherConfigurationFormState({
                             ...otherConfigurationFormState,
                             [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: Number(e.target.value)

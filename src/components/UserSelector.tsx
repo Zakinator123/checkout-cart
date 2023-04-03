@@ -20,6 +20,7 @@ loadCSSFromString(`
 
 .user-selector-container {
     width: 100%;
+    max-width: 1000px;
 }`);
 
 const UserSelector = ({
@@ -33,7 +34,9 @@ const UserSelector = ({
             {currentTransactionUser === null
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
-                    <RecordCard width={viewportWidth > 1050 ? viewportWidth - 350 : viewportWidth - 250} record={currentTransactionUser}/>
+                    <RecordCard
+                        width={Math.min(800, (viewportWidth > 600 ? viewportWidth - 340: viewportWidth - 240))}
+                        record={currentTransactionUser}/>
                 </Box>}
             <Tooltip
                 content="Search Users"

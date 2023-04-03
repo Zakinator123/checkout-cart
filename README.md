@@ -6,7 +6,7 @@
 </h1>
 
 <div align="center">
-  <h1>🚀 Checkout With Cart 🚀</h1>
+  <h1>🚀 Checkout Cart 🚀</h1>
   <br />
 
 [//]: # (  <a href="#about"><strong>Explore the screenshots »</strong></a>)
@@ -111,7 +111,7 @@ Reach out to the maintainer at one of the following places:
 
 ## Project assistance
 
-If you want to say **thank you** or/and support active development of Checkout With Cart:
+If you want to say **thank you** or/and support active development of Checkout Cart:
 - Add a [GitHub Star](https://github.com/Zakinator123/airtable-checkout-with-cart) to the project.
 
 ## License

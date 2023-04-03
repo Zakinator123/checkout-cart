@@ -26,6 +26,7 @@ export const defaultOtherConfigurationState: Readonly<OtherExtensionConfiguratio
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: 7,
 }
 
+export const combinedCheckoutsTableFields = {...CheckoutTableRequiredFieldName, ...CheckoutTableOptionalFieldName};
 export const combinedRequiredConfigKeys = {...TableName, ...CheckoutTableRequiredFieldName};
 export const combinedConfigKeys = {...combinedRequiredConfigKeys, ...CheckoutTableOptionalFieldName}
 export const blankErrorState: Readonly<TablesAndFieldsConfigurationErrors> = blankConfigurationState;
@@ -56,50 +57,61 @@ export const configurationFormData: ExtensionConfigurationFormSchema = {
         [
             {
                 tableName: TableName.inventoryTable,
-                tablePickerPrompt: 'Select your inventory table:',
+                tablePickerLabel: 'Inventory Table:',
+                tablePickerTooltip: 'This table contains the items to be checked out.',
             },
             {
                 tableName: TableName.userTable,
-                tablePickerPrompt: 'Select your user table:',
+                tablePickerLabel: 'User Table:',
+                tablePickerTooltip: 'This table contains the users that items will be checked out to.',
             },
             {
                 tableName: TableName.checkoutsTable,
-                tablePickerPrompt: 'Select your checkouts table:',
+                tablePickerLabel: 'Checkouts Table:',
+                tablePickerTooltip: 'This table contains the checkout records.',
                 requiredFields: [
                     {
                         fieldName: CheckoutTableRequiredFieldName.linkedInventoryTableField,
-                        fieldPrompt: 'Select the linked record field linking this table to the inventory table.',
+                        fieldPickerLabel: 'Linked Record Field to Inventory Table:',
+                        fieldPickerTooltip: 'This field must link to the inventory table configured above.'
                     },
                     {
                         fieldName: CheckoutTableRequiredFieldName.linkedUserTableField,
-                        fieldPrompt: 'Select the linked record field linking this table to the users table.',
+                        fieldPickerLabel: 'Linked Record Field to Users Table:',
+                        fieldPickerTooltip: 'This field must link to the users table configured above.'
                     },
                     {
                         fieldName: CheckoutTableRequiredFieldName.checkedInField,
-                        fieldPrompt:
-                            'Select the checkbox field representing whether or not a checkout is still checked out or checked in.',
+                        fieldPickerLabel:
+                            'Checked In Field:',
+                        fieldPickerTooltip: `This is a checkbox field where
+                         a checked checkbox means that the checkout is "Checked In".`
                     },
                 ],
                 optionalFields: [
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedOutField,
-                        fieldPrompt: `(Optional) Enable to record the date items are checked out.
-                                  Select the date field representing when a checkout is created.`,
+                        fieldPickerLabel: `Date Checked Out Field:`,
+                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is created.
+                        Must be a date field.`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateDueField,
-                        fieldPrompt: `(Optional) Enable to record the date items are due.
-                                  Select the date field representing when items are due for return.`,
+                        fieldPickerLabel: `Date Due Field:`,
+                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is due.
+                         Must be a date field`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedInField,
-                        fieldPrompt: `(Optional) Enable to record date when items are checked in. 
-                                  Select the date field representing when items are checked in.`,
+                        fieldPickerLabel: `Date Checked In Field:`,
+                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is checked in.
+                        Must be a date field.`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.cartGroupField,
-                        fieldPrompt: `(Optional) Enable to have cart group numbers generated for every checkout transaction. 
-                                  Select the number field representing cart group numbers.`,
+                        fieldPickerLabel: `Cart Id Field:`,
+                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the cart id of a checkout.
+                        Must be a number field.`
                     }
                 ],
             }

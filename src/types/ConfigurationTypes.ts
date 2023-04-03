@@ -41,11 +41,26 @@ type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOr
     [CheckoutTableOptionalFieldName.cartGroupField]: OptionalFieldOrFieldIdOrErrorMessage
 }
 
+/*
+type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOrErrorMessage, OptionalFieldOrFieldIdOrErrorMessage> = {
+    [tableName in keyof TableName]: TableOrTableIdOrErrorMessage} & {
+    [requiredField in keyof CheckoutTableRequiredFieldName]: FieldOrFieldIdOrErrorMessage; } & {
+    [optionalField in keyof CheckoutTableOptionalFieldName]: OptionalFieldOrFieldIdOrErrorMessage };
+
+ */
+
 export type OtherExtensionConfiguration = {
     [OtherConfigurationKey.premiumLicenseVerified]: boolean,
     [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: boolean,
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: number,
 }
+
+export type ConfigurationState =
+    { state: 'empty', configuration: TablesAndFieldsConfigurationIds }
+    | { state: 'invalid', configuration: TablesAndFieldsConfigurationIds }
+    | { state: 'not-validated', configuration: TablesAndFieldsConfigurationIds }
+    | { state: 'valid', configuration: TablesAndFieldsConfigurationIds, tablesAndFields: ValidatedTablesAndFieldsConfiguration };
+
 
 export type ExtensionConfiguration = {
     tableAndFieldIds: TablesAndFieldsConfigurationIds,
@@ -61,12 +76,14 @@ export type ValidationResult = {errorsPresent: true, errors: TablesAndFieldsConf
 
 export type FieldConfiguration = {
     readonly fieldName: CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName,
-    readonly fieldPrompt: string,
+    readonly fieldPickerLabel: string,
+    readonly fieldPickerTooltip: string,
 }
 
 export type TableConfiguration = {
     readonly tableName: TableName,
-    readonly tablePickerPrompt: string,
+    readonly tablePickerLabel: string,
+    readonly tablePickerTooltip: string,
     readonly requiredFields?: ReadonlyArray<FieldConfiguration>,
     readonly optionalFields?: ReadonlyArray<FieldConfiguration>,
 }

@@ -25,7 +25,7 @@ import {ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes
 import toast from "react-hot-toast";
 
 loadCSSFromString(`
-.container {
+.checkout-cart-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -34,12 +34,8 @@ loadCSSFromString(`
     padding: 1rem;
     overflow: auto;
     gap: 2rem;
-    height: 100%
-}
-
-.submit-button {
-    background-color: teal;
-    color: white;
+    height: 100%;
+    width: 100%;
 }`);
 
 function CheckoutWithCart({
@@ -54,8 +50,9 @@ function CheckoutWithCart({
     // Viewport Data
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
-    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
     console.log(viewportWidth);
+    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
+
     // TODO: Filter out unwanted fields (e.g. reverse linked fields?)
     const userRecords = useRecords(userTable);
     const inventoryTableRecords = useRecords(inventoryTable);
@@ -112,7 +109,7 @@ function CheckoutWithCart({
         } else setErrorDialogMessages(errorMessages)
     }
 
-    return <Box className="container">
+    return <Box className="checkout-cart-container">
         <TransactionTypeSelector currentOption={transactionType} options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}/>
 
@@ -137,8 +134,8 @@ function CheckoutWithCart({
 
         <Button
             type='submit'
+            variant='primary'
             disabled={transactionIsProcessing}
-            className='submit-button'
             onClick={attemptToExecuteTransaction}
         >
             {transactionIsProcessing
