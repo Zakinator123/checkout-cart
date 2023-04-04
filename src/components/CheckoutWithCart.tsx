@@ -63,7 +63,6 @@ function CheckoutWithCart({
     // Viewport Data
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
-    console.log(viewportWidth);
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
     // TODO: Filter out unwanted fields (e.g. reverse linked fields?)
@@ -93,11 +92,20 @@ function CheckoutWithCart({
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
     const addRecordToCart = () => {
         if (!isPremiumUser && cartRecords.length >= maxNumberOfCartRecordsForFreeUsers) {
-            setErrorDialogMessages([`You have reached the maximum number of records that you can add to the cart as a free user. Please upgrade to a premium account to add more records to the cart.`]);
-        } else return expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
-            .then(record => {
-                if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
-            });
+            toast.error(`You have reached the maximum number of records that you can add to the cart as a free user.
+            
+             Please upgrade to a premium account to add more records to the cart.`);
+        } else {
+            const recordsNotAlreadyInCart = inventoryTableRecords.filter(record => !cartRecords.includes(record));
+            if (recordsNotAlreadyInCart.length === 0) {
+                toast.error(`There are no records in the inventory table that are not already in the cart.`);
+            } else {
+                return expandRecordPickerAsync(recordsNotAlreadyInCart)
+                    .then(record => {
+                        if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
+                    });
+            }
+        }
     };
     const clearTransactionData = () => {
         // TODO: Leave cart records when there are errors associated with their transaction?
@@ -141,7 +149,8 @@ function CheckoutWithCart({
             />
 
             {dateDueField !== undefined &&
-                <FormField label={`Due Date (The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today):`}>
+                <FormField
+                    label={`Due Date (The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today):`}>
                     <Input type='date'
                            value={getIsoDateString(transactionDueDate)}
                            onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}/>

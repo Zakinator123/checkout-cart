@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Box, Button, FormField, Icon, Input, Link, loadCSSFromString, Loader, Text} from "@airtable/blocks/ui";
-import toast from "react-hot-toast";
+import toast, {ToastPosition} from "react-hot-toast";
 import {GlobalConfig} from "@airtable/blocks/types";
 
 loadCSSFromString(`
@@ -37,6 +37,7 @@ loadCSSFromString(`
 }
 `);
 
+const licenseVerificationToastStyles = {position: 'top-center' as ToastPosition, style: {marginTop: '1rem', marginBottom: 0}};
 
 export const Premium = ({isPremiumUser, globalConfig}: {
     isPremiumUser: boolean, globalConfig: GlobalConfig
@@ -55,20 +56,19 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                     license_key: licenseKey
                 })
             })
-            .then(response => response.json())
-            .then(responseJson => {
-                if (responseJson?.success) {
-                    globalConfig.setAsync('isPremiumUser', true)
-                        .then(() => toast.success('License verified!'))
-                        .catch(() => {
-                            setVerifyButtonDisabledState(false);
-                            toast.error('Error saving license key! Contact the developer for support.')
-                        })
-                        .finally(() => {
-                            setVerifyButtonDisabledState(false);
-                        });
-                } else toast.error('Invalid license key!')
+            .then(response => {
+                if (response.status === 404) return undefined;
+                if (response.status === 200) return response.json();
+                throw new Error('An error occurred verifying the license. Please check your network connection or try again later.')
             })
+            .then(responseJson => {
+                const responseSuccessful: boolean = responseJson?.success ?? false;
+                if (responseSuccessful) globalConfig.setAsync('isPremiumUser', true)
+                    .then(() => toast.success('License verified! You are now a premium user!', licenseVerificationToastStyles))
+                    .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.', licenseVerificationToastStyles))
+                else toast.error('Invalid license key!', licenseVerificationToastStyles)
+            })
+            .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.', licenseVerificationToastStyles))
             .finally(() => setVerifyButtonDisabledState(false))
     }
 

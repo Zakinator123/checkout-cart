@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, FormField, Input, loadCSSFromString, Select, Switch, Text} from "@airtable/blocks/ui";
+import {Box, Button, FormField, Input, loadCSSFromString, Loader, Select, Switch, Text} from "@airtable/blocks/ui";
 import {Base} from "@airtable/blocks/models";
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {
@@ -9,7 +9,8 @@ import {
     settingsFormSchema
 } from "../utils/Constants";
 import {
-    OtherConfigurationKey, OtherExtensionConfiguration,
+    OtherConfigurationKey,
+    OtherExtensionConfiguration,
     TableAndFieldsConfigurationKey,
     TablesAndFieldsConfigurationIds,
     ValidationResult
@@ -58,18 +59,18 @@ export const Settings = ({
     const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentTableAndFieldIds === undefined ? blankConfigurationState : currentTableAndFieldIds);
     const [tablesAndFieldsFormErrorState, setFormErrorState] = useState(currentTableAndFieldIds === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentTableAndFieldIds, validateTablesAndFields));
     const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(currentOtherConfiguration === undefined ? defaultOtherConfigurationState : currentOtherConfiguration);
-    const [submitButtonDisabled, setSubmitButtonDisabled] = useState(false);
+    const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
 
     const result = getUpdatedFormErrorStateIfStaleErrorsExist(tablesAndFieldsFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
     if (result.staleErrorsExist) setFormErrorState(result.newFormErrorState);
 
     const submitForm = () => {
-        setSubmitButtonDisabled(true);
+        setConfigurationUpdatePending(true);
         const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
         if (validationResult.errorsPresent) {
             setFormErrorState(validationResult.errors);
             toast.error("There are error(s) with your configuration.");
-            setSubmitButtonDisabled(false);
+            setConfigurationUpdatePending(false);
         } else {
             setFormErrorState(blankErrorState);
 
@@ -77,7 +78,8 @@ export const Settings = ({
                 tableAndFieldIds: tablesAndFieldsFormState,
                 otherConfiguration: otherConfigurationFormState
             };
-            const submissionPromise = globalConfig.setAsync('extensionConfiguration', mergedConfiguration).finally(() => setSubmitButtonDisabled(false));
+            const submissionPromise = globalConfig.setAsync('extensionConfiguration', mergedConfiguration)
+                .finally(() => setConfigurationUpdatePending(false));
 
             toast.promise(submissionPromise, {
                 loading: 'Attempting to save configuration.',
@@ -163,7 +165,7 @@ export const Settings = ({
                 <br/>
                 <FormField
                     label={<FormFieldLabelWithTooltip fieldLabel='Delete Open Checkouts Upon Check-In: CAUTION!'
-                                                      fieldLabelTooltip='Only enable this if you fully understand the implications. Read the "About" section for more information.'
+                                                      fieldLabelTooltip='See the "About" tab. Only enable if you understand the implications!'
                                                       dangerous={true}/>}>
                     <Switch
                         value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn}
@@ -181,7 +183,7 @@ export const Settings = ({
                 <FormField
                     label={<FormFieldLabelWithTooltip
                         fieldLabel='Default Due Date (expressed in # of days from Checkout creation)'
-                        fieldLabelTooltip='Applies to new Checkouts. Only applicable if Due Date field is enabled.'/>}>
+                        fieldLabelTooltip='For newly created Checkouts. Due Date field must be enabled.'/>}>
                     <Input
                         value={tablesAndFieldsFormState.dateDueField === '' ? '' : otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
                         onChange={e => setOtherConfigurationFormState({
@@ -197,8 +199,11 @@ export const Settings = ({
                 <br/>
                 <br/>
                 <Box display='flex' justifyContent='center'>
-                    <Button disabled={submitButtonDisabled} variant='primary' onClick={submitForm}>
-                        Save Configuration
+                    <Button disabled={configurationUpdatePending} variant='primary' onClick={submitForm}>
+                        {configurationUpdatePending
+                            ? <Loader scale={0.2} fillColor='white'/>
+                            : <Text textColor='white'>Save Configuration</Text>
+                        }
                     </Button>
                 </Box>
             </Box>

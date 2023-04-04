@@ -103,11 +103,12 @@ loadCSSFromString(`
 
 /*
     TODO:
-        - Add premium license option/logic for doing checkouts with 3+ items.
         - Create schema generation button
         - Figure out offline no-network connection logic
         ---
         - Look into iots for type checking
+        - If config changes were made but not saved, warn user?
+        - If premium is not active, show message on cart that max cart limit is 3 for free users.
         - Figure out how to make text of tooltips wrap in order to fit in the viewport.
         - Add landing page, and documentation blog/videos?
         - How to deal with inventories where there are quantities of items??

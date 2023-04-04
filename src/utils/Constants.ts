@@ -93,26 +93,22 @@ export const settingsFormSchema: ExtensionConfigurationFormSchema = {
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedOutField,
                         fieldPickerLabel: `Date Checked Out Field:`,
-                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is created.
-                        Must be a date field.`
+                        fieldPickerTooltip: `(Optional) Date Field. Enable this to record the date a checkout is created.`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateDueField,
                         fieldPickerLabel: `Date Due Field:`,
-                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is due.
-                         Must be a date field`
+                        fieldPickerTooltip: `(Optional) Date Field. Enable to record the date a checkout is due.`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.dateCheckedInField,
                         fieldPickerLabel: `Date Checked In Field:`,
-                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the date a checkout is checked in.
-                        Must be a date field.`
+                        fieldPickerTooltip: `(Optional) Date Field. Enable to record the date checkouts are checked in.`
                     },
                     {
                         fieldName: CheckoutTableOptionalFieldName.cartGroupField,
                         fieldPickerLabel: `Cart Id Field:`,
-                        fieldPickerTooltip: `(Optional) Enable this to have the extension record the cart id of a checkout.
-                        Must be a number field.`
+                        fieldPickerTooltip: `(Optional) Number Field. Enable to record the cart id of a checkout.`
                     }
                 ],
             }
