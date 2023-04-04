@@ -54,14 +54,6 @@ export type OtherExtensionConfiguration = {
     [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: boolean,
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: number,
 }
-
-export type ConfigurationState =
-    { state: 'empty', configuration: TablesAndFieldsConfigurationIds }
-    | { state: 'invalid', configuration: TablesAndFieldsConfigurationIds }
-    | { state: 'not-validated', configuration: TablesAndFieldsConfigurationIds }
-    | { state: 'valid', configuration: TablesAndFieldsConfigurationIds, tablesAndFields: ValidatedTablesAndFieldsConfiguration };
-
-
 export type ExtensionConfiguration = {
     tableAndFieldIds: TablesAndFieldsConfigurationIds,
     otherConfiguration: OtherExtensionConfiguration,

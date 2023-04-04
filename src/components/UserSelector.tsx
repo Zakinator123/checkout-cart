@@ -1,6 +1,7 @@
 import {Record} from "@airtable/blocks/models";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
+import {getRecordCardWidth} from "../utils/RandomUtils";
 
 loadCSSFromString(`
 .user-selector {
@@ -35,7 +36,7 @@ const UserSelector = ({
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
                     <RecordCard
-                        width={Math.min(800, (viewportWidth > 600 ? viewportWidth - 340: viewportWidth - 240))}
+                        width={getRecordCardWidth(viewportWidth)}
                         record={currentTransactionUser}/>
                 </Box>}
             <Tooltip

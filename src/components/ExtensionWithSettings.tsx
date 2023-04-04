@@ -103,9 +103,10 @@ loadCSSFromString(`
 /*
     TODO:
         - Make "delete checkouts upon checkin" configurable.
-        - Make default due date configurable and hide date field if feature flag is off
+        - Make default due date configurable
         - Add premium license option/logic for doing checkouts with 5+ items.
         ---
+        - Look into iots for type checking
         - How to deal with inventories where there are quantities of items??
         - Increase test coverage of extension
         - Show failures/successes per record for executeTransaction.
@@ -115,7 +116,6 @@ loadCSSFromString(`
         - Add in a "How this extension works" description.
         - What happens when records limit is reached and a checkouts is created?
         - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
-        - Add in developer info/feature request/donate link to the extension
  */
 
 export function ExtensionWithSettings() {

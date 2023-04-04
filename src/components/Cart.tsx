@@ -1,6 +1,7 @@
 import React from "react";
 import {Box, Button, Label, loadCSSFromString, RecordCard, Text, Tooltip} from "@airtable/blocks/ui";
 import {RecordId} from "@airtable/blocks/types";
+import {getRecordCardWidth} from "../utils/RandomUtils";
 
 loadCSSFromString(`
 .cart {
@@ -46,7 +47,7 @@ const Cart = ({
                 : cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
                         <RecordCard
-                            width={Math.min(800, (viewportWidth > 600 ? viewportWidth - 340: viewportWidth - 240))}
+                            width={getRecordCardWidth(viewportWidth)}
                             record={record}/>
                         <Tooltip
                             content="Remove from Cart"
@@ -57,7 +58,7 @@ const Cart = ({
                             <Button
                                 onClick={() => removeRecordFromCart(record.id)}
                                 size='small'
-                                aria-label="Remove item from cart."
+                                aria-label="Remove item from cart"
                                 className='cart-item-delete-button' icon='trash'
                             >
                             </Button>

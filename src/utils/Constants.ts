@@ -51,7 +51,7 @@ export const fieldTypeLinks: Readonly<Record<CheckoutTableRequiredFieldName | Ch
     [CheckoutTableOptionalFieldName.cartGroupField]: undefined
 }
 
-export const configurationFormData: ExtensionConfigurationFormSchema = {
+export const settingsFormSchema: ExtensionConfigurationFormSchema = {
     deleteCheckoutsUponCheckin: false,
     schemaConfiguration:
         [

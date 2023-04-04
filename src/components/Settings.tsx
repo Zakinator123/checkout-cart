@@ -5,17 +5,12 @@ import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {
     blankConfigurationState,
     blankErrorState,
-    combinedCheckoutsTableFields,
-    configurationFormData,
-    defaultOtherConfigurationState
+    defaultOtherConfigurationState,
+    settingsFormSchema
 } from "../utils/Constants";
 import {
-    CheckoutTableOptionalFieldName,
-    CheckoutTableRequiredFieldName,
     OtherConfigurationKey,
     TableAndFieldsConfigurationKey,
-    TableName,
-    TablesAndFieldsConfigurationErrors,
     TablesAndFieldsConfigurationIds,
     ValidationResult
 } from "../types/ConfigurationTypes";
@@ -23,8 +18,13 @@ import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
 import {GlobalConfig} from "@airtable/blocks/types";
 import toast from "react-hot-toast";
-import {mapValues} from "../utils/RandomUtils";
 import {SelectorLabelWithTooltip} from "./SelectorLabelWithTooltip";
+import {
+    getNewFormErrorStateForSelectorChange,
+    getNewFormStateForSelectorChange,
+    getUpdatedFormErrorStateIfStaleErrorsExist,
+    validateFormAndGetFormValidationErrors
+} from "../utils/SettingsFormUtils";
 
 loadCSSFromString(`
 .settings-container {
@@ -34,26 +34,12 @@ loadCSSFromString(`
     justify-content: center;
     background-color: white;
     padding: 2rem;
+    margin-bottom: 1rem;
     overflow: auto;
     gap: 1.5rem;
     height: 100%;
     max-width: 1000px;
 }`)
-
-const validateFormAndGetFormValidationErrors = (formState: TablesAndFieldsConfigurationIds, configurationValidator: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult) => {
-    const validationResult = configurationValidator(formState);
-    return validationResult.errorsPresent ? validationResult.errors : blankErrorState;
-}
-
-function getNewFormErrorStateForSelectorChange(currentFormErrorState: Readonly<TablesAndFieldsConfigurationErrors>, fieldOrTableName: TableAndFieldsConfigurationKey, formValidationErrors: TablesAndFieldsConfigurationErrors) {
-    return mapValues(currentFormErrorState, (key, value) => {
-        // Replace values in the currentFormErrorState with values from the formValidationErrors
-        // iff the formValidationErrors has no value for the key or if field/table name is the same as the key.
-        if (key === fieldOrTableName) return formValidationErrors[key as TableAndFieldsConfigurationKey];
-        if (formValidationErrors[key as TableAndFieldsConfigurationKey] === '') return '';
-        return value;
-    });
-}
 
 export const Settings = ({
                              currentConfiguration,
@@ -68,39 +54,21 @@ export const Settings = ({
                                  globalConfig: GlobalConfig
                              }) => {
     const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentConfiguration === undefined ? blankConfigurationState : currentConfiguration);
-    const [currentFormErrorState, setFormErrorState] = useState(
-        currentConfiguration === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
+    const [currentFormErrorState, setFormErrorState] = useState(currentConfiguration === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
     const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(defaultOtherConfigurationState);
 
-    // TODO: See if this is still needed?
-    // If currentFormErrorState has any entries with values that are not empty, call validateFormAndGetFormValidationErrors with the currentConfiguration and if there are
-    // errors in the currentFormErrorState that no longer exist in the validationResult, call setFormErrorState to remove the error from the currentFormErrorState.
-    // This is to handle the case where the user has corrected the error in the form and the error is no longer present in the validationResult.
-    if (currentFormErrorState !== blankErrorState) {
-        const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
-        if (validationResult.errorsPresent) {
-            let thereAreErrorsToBeCleared: boolean = false;
-            const newFormErrorState = mapValues(currentFormErrorState, (key, value) => {
-                if (validationResult.errors[key as TableAndFieldsConfigurationKey] === '' && value !== '') {
-                    console.log('Clearing error for key: ' + key)
-                    thereAreErrorsToBeCleared = true;
-                    return '';
-                } else return value;
-            });
-            if (thereAreErrorsToBeCleared) setFormErrorState(newFormErrorState);
-        } else {
-            setFormErrorState(blankErrorState);
-        }
-    }
+    const result = getUpdatedFormErrorStateIfStaleErrorsExist(currentFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
+    if (result.staleErrorsExist) setFormErrorState(result.newFormErrorState);
 
     const submitForm = () => {
         const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
         if (validationResult.errorsPresent) {
             setFormErrorState(validationResult.errors);
-            toast("There are error(s) with your configuration.");
+            toast.error("There are error(s) with your configuration.");
         } else {
             setFormErrorState(blankErrorState);
             const submissionPromise = globalConfig.setAsync('extensionConfiguration', tablesAndFieldsFormState)
+
             toast.promise(submissionPromise, {
                 loading: 'Attempting to save configuration.',
                 success: 'Configuration saved successfully!',
@@ -110,18 +78,10 @@ export const Settings = ({
     }
 
     const selectorChangeHandler = (fieldOrTableName: TableAndFieldsConfigurationKey, selectedOption: SelectOptionValue) => {
-        let newFormState = {...tablesAndFieldsFormState, [fieldOrTableName]: selectedOption}
-
-        //TODO: See if there's a programmatic way to do this with more mappings.
-        if (fieldOrTableName === TableName.checkoutsTable) {
-            newFormState = {
-                ...newFormState, ...mapValues(combinedCheckoutsTableFields, (key,) =>
-                    newFormState[key as CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName] = '')
-            }
-        }
+        let newFormState = getNewFormStateForSelectorChange(tablesAndFieldsFormState, fieldOrTableName, selectedOption);
         setTablesAndFieldsFormState(newFormState)
-        const formValidationErrors = validateFormAndGetFormValidationErrors(newFormState, validateTablesAndFields);
-        const newFormErrorState = getNewFormErrorStateForSelectorChange(currentFormErrorState, fieldOrTableName, formValidationErrors);
+        const newFormValidationErrors = validateFormAndGetFormValidationErrors(newFormState, validateTablesAndFields);
+        const newFormErrorState = getNewFormErrorStateForSelectorChange(currentFormErrorState, newFormValidationErrors, fieldOrTableName);
         setFormErrorState(newFormErrorState)
     }
 
@@ -130,15 +90,14 @@ export const Settings = ({
         <div>
             <Text as='strong' fontWeight='600' fontSize={14}>Extension Configuration</Text>
             <Box padding='1.5rem' maxWidth={800}>
-
-                {configurationFormData.schemaConfiguration.map(({
-                                                                    tableName,
-                                                                    tablePickerLabel,
-                                                                    tablePickerTooltip,
-                                                                    requiredFields = [],
-                                                                    optionalFields = []
-                                                                }, index) => {
-                    const jsx = (
+                {settingsFormSchema.schemaConfiguration.map(({
+                                                                 tableName,
+                                                                 tablePickerLabel,
+                                                                 tablePickerTooltip,
+                                                                 requiredFields = [],
+                                                                 optionalFields = []
+                                                             }, index) => {
+                    const tableSelector = (
                         <FormField key={index}
                                    label={<SelectorLabelWithTooltip selectorLabel={tablePickerLabel}
                                                                     selectorLabelTooltip={tablePickerTooltip}/>}>
@@ -155,15 +114,14 @@ export const Settings = ({
                                 />
                             </Box>
                             <Text textColor='red'>{currentFormErrorState[tableName]}</Text>
-                        </FormField>
-                    )
+                        </FormField>)
 
 
                     if (requiredFields.length !== 0 || optionalFields.length !== 0) {
                         const table = base.getTableByIdIfExists(tablesAndFieldsFormState[tableName]) ?? undefined;
 
                         return <Box key={index} maxWidth={500} border='thick' padding='1rem'>
-                            {jsx}
+                            {tableSelector}
                             <br/>
 
                             {
@@ -184,14 +142,12 @@ export const Settings = ({
                                         formState={tablesAndFieldsFormState}
                                         formErrorState={currentFormErrorState}
                                         selectorChangeHandler={selectorChangeHandler}/>
-                                </>}
+                                </>
+                            }
                         </Box>;
-                    } else {
-                        return jsx;
                     }
-
-                }
-                )}
+                    return tableSelector;
+                })}
                 <br/>
                 <br/>
                 <FormField label={<Text textColor='red'>CAUTION: Delete Open Checkouts upon Check-In</Text>}>

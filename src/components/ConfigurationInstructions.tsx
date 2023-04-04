@@ -23,7 +23,7 @@ export const ConfigurationInstructions = () =>
                 <li>
                     <Text display='inline' fontWeight={600}>Checkouts Table</Text> - Contains links to the above two tables and is where checkouts and
                     checkins are tracked.
-                    This extension primarily manipulates records in this table. <br/><br/>
+                    This extension creates, updates, and optionally deletes records in this table. <br/><br/>
 
                     <div style={{paddingLeft: '2rem'}}>
                         This table must have the
