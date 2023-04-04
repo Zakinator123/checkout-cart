@@ -27,9 +27,15 @@ export const About = () => {
                 a user is associated with the cart, and the &quot;Check Out Items&quot; button is pressed,
                 this extension will:
                 <ol>
-                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; and either
-                        mark them as checked in (with the configured checkbox field), or delete them, depending on your
-                        settings.
+                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; (called &quot;Open Checkouts&quot;)
+                        and mark them as checked in with the configured checkbox field. This prevents the item from having multiple open checkouts simultaneously.
+                        (E.g. A book cannot be checked out to two different people at the same time.)
+                        <br/>
+                        <br/>
+                        <ul><li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is enabled: </strong>
+                            Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts will be deleted entirely.
+                            Existing checkouts associated with the item that are already marked as &quot;checked in&quot; will not be deleted.
+                            </li></ul>
                     </li>
                     <br/>
                     <li>For every item in the cart, create a new checkout record that is linked to that item and linked
@@ -42,6 +48,7 @@ export const About = () => {
                         <ul>
                             <li>&quot;Date Checked Out&quot; to indicate when a checkout record was created.</li>
                             <li>&quot;Date Due&quot; to track when outstanding checked out items are due.</li>
+                            <li>&quot;Date Checked In&quot; to track when items are checked in.</li>
                             <li>&quot;Cart Id&quot; to indicate what other checkouts were in the same cart.</li>
                         </ul>
                     </li>
@@ -59,10 +66,14 @@ export const About = () => {
                 When the transaction type is set to &quot;Check In&quot;, items are added to the cart,
                 and the &quot;Check In Items&quot; button is pressed, this extension will:
                 <ol>
-
-                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; and either
-                        mark them as checked in (with the configured checkbox field), or delete them, depending on your
-                        settings (same as step 1 for Check-Outs).
+                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; (called &quot;Open Checkouts&quot;)
+                        and mark them as checked in with the configured checkbox field. (Same as step 1 above for Check-Outs)
+                        <br/>
+                        <br/>
+                        <ul><li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is enabled: </strong>
+                            Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts will be deleted entirely.
+                            Existing checkouts associated with the item that are already marked as &quot;checked in&quot; will not be deleted.
+                        </li></ul>
                     </li>
                     <br/>
                     <li>If configured in the settings, the extension can also populate the &quot;Date Checked

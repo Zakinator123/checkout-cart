@@ -3,7 +3,7 @@ import {Table} from "@airtable/blocks/models";
 import React from "react";
 import {FieldConfiguration} from "../types/ConfigurationTypes";
 import {ExpectedAppConfigFieldTypeMapping, fieldTypeLinks} from "../utils/Constants";
-import {SelectorLabelWithTooltip} from "./SelectorLabelWithTooltip";
+import {FormFieldLabelWithTooltip} from "./FormFieldLabelWithTooltip";
 import {getValidFieldOptionsForFieldSelector} from "../utils/SettingsFormUtils";
 
 export const FieldSelectorGroup = ({
@@ -27,8 +27,8 @@ export const FieldSelectorGroup = ({
         <Box padding='1rem' paddingLeft='1rem'>
             {fields.map(({fieldName, fieldPickerLabel, fieldPickerTooltip}) =>
                 (<FormField key={fieldName} paddingLeft='1.5rem'
-                            label={<SelectorLabelWithTooltip selectorLabel={fieldPickerLabel}
-                                                             selectorLabelTooltip={fieldPickerTooltip}/>}>
+                            label={<FormFieldLabelWithTooltip fieldLabel={fieldPickerLabel}
+                                                              fieldLabelTooltip={fieldPickerTooltip}/>}>
                     <div style={{display: 'flex', gap: '1rem'}}>
                         <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
                             <Select

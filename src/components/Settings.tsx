@@ -18,7 +18,7 @@ import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
 import {GlobalConfig} from "@airtable/blocks/types";
 import toast from "react-hot-toast";
-import {SelectorLabelWithTooltip} from "./SelectorLabelWithTooltip";
+import {FormFieldLabelWithTooltip} from "./FormFieldLabelWithTooltip";
 import {
     getNewFormErrorStateForSelectorChange,
     getNewFormStateForSelectorChange,
@@ -99,8 +99,8 @@ export const Settings = ({
                                                              }, index) => {
                     const tableSelector = (
                         <FormField key={index}
-                                   label={<SelectorLabelWithTooltip selectorLabel={tablePickerLabel}
-                                                                    selectorLabelTooltip={tablePickerTooltip}/>}>
+                                   label={<FormFieldLabelWithTooltip fieldLabel={tablePickerLabel}
+                                                                     fieldLabelTooltip={tablePickerTooltip}/>}>
                             <Box border='default' borderColor={currentFormErrorState[tableName] !== '' ? 'red' : ''}>
                                 <Select
                                     options={base.tables.map(table => ({
@@ -150,7 +150,10 @@ export const Settings = ({
                 })}
                 <br/>
                 <br/>
-                <FormField label={<Text textColor='red'>CAUTION: Delete Open Checkouts upon Check-In</Text>}>
+                <FormField
+                    label={<FormFieldLabelWithTooltip fieldLabel='Delete Open Checkouts Upon Check-In: CAUTION!'
+                                                      fieldLabelTooltip='Only enable this if you fully understand the implications. Read the "About" section for more information.'
+                                                      dangerous={true}/>}>
                     <Switch
                         value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin}
                         onChange={newValue => setOtherConfigurationFormState({
@@ -165,7 +168,9 @@ export const Settings = ({
                 <br/>
 
                 <FormField
-                    label='Default Due Date (expressed in # of days from checkout date) for new Checkouts. Only applicable if Due-Date field is enabled'>
+                    label={<FormFieldLabelWithTooltip
+                        fieldLabel='Default Due Date (expressed in # of days from Checkout creation)'
+                        fieldLabelTooltip='Applies to new Checkouts. Only applicable if Due Date field is enabled.'/>}>
                     <Input
                         value={tablesAndFieldsFormState.dateDueField === '' ? '' : otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
                         onChange={e => setOtherConfigurationFormState({
@@ -180,7 +185,9 @@ export const Settings = ({
                 </FormField>
                 <br/>
                 <br/>
-                <Button onClick={submitForm}>Save Configuration</Button>
+                <Box display='flex' justifyContent='center'>
+                    <Button variant='primary' onClick={submitForm}>Save Configuration</Button>
+                </Box>
             </Box>
         </div>
     </Box>;

@@ -73,6 +73,7 @@ loadCSSFromString(`
     border-left: 1px solid #aaa;
     border-right: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
+    margin-bottom: 3rem;
 }
 
 @media (min-width: 515px) {
@@ -105,15 +106,19 @@ loadCSSFromString(`
         - Make "delete checkouts upon checkin" configurable.
         - Make default due date configurable
         - Add premium license option/logic for doing checkouts with 5+ items.
+        - Create schema generation button
+        - Figure out offline no-network connection logic
         ---
         - Look into iots for type checking
+        - Add landing page, and documentation blog/videos?
         - How to deal with inventories where there are quantities of items??
         - Increase test coverage of extension
         - Show failures/successes per record for executeTransaction.
         - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
-        - Make config explanation menu minimizable
-        - Investigate use of base template instead of "create schema for me" button?
+        - Investigate use of base template instead of or in addition to "create schema for me" button?
         - Add in a "How this extension works" description.
+        - Add info that licenses can only be redeemed once to both gumroad and premium page.
+        - Add info in about page that write permissions and network access are required for the extension to work.
         - What happens when records limit is reached and a checkouts is created?
         - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
  */
