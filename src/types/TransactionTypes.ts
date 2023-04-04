@@ -3,8 +3,7 @@ import {Record as AirtableRecord} from "@airtable/blocks/models";
 export type CheckoutTransactionMetadata = {
     transactionType: TransactionType,
     transactionUser: AirtableRecord,
-    transactionDueDate: Date,
-    openCheckoutsShouldBeDeleted: boolean
+    transactionDueDate: Date
 }
 
 export type TransactionCart = { cartRecords: Array<AirtableRecord> }

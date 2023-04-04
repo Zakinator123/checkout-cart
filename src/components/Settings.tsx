@@ -9,7 +9,7 @@ import {
     settingsFormSchema
 } from "../utils/Constants";
 import {
-    OtherConfigurationKey,
+    OtherConfigurationKey, OtherExtensionConfiguration,
     TableAndFieldsConfigurationKey,
     TablesAndFieldsConfigurationIds,
     ValidationResult
@@ -42,32 +42,42 @@ loadCSSFromString(`
 }`)
 
 export const Settings = ({
-                             currentConfiguration,
+                             currentTableAndFieldIds,
+                             currentOtherConfiguration,
                              base,
                              validateTablesAndFields,
                              globalConfig
                          }:
                              {
-                                 currentConfiguration: TablesAndFieldsConfigurationIds | undefined
+                                 currentTableAndFieldIds: TablesAndFieldsConfigurationIds | undefined,
+                                 currentOtherConfiguration: OtherExtensionConfiguration | undefined,
                                  base: Base,
                                  validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
                                  globalConfig: GlobalConfig
                              }) => {
-    const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentConfiguration === undefined ? blankConfigurationState : currentConfiguration);
-    const [currentFormErrorState, setFormErrorState] = useState(currentConfiguration === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentConfiguration, validateTablesAndFields));
-    const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(defaultOtherConfigurationState);
+    const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentTableAndFieldIds === undefined ? blankConfigurationState : currentTableAndFieldIds);
+    const [tablesAndFieldsFormErrorState, setFormErrorState] = useState(currentTableAndFieldIds === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentTableAndFieldIds, validateTablesAndFields));
+    const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(currentOtherConfiguration === undefined ? defaultOtherConfigurationState : currentOtherConfiguration);
+    const [submitButtonDisabled, setSubmitButtonDisabled] = useState(false);
 
-    const result = getUpdatedFormErrorStateIfStaleErrorsExist(currentFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
+    const result = getUpdatedFormErrorStateIfStaleErrorsExist(tablesAndFieldsFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
     if (result.staleErrorsExist) setFormErrorState(result.newFormErrorState);
 
     const submitForm = () => {
+        setSubmitButtonDisabled(true);
         const validationResult = validateTablesAndFields(tablesAndFieldsFormState);
         if (validationResult.errorsPresent) {
             setFormErrorState(validationResult.errors);
             toast.error("There are error(s) with your configuration.");
+            setSubmitButtonDisabled(false);
         } else {
             setFormErrorState(blankErrorState);
-            const submissionPromise = globalConfig.setAsync('extensionConfiguration', tablesAndFieldsFormState)
+
+            const mergedConfiguration = {
+                tableAndFieldIds: tablesAndFieldsFormState,
+                otherConfiguration: otherConfigurationFormState
+            };
+            const submissionPromise = globalConfig.setAsync('extensionConfiguration', mergedConfiguration).finally(() => setSubmitButtonDisabled(false));
 
             toast.promise(submissionPromise, {
                 loading: 'Attempting to save configuration.',
@@ -81,7 +91,7 @@ export const Settings = ({
         let newFormState = getNewFormStateForSelectorChange(tablesAndFieldsFormState, fieldOrTableName, selectedOption);
         setTablesAndFieldsFormState(newFormState)
         const newFormValidationErrors = validateFormAndGetFormValidationErrors(newFormState, validateTablesAndFields);
-        const newFormErrorState = getNewFormErrorStateForSelectorChange(currentFormErrorState, newFormValidationErrors, fieldOrTableName);
+        const newFormErrorState = getNewFormErrorStateForSelectorChange(tablesAndFieldsFormErrorState, newFormValidationErrors, fieldOrTableName);
         setFormErrorState(newFormErrorState)
     }
 
@@ -101,7 +111,8 @@ export const Settings = ({
                         <FormField key={index}
                                    label={<FormFieldLabelWithTooltip fieldLabel={tablePickerLabel}
                                                                      fieldLabelTooltip={tablePickerTooltip}/>}>
-                            <Box border='default' borderColor={currentFormErrorState[tableName] !== '' ? 'red' : ''}>
+                            <Box border='default'
+                                 borderColor={tablesAndFieldsFormErrorState[tableName] !== '' ? 'red' : ''}>
                                 <Select
                                     options={base.tables.map(table => ({
                                         value: table.id,
@@ -113,7 +124,7 @@ export const Settings = ({
                                     value={tablesAndFieldsFormState[tableName]}
                                 />
                             </Box>
-                            <Text textColor='red'>{currentFormErrorState[tableName]}</Text>
+                            <Text textColor='red'>{tablesAndFieldsFormErrorState[tableName]}</Text>
                         </FormField>)
 
 
@@ -131,7 +142,7 @@ export const Settings = ({
                                         table={base.getTable(tablesAndFieldsFormState[tableName])}
                                         fields={requiredFields}
                                         formState={tablesAndFieldsFormState}
-                                        formErrorState={currentFormErrorState}
+                                        formErrorState={tablesAndFieldsFormErrorState}
                                         selectorChangeHandler={selectorChangeHandler}
                                     />
 
@@ -140,7 +151,7 @@ export const Settings = ({
                                         table={base.getTable(tablesAndFieldsFormState[tableName])}
                                         fields={optionalFields}
                                         formState={tablesAndFieldsFormState}
-                                        formErrorState={currentFormErrorState}
+                                        formErrorState={tablesAndFieldsFormErrorState}
                                         selectorChangeHandler={selectorChangeHandler}/>
                                 </>
                             }
@@ -155,12 +166,12 @@ export const Settings = ({
                                                       fieldLabelTooltip='Only enable this if you fully understand the implications. Read the "About" section for more information.'
                                                       dangerous={true}/>}>
                     <Switch
-                        value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin}
+                        value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn}
                         onChange={newValue => setOtherConfigurationFormState({
                             ...otherConfigurationFormState,
-                            [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: newValue
+                            [OtherConfigurationKey.deleteOpenCheckoutsUponCheckIn]: newValue
                         })}
-                        label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckin ? 'Enabled' : 'Disabled'}
+                        label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn ? 'Enabled' : 'Disabled'}
                         variant='danger'
                     />
                 </FormField>
@@ -186,7 +197,9 @@ export const Settings = ({
                 <br/>
                 <br/>
                 <Box display='flex' justifyContent='center'>
-                    <Button variant='primary' onClick={submitForm}>Save Configuration</Button>
+                    <Button disabled={submitButtonDisabled} variant='primary' onClick={submitForm}>
+                        Save Configuration
+                    </Button>
                 </Box>
             </Box>
         </div>

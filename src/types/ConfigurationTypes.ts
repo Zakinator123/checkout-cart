@@ -21,9 +21,8 @@ export enum CheckoutTableOptionalFieldName {
 }
 
 export enum OtherConfigurationKey {
-    deleteOpenCheckoutsUponCheckin = 'deleteOpenCheckoutsUponCheckin',
+    deleteOpenCheckoutsUponCheckIn = 'deleteOpenCheckoutsUponCheckIn',
     defaultNumberOfDaysFromTodayForDueDate = 'defaultNumberOfDaysFromTodayForDueDate',
-    premiumLicenseVerified = 'premiumLicenseVerified'
 }
 
 export type TableAndFieldsConfigurationKey = TableName | CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName;
@@ -50,8 +49,7 @@ type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOr
  */
 
 export type OtherExtensionConfiguration = {
-    [OtherConfigurationKey.premiumLicenseVerified]: boolean,
-    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: boolean,
+    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckIn]: boolean,
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: number,
 }
 export type ExtensionConfiguration = {

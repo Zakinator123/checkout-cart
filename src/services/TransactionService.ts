@@ -18,6 +18,7 @@ export class TransactionService {
     private readonly dateCheckedOutField?: Field;
     private readonly dateDueField?: Field;
     private readonly cartGroupField?: Field;
+    private readonly deleteOpenCheckoutsUponCheckIn: boolean;
 
     constructor({
                     checkoutsTable,
@@ -28,7 +29,8 @@ export class TransactionService {
                     linkedInventoryTableField,
                     linkedUserTableField,
                     cartGroupField
-                }: ValidatedTablesAndFieldsConfiguration) {
+                }: ValidatedTablesAndFieldsConfiguration,
+                deleteOpenCheckoutsUponCheckIn: boolean) {
         this.checkoutsTable = checkoutsTable;
         this.checkedInField = checkedInField;
         this.dateCheckedInField = dateCheckedInField;
@@ -37,6 +39,7 @@ export class TransactionService {
         this.linkedInventoryTableField = linkedInventoryTableField;
         this.linkedUserTableField = linkedUserTableField;
         this.cartGroupField = cartGroupField;
+        this.deleteOpenCheckoutsUponCheckIn = deleteOpenCheckoutsUponCheckIn;
     }
 
 
@@ -68,50 +71,33 @@ export class TransactionService {
             .map(record => record.id);
     }
 
-    getCheckoutRecordToBeCreated(cartRecord: Record, transactionData: CheckoutTransactionMetadata, cartGroupNumber: number) {
-        let optionalFields = {};
-        optionalFields = this.dateCheckedOutField ? {
-            ...optionalFields,
-            [this.dateCheckedOutField.id]: new Date()
-        } : optionalFields;
-        optionalFields = this.dateDueField ? {
-            ...optionalFields,
-            [this.dateDueField.id]: transactionData.transactionDueDate
-        } : optionalFields;
-        optionalFields = this.cartGroupField ? {
-            ...optionalFields,
-            [this.cartGroupField.id]: cartGroupNumber
-        } : optionalFields;
+    getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: CheckoutTransactionMetadata, cartGroupNumber: number) => ({
+        [this.linkedInventoryTableField.id]: [{id: cartRecord.id}],
+        [this.linkedUserTableField.id]: [{id: transactionData.transactionUser.id}],
+        [this.checkedInField.id]: false,
+        ...(this.dateCheckedOutField ? {[this.dateCheckedOutField.id]: new Date()} : {}),
+        ...(this.dateDueField ? {[this.dateDueField.id]: transactionData.transactionDueDate} : {}),
+        ...(this.cartGroupField ? {[this.cartGroupField.id]: cartGroupNumber} : {})
+    });
 
-        return {
-            [this.linkedInventoryTableField.id]: [{id: cartRecord.id}],
-            [this.linkedUserTableField.id]: [{id: transactionData.transactionUser.id}],
-            [this.checkedInField.id]: false,
-            ...optionalFields
-        };
-    }
+    formatCheckoutRecordsToBeCheckedIn = (openCheckoutsAssociatedWithCartRecord: Array<RecordId>) => openCheckoutsAssociatedWithCartRecord.map(checkoutRecordId => ({
+        id: checkoutRecordId,
+        fields: {
+            [this.checkedInField.id]: true,
+            ...(this.dateCheckedInField ? {[this.dateCheckedInField.id]: new Date()} : {})
+        }
+    }));
 
-    formatCheckoutRecordsToBeCheckedIn(openCheckoutsAssociatedWithCartRecord: Array<RecordId>) {
-        const dateCheckedIn = this.dateCheckedInField ? {[this.dateCheckedInField.id]: new Date()} : {}
-        return openCheckoutsAssociatedWithCartRecord.map(checkoutRecordId => ({
-            id: checkoutRecordId,
-            fields: {
-                [this.checkedInField.id]: true,
-                ...dateCheckedIn
-            }
-        }))
-    }
-
-    async handleOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record, openCheckoutsShouldBeDeleted: boolean) {
+    async handleOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record) {
         const openCheckoutsAssociatedWithCartRecord = await this.getOpenCheckoutsAssociatedWithCartRecord(cartRecord);
         if (openCheckoutsAssociatedWithCartRecord.length !== 0)
-            await (openCheckoutsShouldBeDeleted
+            await (this.deleteOpenCheckoutsUponCheckIn
                 ? this.checkoutsTable.deleteRecordsAsync(openCheckoutsAssociatedWithCartRecord)
                 : this.checkoutsTable.updateRecordsAsync(this.formatCheckoutRecordsToBeCheckedIn(openCheckoutsAssociatedWithCartRecord)));
     }
 
     async executeCheckInsAndCheckOutsForCartRecord(cartRecord: Record, transactionMetadata: TransactionMetadata, cartGroupNumber: number) {
-        await this.handleOpenCheckoutsAssociatedWithCartRecord(cartRecord, transactionMetadata.openCheckoutsShouldBeDeleted);
+        await this.handleOpenCheckoutsAssociatedWithCartRecord(cartRecord);
         if (transactionMetadata.transactionType == 'checkout') {
             // TODO: See if the type assertion can be removed below with some other strategy.
             await this.checkoutsTable.createRecordAsync(this.getCheckoutRecordToBeCreated(cartRecord, <CheckoutTransactionMetadata>transactionMetadata, cartGroupNumber));

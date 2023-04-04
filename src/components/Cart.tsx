@@ -38,7 +38,13 @@ const Cart = ({
                   cartRecords,
                   removeRecordFromCart,
                   viewportWidth
-              }: { cartRecords: any[]; viewportWidth: number; removeRecordFromCart: (recordId: RecordId) => void; addRecordToCart: () => Promise<void>; }) =>
+              }:
+                  {
+                      cartRecords: any[],
+                      viewportWidth: number,
+                      removeRecordFromCart: (recordId: RecordId) => void,
+                      addRecordToCart: () => Promise<void> | undefined;
+                  }) =>
     <div className='cart-container'>
         <Label> Cart: </Label>
         <Box className="cart" border="thick">

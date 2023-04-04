@@ -14,6 +14,7 @@ export const Toast = () => (<Toaster
         style: {
             background: '#363636',
             color: '#fff',
+            marginBottom: '5rem',
         },
 
         // Default options for specific types

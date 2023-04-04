@@ -7,6 +7,8 @@ import {
     TableName, TablesAndFieldsConfigurationErrors, OtherExtensionConfiguration, OtherConfigurationKey
 } from "../types/ConfigurationTypes";
 
+export const maxNumberOfCartRecordsForFreeUsers: number = 3;
+
 export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> = {
     [TableName.inventoryTable]: '',
     [TableName.userTable]: '',
@@ -21,8 +23,7 @@ export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> 
 };
 
 export const defaultOtherConfigurationState: Readonly<OtherExtensionConfiguration> = {
-    [OtherConfigurationKey.premiumLicenseVerified]: false,
-    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckin]: false,
+    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckIn]: false,
     [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: 7,
 }
 

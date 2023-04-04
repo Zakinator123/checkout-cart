@@ -1,7 +1,7 @@
 import {Box, Heading, Icon, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
 import React, {Suspense} from 'react';
 import {Settings} from "./Settings";
-import {TablesAndFieldsConfigurationIds,} from "../types/ConfigurationTypes";
+import {ExtensionConfiguration,} from "../types/ConfigurationTypes";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationValidatorService";
 // @ts-ignore
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
@@ -103,20 +103,19 @@ loadCSSFromString(`
 
 /*
     TODO:
-        - Make "delete checkouts upon checkin" configurable.
-        - Make default due date configurable
-        - Add premium license option/logic for doing checkouts with 5+ items.
+        - Add premium license option/logic for doing checkouts with 3+ items.
         - Create schema generation button
         - Figure out offline no-network connection logic
         ---
         - Look into iots for type checking
+        - Figure out how to make text of tooltips wrap in order to fit in the viewport.
         - Add landing page, and documentation blog/videos?
         - How to deal with inventories where there are quantities of items??
         - Increase test coverage of extension
         - Show failures/successes per record for executeTransaction.
         - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
         - Investigate use of base template instead of or in addition to "create schema for me" button?
-        - Add in a "How this extension works" description.
+        - Add in a "How this extension works" description
         - Add info that licenses can only be redeemed once to both gumroad and premium page.
         - Add info in about page that write permissions and network access are required for the extension to work.
         - What happens when records limit is reached and a checkouts is created?
@@ -128,7 +127,7 @@ export function ExtensionWithSettings() {
     const globalConfig = useGlobalConfig();
 
     const configurationValidator = getConfigurationValidatorForBase(base);
-    const extensionConfig = globalConfig.get('extensionConfiguration') as TablesAndFieldsConfigurationIds | undefined;
+    const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
     const isPremiumUser: boolean = (globalConfig.get('isPremiumUser') as boolean | undefined) ?? false;
 
     console.log(`Network status: ${navigator.onLine}`);
@@ -149,11 +148,13 @@ export function ExtensionWithSettings() {
                 }>
                     <CheckoutWithCartWrapper
                         extensionConfiguration={extensionConfig}
-                        configurationValidator={configurationValidator}/>
+                        configurationValidator={configurationValidator}
+                        isPremiumUser={isPremiumUser}/>
                 </Suspense>
             </TabPanel>
             <TabPanel>
-                <Settings currentConfiguration={extensionConfig}
+                <Settings currentTableAndFieldIds={extensionConfig?.tableAndFieldIds}
+                          currentOtherConfiguration={extensionConfig?.otherConfiguration}
                           base={base}
                           validateTablesAndFields={configurationValidator}
                           globalConfig={globalConfig}/>

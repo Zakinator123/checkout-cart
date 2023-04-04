@@ -18,11 +18,16 @@ import {Record} from "@airtable/blocks/models";
 import UserSelector from "./UserSelector";
 import {TransactionData, TransactionType, transactionTypes,} from "../types/TransactionTypes";
 import {TransactionService} from "../services/TransactionService";
-import {convertLocalDateTimeStringToDate, getDateTimeOneWeekFromToday, getIsoDateString} from "../utils/DateUtils";
+import {
+    convertLocalDateTimeStringToDate,
+    getDateTimeVariableNumberOfDaysFromToday,
+    getIsoDateString
+} from "../utils/DateUtils";
 import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
-import {ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
+import {OtherExtensionConfiguration, ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
 import toast from "react-hot-toast";
+import {maxNumberOfCartRecordsForFreeUsers} from "../utils/Constants";
 
 loadCSSFromString(`
 .checkout-cart-container {
@@ -40,12 +45,20 @@ loadCSSFromString(`
 
 function CheckoutWithCart({
                               transactionService,
-                              config: {
+                              tablesAndFields: {
                                   inventoryTable,
                                   userTable,
                                   dateDueField,
-                              }
-                          }: { transactionService: TransactionService, config: ValidatedTablesAndFieldsConfiguration }) {
+                              },
+                              otherConfiguration,
+                              isPremiumUser,
+                          }:
+                              {
+                                  transactionService: TransactionService,
+                                  tablesAndFields: ValidatedTablesAndFieldsConfiguration,
+                                  otherConfiguration: OtherExtensionConfiguration,
+                                  isPremiumUser: boolean
+                              }) {
 
     // Viewport Data
     const viewport = useViewport();
@@ -61,16 +74,14 @@ function CheckoutWithCart({
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
     const [cartRecords, setCartRecords] = useState<Array<Record>>([]);
     const [transactionUser, setTransactionUser] = useState<Record | null>(null);
-    const [transactionDueDate, setTransactionDueDate] = useState<Date>(getDateTimeOneWeekFromToday());
+    const [transactionDueDate, setTransactionDueDate] = useState<Date>(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate));
 
-    const deleteCheckoutsUponCheckIn: boolean = false;
 
     const transactionData: TransactionData = {
         transactionType: transactionType,
         cartRecords: cartRecords,
         transactionUser: transactionUser,
         transactionDueDate: transactionDueDate,
-        openCheckoutsShouldBeDeleted: deleteCheckoutsUponCheckIn
     };
 
     // Other State
@@ -80,13 +91,17 @@ function CheckoutWithCart({
     // Transaction State Mutators
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
-    const addRecordToCart = () => expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
-        .then(record => {
-            if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
-        });
+    const addRecordToCart = () => {
+        if (!isPremiumUser && cartRecords.length >= maxNumberOfCartRecordsForFreeUsers) {
+            setErrorDialogMessages([`You have reached the maximum number of records that you can add to the cart as a free user. Please upgrade to a premium account to add more records to the cart.`]);
+        } else return expandRecordPickerAsync(inventoryTableRecords.filter(record => !cartRecords.includes(record)))
+            .then(record => {
+                if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
+            });
+    };
     const clearTransactionData = () => {
         // TODO: Leave cart records when there are errors associated with their transaction?
-        setTransactionDueDate(getDateTimeOneWeekFromToday())
+        setTransactionDueDate(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate))
         // TODO: If there are errors associated with the transaction, then perhaps the user should not be cleared?
         setTransactionUser(null);
     }
@@ -110,11 +125,13 @@ function CheckoutWithCart({
     }
 
     return <Box className="checkout-cart-container">
-        <TransactionTypeSelector currentOption={transactionType} options={Object.values(transactionTypes)}
+        <TransactionTypeSelector currentOption={transactionType}
+                                 options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}/>
 
         <Cart viewportWidth={viewportWidth}
-              cartRecords={cartRecords} addRecordToCart={addRecordToCart}
+              cartRecords={cartRecords}
+              addRecordToCart={addRecordToCart}
               removeRecordFromCart={removeRecordFromCart}/>
 
         {transactionType === transactionTypes.checkout.value && <>
@@ -124,8 +141,9 @@ function CheckoutWithCart({
             />
 
             {dateDueField !== undefined &&
-                <FormField label="Due Date (Default is 1 week from today):">
-                    <Input type='datetime-local' value={getIsoDateString(transactionDueDate)}
+                <FormField label={`Due Date (The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today):`}>
+                    <Input type='date'
+                           value={getIsoDateString(transactionDueDate)}
                            onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}/>
                 </FormField>
             }
