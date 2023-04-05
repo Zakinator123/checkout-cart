@@ -1,5 +1,5 @@
 import {Box, Heading, Icon, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
-import React, {Suspense} from 'react';
+import React, {Suspense, useState} from 'react';
 import {Settings} from "./Settings";
 import {ExtensionConfiguration,} from "../types/ConfigurationTypes";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationValidatorService";
@@ -104,10 +104,9 @@ loadCSSFromString(`
 /*
     TODO:
         - Create schema generation button
-        - Figure out offline no-network connection logic
         ---
         - Look into iots for type checking
-        - If config changes were made but not saved, warn user?
+        - Add schema visualizer in settings page
         - If premium is not active, show message on cart that max cart limit is 3 for free users.
         - Figure out how to make text of tooltips wrap in order to fit in the viewport.
         - Add landing page, and documentation blog/videos?
@@ -126,12 +125,13 @@ loadCSSFromString(`
 export function ExtensionWithSettings() {
     const base = useBase();
     const globalConfig = useGlobalConfig();
+    const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
+    const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     const configurationValidator = getConfigurationValidatorForBase(base);
     const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
     const isPremiumUser: boolean = (globalConfig.get('isPremiumUser') as boolean | undefined) ?? false;
 
-    console.log(`Network status: ${navigator.onLine}`);
     return <div className='container'>
         <Heading>🚀 Checkout Cart 🚀</Heading>
         <Tabs defaultIndex={extensionConfig === undefined ? 3 : 0}>
@@ -145,12 +145,13 @@ export function ExtensionWithSettings() {
                 <Suspense fallback={
                     <Box className='tab-loading-state'>
                         <Loader scale={0.5}/>
-                    </Box>
-                }>
+                    </Box>}>
                     <CheckoutWithCartWrapper
                         extensionConfiguration={extensionConfig}
                         configurationValidator={configurationValidator}
-                        isPremiumUser={isPremiumUser}/>
+                        isPremiumUser={isPremiumUser}
+                        transactionIsProcessing={transactionIsProcessing}
+                        setTransactionIsProcessing={setTransactionIsProcessing}/>
                 </Suspense>
             </TabPanel>
             <TabPanel>
@@ -158,7 +159,9 @@ export function ExtensionWithSettings() {
                           currentOtherConfiguration={extensionConfig?.otherConfiguration}
                           base={base}
                           validateTablesAndFields={configurationValidator}
-                          globalConfig={globalConfig}/>
+                          globalConfig={globalConfig}
+                configurationUpdatePending={configurationUpdatePending}
+                setConfigurationUpdatePending={setConfigurationUpdatePending}/>
             </TabPanel>
             <TabPanel><Premium isPremiumUser={isPremiumUser} globalConfig={globalConfig}/></TabPanel>
             <TabPanel><About/></TabPanel>

@@ -28,6 +28,7 @@ import {RecordId} from "@airtable/blocks/types";
 import {OtherExtensionConfiguration, ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
 import toast from "react-hot-toast";
 import {maxNumberOfCartRecordsForFreeUsers} from "../utils/Constants";
+import {airtableMutationWrapper} from "../utils/RandomUtils";
 
 loadCSSFromString(`
 .checkout-cart-container {
@@ -52,12 +53,16 @@ function CheckoutWithCart({
                               },
                               otherConfiguration,
                               isPremiumUser,
+                              transactionIsProcessing,
+                              setTransactionIsProcessing
                           }:
                               {
                                   transactionService: TransactionService,
                                   tablesAndFields: ValidatedTablesAndFieldsConfiguration,
                                   otherConfiguration: OtherExtensionConfiguration,
-                                  isPremiumUser: boolean
+                                  isPremiumUser: boolean,
+                                  transactionIsProcessing: boolean,
+                                  setTransactionIsProcessing: (transactionIsProcessing: boolean) => void
                               }) {
 
     // Viewport Data
@@ -85,7 +90,6 @@ function CheckoutWithCart({
 
     // Other State
     const [errorDialogMessages, setErrorDialogMessages] = useState<Array<string>>([]);
-    const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     // Transaction State Mutators
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
@@ -120,7 +124,7 @@ function CheckoutWithCart({
             setTransactionIsProcessing(true);
 
             // Show user notifications for settled Promises.
-            const transactionPromise = transactionService.executeTransaction(transactionData, removeRecordFromCart)
+            const transactionPromise = airtableMutationWrapper(() => transactionService.executeTransaction({...transactionData}, removeRecordFromCart))
                 .then(() => clearTransactionData())
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
 
@@ -135,10 +139,12 @@ function CheckoutWithCart({
     return <Box className="checkout-cart-container">
         <TransactionTypeSelector currentOption={transactionType}
                                  options={Object.values(transactionTypes)}
-                                 setOption={setTransactionType}/>
+                                 setOption={setTransactionType}
+                                 transactionIsProcessing={transactionIsProcessing}/>
 
         <Cart viewportWidth={viewportWidth}
               cartRecords={cartRecords}
+              transactionIsProcessing={transactionIsProcessing}
               addRecordToCart={addRecordToCart}
               removeRecordFromCart={removeRecordFromCart}/>
 
@@ -146,6 +152,7 @@ function CheckoutWithCart({
             <UserSelector viewportWidth={viewportWidth}
                           currentTransactionUser={transactionUser}
                           selectUser={selectUserForTransaction}
+                          transactionIsProcessing={transactionIsProcessing}
             />
 
             {dateDueField !== undefined &&
@@ -153,7 +160,8 @@ function CheckoutWithCart({
                     label={`Due Date (The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today):`}>
                     <Input type='date'
                            value={getIsoDateString(transactionDueDate)}
-                           onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}/>
+                           onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}
+                           disabled={transactionIsProcessing}/>
                 </FormField>
             }
         </>

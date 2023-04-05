@@ -18,12 +18,16 @@ loadCSSFromString(`
 const CheckoutWithCartWrapper = ({
                                      extensionConfiguration,
                                      configurationValidator,
-                                     isPremiumUser
+                                     isPremiumUser,
+                                     transactionIsProcessing,
+                                     setTransactionIsProcessing
                                  }:
                                      {
                                          extensionConfiguration: ExtensionConfiguration | undefined,
                                          configurationValidator: (configIds: TablesAndFieldsConfigurationIds) => ValidationResult,
-                                         isPremiumUser: boolean
+                                         isPremiumUser: boolean,
+                                         transactionIsProcessing: boolean,
+                                         setTransactionIsProcessing: (processing: boolean) => void
                                      }) => {
 
     if (extensionConfiguration === undefined) {
@@ -42,6 +46,8 @@ const CheckoutWithCartWrapper = ({
             tablesAndFields={validationResult.configuration}
             otherConfiguration={extensionConfiguration.otherConfiguration}
             isPremiumUser={isPremiumUser}
+            transactionIsProcessing={transactionIsProcessing}
+            setTransactionIsProcessing={setTransactionIsProcessing}
         />;
 }
 

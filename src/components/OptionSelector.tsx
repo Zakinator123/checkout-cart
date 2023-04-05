@@ -16,8 +16,9 @@ loadCSSFromString(`
 const OptionSelector = ({
                             currentOption,
                             options,
-                            setOption
-                        }: { currentOption: SelectOptionValue; setOption: any; options: SelectOption[]; }) =>
+                            setOption,
+                            transactionIsProcessing
+                        }: { currentOption: SelectOptionValue; setOption: any; options: SelectOption[], transactionIsProcessing: boolean }) =>
     <div className='option-selector'>
         <div>
             <Label>Select the transaction type:</Label>
@@ -26,6 +27,7 @@ const OptionSelector = ({
                 onChange={(newValue) => setOption(newValue)}
                 options={options}
                 maxWidth={400}
+                disabled={transactionIsProcessing}
             />
         </div>
     </div>;

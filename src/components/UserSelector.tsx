@@ -27,8 +27,9 @@ loadCSSFromString(`
 const UserSelector = ({
                           currentTransactionUser,
                           selectUser,
-                          viewportWidth
-                      }: { currentTransactionUser: Record | null; viewportWidth: number; selectUser: () => Promise<void> }) =>
+                          viewportWidth,
+                          transactionIsProcessing
+                      }: { currentTransactionUser: Record | null; viewportWidth: number; selectUser: () => Promise<void>, transactionIsProcessing: boolean }) =>
     <div className='user-selector-container'>
         <Label> User Associated with Cart: </Label>
         <Box className='user-selector' border='thick'>
@@ -49,6 +50,7 @@ const UserSelector = ({
                     className='user-search-button'
                     aria-label="Search and select a user to associate with the transaction."
                     icon='search'
+                    disabled={transactionIsProcessing}
                     onClick={selectUser}
                 />
             </Tooltip>

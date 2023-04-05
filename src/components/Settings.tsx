@@ -26,6 +26,7 @@ import {
     getUpdatedFormErrorStateIfStaleErrorsExist,
     validateFormAndGetFormValidationErrors
 } from "../utils/SettingsFormUtils";
+import {airtableMutationWrapper} from "../utils/RandomUtils";
 
 loadCSSFromString(`
 .settings-container {
@@ -47,19 +48,22 @@ export const Settings = ({
                              currentOtherConfiguration,
                              base,
                              validateTablesAndFields,
-                             globalConfig
+                             globalConfig,
+    configurationUpdatePending,
+    setConfigurationUpdatePending
                          }:
                              {
                                  currentTableAndFieldIds: TablesAndFieldsConfigurationIds | undefined,
                                  currentOtherConfiguration: OtherExtensionConfiguration | undefined,
                                  base: Base,
                                  validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
-                                 globalConfig: GlobalConfig
+                                 globalConfig: GlobalConfig,
+                                 configurationUpdatePending: boolean,
+                                 setConfigurationUpdatePending: (pending: boolean) => void
                              }) => {
     const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentTableAndFieldIds === undefined ? blankConfigurationState : currentTableAndFieldIds);
     const [tablesAndFieldsFormErrorState, setFormErrorState] = useState(currentTableAndFieldIds === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentTableAndFieldIds, validateTablesAndFields));
     const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(currentOtherConfiguration === undefined ? defaultOtherConfigurationState : currentOtherConfiguration);
-    const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
 
     const result = getUpdatedFormErrorStateIfStaleErrorsExist(tablesAndFieldsFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
     if (result.staleErrorsExist) setFormErrorState(result.newFormErrorState);
@@ -78,11 +82,11 @@ export const Settings = ({
                 tableAndFieldIds: tablesAndFieldsFormState,
                 otherConfiguration: otherConfigurationFormState
             };
-            const submissionPromise = globalConfig.setAsync('extensionConfiguration', mergedConfiguration)
+            const submissionPromise = airtableMutationWrapper(() => globalConfig.setAsync('extensionConfiguration', mergedConfiguration))
                 .finally(() => setConfigurationUpdatePending(false));
 
             toast.promise(submissionPromise, {
-                loading: 'Attempting to save configuration.',
+                loading: 'Attempting to save configuration..',
                 success: 'Configuration saved successfully!',
                 error: 'An error occurred saving the configuration.',
             });

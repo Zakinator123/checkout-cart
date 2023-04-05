@@ -36,14 +36,16 @@ loadCSSFromString(`
 const Cart = ({
                   addRecordToCart,
                   cartRecords,
+                  transactionIsProcessing,
                   removeRecordFromCart,
                   viewportWidth
               }:
                   {
-                      cartRecords: any[],
-                      viewportWidth: number,
-                      removeRecordFromCart: (recordId: RecordId) => void,
                       addRecordToCart: () => Promise<void> | undefined;
+                      cartRecords: any[],
+                      transactionIsProcessing: boolean,
+                      removeRecordFromCart: (recordId: RecordId) => void,
+                      viewportWidth: number,
                   }) =>
     <div className='cart-container'>
         <Label> Cart: </Label>
@@ -64,6 +66,7 @@ const Cart = ({
                             <Button
                                 onClick={() => removeRecordFromCart(record.id)}
                                 size='small'
+                                disabled={transactionIsProcessing}
                                 aria-label="Remove item from cart"
                                 className='cart-item-delete-button' icon='trash'
                             >
@@ -74,6 +77,7 @@ const Cart = ({
             }
             <Button
                 onClick={addRecordToCart}
+                disabled={transactionIsProcessing}
                 icon="plus"
                 margin={3}>
                 Add to Cart
