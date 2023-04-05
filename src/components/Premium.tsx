@@ -2,13 +2,14 @@ import React, {useState} from "react";
 import {Box, Button, FormField, Icon, Input, Link, loadCSSFromString, Loader, Text} from "@airtable/blocks/ui";
 import toast, {ToastPosition} from "react-hot-toast";
 import {GlobalConfig} from "@airtable/blocks/types";
+import {airtableMutationWrapper} from "../utils/RandomUtils";
 
 loadCSSFromString(`
 .centered-premium-container {
     display: flex;
     flex-direction: column;
     padding: 2rem;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .premium-input-box {
@@ -24,6 +25,7 @@ loadCSSFromString(`
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    margin-bottom: 0;
 }
 
 @media (min-width: 515px) {
@@ -37,7 +39,10 @@ loadCSSFromString(`
 }
 `);
 
-const licenseVerificationToastStyles = {position: 'top-center' as ToastPosition, style: {marginTop: '1rem', marginBottom: 0}};
+const licenseVerificationToastStyles = {
+    position: 'top-center' as ToastPosition,
+    style: {marginTop: '1rem', marginBottom: 0}
+};
 
 export const Premium = ({isPremiumUser, globalConfig}: {
     isPremiumUser: boolean, globalConfig: GlobalConfig
@@ -63,10 +68,15 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             })
             .then(responseJson => {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
-                if (responseSuccessful) globalConfig.setAsync('isPremiumUser', true)
-                    .then(() => toast.success('License verified! You are now a premium user!', licenseVerificationToastStyles))
-                    .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.', licenseVerificationToastStyles))
-                else toast.error('Invalid license key!', licenseVerificationToastStyles)
+                if (responseSuccessful) {
+                    responseJson.uses >= 2
+                        ? toast.error(`This license has already been redeemed. Licenses can only be used once per base.
+                         
+                                                 If you accidentally deleted and reinstalled the extension and need another license, please contact the developer.`, licenseVerificationToastStyles)
+                        : airtableMutationWrapper(() => globalConfig.setAsync('isPremiumUser', true))
+                            .then(() => toast.success('License verified! You are now a premium user!', licenseVerificationToastStyles))
+                            .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.', licenseVerificationToastStyles))
+                } else toast.error('Invalid license key!', licenseVerificationToastStyles)
             })
             .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.', licenseVerificationToastStyles))
             .finally(() => setVerifyButtonDisabledState(false))
@@ -78,8 +88,11 @@ export const Premium = ({isPremiumUser, globalConfig}: {
         </Text>
         <Box className='premium-form'>
             <FormField
-                label={<><Icon name="premium" size={12}/> Premium License Key <Icon name="premium"
-                                                                                    size={12}/></>}>
+                label={
+                    <>
+                        <Icon name="premium" size={12}/> Premium License Key <Icon name="premium" size={12}/>
+                    </>
+                }>
                 <Box className='premium-input-box'>
                     <Input value={isPremiumUser ? "✅  You've already upgraded!" : licenseKey}
                            disabled={isPremiumUser}
@@ -94,6 +107,7 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                             scale={0.3}/></> : 'Verify License'}
                     </Button>
                 </Box>
+                <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between bases.</Text></Box>
             </FormField>
             <Box display='flex' alignContent='center' justifyContent='center'>
                 <Link

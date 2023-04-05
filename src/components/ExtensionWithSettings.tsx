@@ -103,23 +103,20 @@ loadCSSFromString(`
 
 /*
     TODO:
+        - Add info in about page that write permissions and network access are required for the extension to work.
+        - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
+        - Add solicitation of feedback/usecases in the about page.
+        ---
         - Create schema generation button
+        - Investigate use of base template instead of or in addition to "create schema for me" button?'
+        - Add schema visualization in settings page
         ---
         - Look into iots for type checking
-        - Add schema visualizer in settings page
-        - If premium is not active, show message on cart that max cart limit is 3 for free users.
-        - Figure out how to make text of tooltips wrap in order to fit in the viewport.
-        - Add landing page, and documentation blog/videos?
-        - How to deal with inventories where there are quantities of items??
+        - Add landing page, and documentation blog/videos
         - Increase test coverage of extension
         - Show failures/successes per record for executeTransaction.
         - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
-        - Investigate use of base template instead of or in addition to "create schema for me" button?
-        - Add in a "How this extension works" description
-        - Add info that licenses can only be redeemed once to both gumroad and premium page.
-        - Add info in about page that write permissions and network access are required for the extension to work.
-        - What happens when records limit is reached and a checkouts is created?
-        - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
+        - Add in a "How to use this extension" description
  */
 
 export function ExtensionWithSettings() {

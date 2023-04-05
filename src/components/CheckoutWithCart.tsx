@@ -146,7 +146,8 @@ function CheckoutWithCart({
               cartRecords={cartRecords}
               transactionIsProcessing={transactionIsProcessing}
               addRecordToCart={addRecordToCart}
-              removeRecordFromCart={removeRecordFromCart}/>
+              removeRecordFromCart={removeRecordFromCart}
+              isPremiumUser={isPremiumUser}/>
 
         {transactionType === transactionTypes.checkout.value && <>
             <UserSelector viewportWidth={viewportWidth}

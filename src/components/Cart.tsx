@@ -38,7 +38,8 @@ const Cart = ({
                   cartRecords,
                   transactionIsProcessing,
                   removeRecordFromCart,
-                  viewportWidth
+                  viewportWidth,
+                  isPremiumUser,
               }:
                   {
                       addRecordToCart: () => Promise<void> | undefined;
@@ -46,6 +47,7 @@ const Cart = ({
                       transactionIsProcessing: boolean,
                       removeRecordFromCart: (recordId: RecordId) => void,
                       viewportWidth: number,
+                      isPremiumUser: boolean
                   }) =>
     <div className='cart-container'>
         <Label> Cart: </Label>
@@ -83,6 +85,9 @@ const Cart = ({
                 Add to Cart
             </Button>
         </Box>
+        {!isPremiumUser &&
+            <Box margin={2}><Text size='small' textColor='gray'>Upgrade to premium to add more than 3 items to the
+                cart!</Text></Box>}
     </div>;
 
 export default Cart;

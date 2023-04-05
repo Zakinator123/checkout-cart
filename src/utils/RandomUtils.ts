@@ -19,7 +19,6 @@ export const getRecordCardWidth = (viewportWidth: number) => Math.min(800, (view
 
 export const airtableMutationWrapper = (airtableMutator: () => Promise<unknown>): Promise<unknown> => {
     return new Promise((resolve, reject) => {
-        console.log("Timeout was activated");
         const timeout = setTimeout(() => {
             toast.loading(`Airtable is taking a while to respond. Please check your network connection.
             
