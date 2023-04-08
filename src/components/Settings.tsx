@@ -137,10 +137,10 @@ export const Settings = ({
                                 <Box border='default'
                                      borderColor={tablesAndFieldsFormErrorState[tableName] !== '' ? 'red' : ''}>
                                     <Select
-                                        options={base.tables.map(table => ({
+                                        options={[{disabled: true, value: '', label: ''}, ...base.tables.map(table => ({
                                             value: table.id,
                                             label: table.name
-                                        }))}
+                                        }))]}
                                         name={tableName}
                                         id={tableName}
                                         onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}

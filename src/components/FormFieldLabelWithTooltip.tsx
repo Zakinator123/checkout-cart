@@ -9,7 +9,7 @@ export const FormFieldLabelWithTooltip = ({
     <>
         {fieldLabel}
         <Tooltip
-            fitInWindowMode={Tooltip.fitInWindowModes.NONE}
+            fitInWindowMode={Tooltip.fitInWindowModes.NUDGE}
             content={fieldLabelTooltip}
             placementX={Tooltip.placements.CENTER}
             placementY={Tooltip.placements.BOTTOM}>

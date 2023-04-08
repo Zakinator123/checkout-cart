@@ -109,7 +109,6 @@ loadCSSFromString(`
         - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Add schema visualization in settings page
         ---
-        - Add empty placeholder options in configuration selectors to stop unnecessary console messages.
         - Look into iots for type checking
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Add landing page, and documentation blog/videos
@@ -133,7 +132,7 @@ export function ExtensionWithSettings() {
 
     return <div className='container'>
         <Heading>🚀 Checkout Cart 🚀</Heading>
-        <Tabs defaultIndex={extensionConfig === undefined ? 3 : 0}>
+        <Tabs defaultIndex={extensionConfig === undefined ? 1 : 0}>
             <TabList>
                 <Tab>🛒 Checkout Cart </Tab>
                 <Tab><Icon name="cog" size={12}/> Settings</Tab>

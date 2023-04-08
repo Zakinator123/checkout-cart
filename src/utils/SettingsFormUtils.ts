@@ -11,14 +11,14 @@ import {Field, FieldType, Table} from "@airtable/blocks/models";
 import {TableId} from "@airtable/blocks/types";
 
 export const validateFormAndGetFormValidationErrors = (formState: TablesAndFieldsConfigurationIds,
-                                                configurationValidator: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult) => {
+                                                       configurationValidator: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult) => {
     const validationResult = configurationValidator(formState);
     return validationResult.errorsPresent ? validationResult.errors : blankErrorState;
 }
 
 export const getNewFormErrorStateForSelectorChange = (currentFormErrorState: Readonly<TablesAndFieldsConfigurationErrors>,
-                                               formValidationErrors: TablesAndFieldsConfigurationErrors,
-                                               fieldOrTableName: TableAndFieldsConfigurationKey) =>
+                                                      formValidationErrors: TablesAndFieldsConfigurationErrors,
+                                                      fieldOrTableName: TableAndFieldsConfigurationKey) =>
     mapValues(currentFormErrorState, (key, value) => {
         // Replace values in the currentFormErrorState with values from the formValidationErrors
         // iff the formValidationErrors has no value for the key or if field/table name is the same as the key.
@@ -30,8 +30,8 @@ export const getNewFormErrorStateForSelectorChange = (currentFormErrorState: Rea
 export const formErrorStateHasErrors = (formErrorState: Readonly<TablesAndFieldsConfigurationErrors>): boolean => Object.values(formErrorState).some(value => value !== '')
 
 export const getUpdatedFormErrorStateIfStaleErrorsExist = (currentFormErrorState: Readonly<TablesAndFieldsConfigurationErrors>,
-                                                    validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
-                                                    tablesAndFieldsFormState: Readonly<TablesAndFieldsConfigurationIds>)
+                                                           validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
+                                                           tablesAndFieldsFormState: Readonly<TablesAndFieldsConfigurationIds>)
     : { staleErrorsExist: boolean, newFormErrorState: TablesAndFieldsConfigurationErrors } => {
     // If currentFormErrorState has any entries with values that are not empty, call validateFormAndGetFormValidationErrors with the currentConfiguration and if there are
     // errors in the currentFormErrorState that no longer exist in the validationResult, call setFormErrorState to remove the error from the currentFormErrorState.
@@ -55,8 +55,8 @@ export const getUpdatedFormErrorStateIfStaleErrorsExist = (currentFormErrorState
 }
 
 export const getNewFormStateForSelectorChange = (tablesAndFieldsFormState: Readonly<TablesAndFieldsConfigurationIds>,
-                                          fieldOrTableName: TableAndFieldsConfigurationKey,
-                                          selectedOption: SelectOptionValue) => {
+                                                 fieldOrTableName: TableAndFieldsConfigurationKey,
+                                                 selectedOption: SelectOptionValue) => {
     let newFormState = {...tablesAndFieldsFormState, [fieldOrTableName]: selectedOption}
 
     // If selector is a table, then all dependent fields must be reset.
@@ -75,11 +75,11 @@ export const getNewFormStateForSelectorChange = (tablesAndFieldsFormState: Reado
 };
 
 export const getValidFieldOptionsForFieldSelector = (table: Table,
-                                              expectedFieldType: FieldType,
-                                              mustLinkTo: TableName | undefined,
-                                              formState: TablesAndFieldsConfigurationIds,
-                                              fieldIsRequired: boolean) => {
-    let atLeastOneFieldIsEnabled = false;
+                                                     expectedFieldType: FieldType,
+                                                     mustLinkTo: TableName | undefined,
+                                                     formState: TablesAndFieldsConfigurationIds,
+                                                     fieldIsRequired: boolean) => {
+    let atLeastOneFieldSelectorOptionIsEnabled = false;
 
     const options = table.fields.map((field: Field) => {
         let fieldOptionDisabled: boolean;
@@ -89,7 +89,7 @@ export const getValidFieldOptionsForFieldSelector = (table: Table,
             fieldOptionDisabled = field.config.options.linkedTableId !== mustLinkToTableId;
         } else fieldOptionDisabled = false;
 
-        if (fieldOptionDisabled === false) atLeastOneFieldIsEnabled = true;
+        if (fieldOptionDisabled === false) atLeastOneFieldSelectorOptionIsEnabled = true;
         return {
             disabled: fieldOptionDisabled,
             label: field.name,
@@ -103,25 +103,26 @@ export const getValidFieldOptionsForFieldSelector = (table: Table,
         value: ''
     };
 
-    if (!atLeastOneFieldIsEnabled) {
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        const message = (mustLinkTo ?? false)
-            ? `ERROR: No fields exist that link to the configured ${mustLinkTo} table`
-            : `ERROR: No fields exist of type ${expectedFieldType}`;
-        const errorOption = {
-            disabled: true,
-            label: message,
-            value: undefined
-        };
-
-        return fieldIsRequired ? [errorOption] : [disabledOption, errorOption];
+    const defaultEmptyFieldStateOption = {
+        disabled: true,
+        label: '',
+        value: ''
     }
 
-    return !fieldIsRequired
-        ? [{
-            disabled: false,
-            label: 'DISABLED - Extension Will Not Use This Field',
-            value: ''
-        }, ...options]
-        : options;
+    if (atLeastOneFieldSelectorOptionIsEnabled) {
+        return fieldIsRequired ? [defaultEmptyFieldStateOption, ...options] : [disabledOption, ...options];
+    }
+
+    const isLinkedField: boolean = mustLinkTo !== undefined;
+    const message = (isLinkedField)
+        ? `ERROR: No fields exist that link to the configured ${mustLinkTo} table`
+        : `ERROR: No fields exist of type ${expectedFieldType}`;
+
+    const errorOption = {
+        disabled: true,
+        label: message,
+        value: undefined
+    };
+
+    return fieldIsRequired ? [defaultEmptyFieldStateOption, errorOption] : [disabledOption, errorOption];
 }
