@@ -118,6 +118,7 @@ loadCSSFromString(`
         - Put icons for field type of each field in settings page
         - Extract more styles into css classes
         - Extract all strings into a separate file.
+        - Extract css for this file into a separate CSS file
  */
 
 export function ExtensionWithSettings() {
@@ -143,7 +144,7 @@ export function ExtensionWithSettings() {
                 <TabPanel>
                     <Suspense fallback={
                         <Box className='tab-loading-state'>
-                            <Loader scale={0.5}/>
+                            <Loader scale={0.5} fillColor='green'/>
                         </Box>}>
                         <CheckoutWithCartWrapper
                             extensionConfiguration={extensionConfig}

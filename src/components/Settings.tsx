@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Box, Button, FormField, Input, loadCSSFromString, Loader, Select, Switch, Text} from "@airtable/blocks/ui";
-import {Base} from "@airtable/blocks/models";
+import {Base, FieldType} from "@airtable/blocks/models";
 import {ConfigurationInstructions} from "./ConfigurationInstructions";
 import {
     blankConfigurationState,
@@ -117,9 +117,59 @@ export const Settings = ({
         setFormErrorState(newFormErrorState)
     }
 
+    const generateSchema = async () => {
+
+        /* TODO:
+             - Append random number on table names
+             - Add date fields
+             - Suggest in description that the user should change the primary field to an autonumber field for checkouts table
+             - Set currently viewed table to be checkouts table
+             - Add some test data to the fields
+             - Add dialog warning user of the action
+             - Check if user has permissions to create the tables.
+             - Set extension configuration to use the ids of the new tables
+             -
+        */
+
+        const inventoryTable = await base.createTableAsync('Test Inventory 1', [{
+            name: 'Item Name',
+            type: FieldType.SINGLE_LINE_TEXT,
+            description: 'This is the primary field'
+        }])
+
+        const usersTable = await base.createTableAsync('Test Users 1', [{
+            name: 'User Name',
+            type: FieldType.SINGLE_LINE_TEXT,
+            description: 'This is the primary field'
+        }])
+
+        const checkoutsTable = await base.createTableAsync('Test Checkouts 1', [
+            {
+                name: 'Checkout Id',
+                type: FieldType.NUMBER,
+                options: {precision: 0},
+                description: 'This is the primary field - this should be changed to an autonumber field.'
+            },
+            {
+                name: 'Checked In',
+                type: FieldType.CHECKBOX,
+                options: {
+                    icon: 'check',
+                    color: 'greenBright'
+                },
+                description: 'This field indicates whether the item has been checked in or not'
+            }])
+
+        checkoutsTable.createFieldAsync('Checked Out Item', FieldType.MULTIPLE_RECORD_LINKS, {linkedTableId: inventoryTable.id});
+        checkoutsTable.createFieldAsync('Checked Out To', FieldType.MULTIPLE_RECORD_LINKS, {linkedTableId: usersTable.id});
+    }
+
     return <>
         <Box className='settings-container'>
             <ConfigurationInstructions/>
+            <Box margin='1rem'>
+                <Button onClick={generateSchema}>Generate Schema</Button>
+            </Box>
             <div>
                 <Text as='strong' fontWeight='600' fontSize={14}>Extension Configuration</Text>
                 <Box padding='1.5rem' maxWidth={800}>
