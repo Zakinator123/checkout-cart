@@ -1,28 +1,33 @@
 import React from "react";
 import {Toaster} from "react-hot-toast";
 
-export const Toast = () => (<Toaster
+export const Toast = ({top}: {top: string}) => <Toaster
     position="bottom-center"
     reverseOrder={false}
+    containerStyle={{
+        position: 'relative',
+        inset: `${top} 0 0 0`,
+        margin: '1rem'
+    }}
     gutter={8}
-    containerClassName=""
-    containerStyle={{}}
     toastOptions={{
         // Define default options
-        className: '',
-        duration: 5000,
+        duration: 4000,
         style: {
+            maxWidth: 'max-content',
+            minWidth: '250px',
             background: '#363636',
             color: '#fff',
-            marginBottom: '5rem',
+            position: 'relative',
         },
 
         // Default options for specific types
         success: {
             duration: 2000,
             style: {
+                minWidth: 'fit-content',
                 background: 'green'
             },
         }
     }}
-/>);
+/>

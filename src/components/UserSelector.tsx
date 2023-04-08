@@ -11,7 +11,7 @@ loadCSSFromString(`
     align-items: center;
     background-color: #e7ffe7;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .user-search-button {

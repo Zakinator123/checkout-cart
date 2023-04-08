@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import TransactionTypeSelector from "./OptionSelector";
 import {
     Box,
@@ -23,12 +23,12 @@ import {
     getDateTimeVariableNumberOfDaysFromToday,
     getIsoDateString
 } from "../utils/DateUtils";
-import {ErrorDialog} from "./ErrorDialog";
 import {RecordId} from "@airtable/blocks/types";
 import {OtherExtensionConfiguration, ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
 import toast from "react-hot-toast";
 import {maxNumberOfCartRecordsForFreeUsers} from "../utils/Constants";
-import {airtableMutationWrapper} from "../utils/RandomUtils";
+import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
+import {Toast} from "./Toaster";
 
 loadCSSFromString(`
 .checkout-cart-container {
@@ -39,38 +39,42 @@ loadCSSFromString(`
     background-color: white;
     padding: 1rem;
     overflow: auto;
-    gap: 2rem;
+    gap: 1.5rem;
     height: 100%;
     width: 100%;
 }`);
 
-function CheckoutWithCart({
-                              transactionService,
-                              tablesAndFields: {
-                                  inventoryTable,
-                                  userTable,
-                                  dateDueField,
-                              },
-                              otherConfiguration,
-                              isPremiumUser,
-                              transactionIsProcessing,
-                              setTransactionIsProcessing
-                          }:
-                              {
-                                  transactionService: TransactionService,
-                                  tablesAndFields: ValidatedTablesAndFieldsConfiguration,
-                                  otherConfiguration: OtherExtensionConfiguration,
-                                  isPremiumUser: boolean,
-                                  transactionIsProcessing: boolean,
-                                  setTransactionIsProcessing: (transactionIsProcessing: boolean) => void
-                              }) {
+function CheckoutCart({
+                          transactionService,
+                          tablesAndFields: {
+                              inventoryTable,
+                              userTable,
+                              dateDueField,
+                          },
+                          otherConfiguration,
+                          isPremiumUser,
+                          transactionIsProcessing,
+                          setTransactionIsProcessing
+                      }:
+                          {
+                              transactionService: TransactionService,
+                              tablesAndFields: ValidatedTablesAndFieldsConfiguration,
+                              otherConfiguration: OtherExtensionConfiguration,
+                              isPremiumUser: boolean,
+                              transactionIsProcessing: boolean,
+                              setTransactionIsProcessing: (transactionIsProcessing: boolean) => void
+                          }) {
 
     // Viewport Data
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
-    // TODO: Filter out unwanted fields (e.g. reverse linked fields?)
+    useEffect(() => {
+        toast.remove();
+        return () => toast.remove();
+    }, [])
+
     const userRecords = useRecords(userTable);
     const inventoryTableRecords = useRecords(inventoryTable);
 
@@ -88,27 +92,21 @@ function CheckoutWithCart({
         transactionDueDate: transactionDueDate,
     };
 
-    // Other State
-    const [errorDialogMessages, setErrorDialogMessages] = useState<Array<string>>([]);
-
     // Transaction State Mutators
     const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
     const addRecordToCart = () => {
         if (!isPremiumUser && cartRecords.length >= maxNumberOfCartRecordsForFreeUsers) {
-            toast.error(`You have reached the maximum number of records that you can add to the cart as a free user.
-            
-             Please upgrade to a premium account to add more records to the cart.`);
+            toast.error(`Please upgrade to premium to add more records to the cart.`, {duration: 6000, style: {top: '-18rem'}});
         } else {
+            // TODO: Instead of filtering here, just show an error if the user tries to add a record that is already in the cart.
             const recordsNotAlreadyInCart = inventoryTableRecords.filter(record => !cartRecords.includes(record));
-            if (recordsNotAlreadyInCart.length === 0) {
-                toast.error(`There are no records in the inventory table that are not already in the cart.`);
-            } else {
-                return expandRecordPickerAsync(recordsNotAlreadyInCart)
-                    .then(record => {
-                        if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
-                    });
-            }
+            if (recordsNotAlreadyInCart.length !== 0) return expandRecordPickerAsync(recordsNotAlreadyInCart)
+                .then(record => {
+                    if (record !== null) setCartRecords(cartRecords => [...cartRecords, record])
+                });
+
+            toast.error(`There are no records in the inventory table that are not already in the cart.`);
         }
     };
     const clearTransactionData = () => {
@@ -124,19 +122,27 @@ function CheckoutWithCart({
             setTransactionIsProcessing(true);
 
             // Show user notifications for settled Promises.
-            const transactionPromise = airtableMutationWrapper(() => transactionService.executeTransaction({...transactionData}, removeRecordFromCart))
+            const transactionPromise = asyncAirtableOperationWrapper(() => transactionService.executeTransaction({...transactionData}, removeRecordFromCart))
                 .then(() => clearTransactionData())
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
 
             toast.promise(transactionPromise, {
                 loading: 'Attempting to execute transaction.',
-                success: () => `${transactionTypes[transactionData.transactionType].label} successful!`,
+                success: `${transactionTypes[transactionData.transactionType].label} successful!`,
                 error: 'An error occurred with the transaction.',
             });
-        } else setErrorDialogMessages(errorMessages)
+        } else {
+            const errors = errorMessages.map(message => `- ${message}\n`);
+            toast.error(`${errorMessages.length > 1 ? 'Errors occurred' : 'An error occurred'}: \n ${errors.join('')}`, {
+                style: {
+                    top: `${viewportWidth > 590 ? errorMessages.length.toString() : (errorMessages.length * 2).toString()}rem`,
+                    minWidth: '270px'
+                }
+            });
+        }
     }
 
-    return <Box className="checkout-cart-container">
+    return <><Box className="checkout-cart-container">
         <TransactionTypeSelector currentOption={transactionType}
                                  options={Object.values(transactionTypes)}
                                  setOption={setTransactionType}
@@ -179,9 +185,9 @@ function CheckoutWithCart({
                 : <Text textColor='white'>{transactionTypes[transactionType].label} Items</Text>
             }
         </Button>
-
-        <ErrorDialog errors={errorDialogMessages} clearErrorMessages={() => setErrorDialogMessages([])}/>
-    </Box>;
+    </Box>
+        <Toast top='2rem'/>
+    </>
 }
 
-export default CheckoutWithCart;
+export default CheckoutCart;

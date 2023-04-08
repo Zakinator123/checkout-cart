@@ -43,23 +43,28 @@ export class TransactionService {
     }
 
 
-    validateTransaction: (transactionData: TransactionData) => Array<string> = ({
+    validateTransaction: (transactionData: TransactionData) => ReadonlyArray<string> = ({
                                                                                     cartRecords,
                                                                                     transactionType,
                                                                                     transactionUser
                                                                                 }) => {
         let errorMessages: Array<string> = [];
-        if (cartRecords.length === 0) errorMessages.push("Please populate the cart with items to execute a transaction.");
-        if (transactionType === transactionTypes.checkout.value && transactionUser === null) {
-            errorMessages.push("Please select a member to associate with the transaction.");
+        if (cartRecords.length === 0) errorMessages.push("Please populate the cart with items to execute a transaction");
+        if (transactionType === transactionTypes.checkout.value) {
+            if (transactionUser === null) errorMessages.push("Please select a member to associate with the transaction");
+            const hasPermissionToCreateCheckouts: boolean = this.checkoutsTable.hasPermissionToCreateRecord();
+            if (!hasPermissionToCreateCheckouts) errorMessages.push("You do not have permission to create new checkout records.");
         }
+
+        const hasUpdateOrDeletePermission: boolean = this.deleteOpenCheckoutsUponCheckIn ? this.checkoutsTable.hasPermissionToDeleteRecords() : this.checkoutsTable.hasPermissionToUpdateRecords();
+        if (!hasUpdateOrDeletePermission) errorMessages.push("You do not have permission to update records in the checkouts table to check them in.");
         return errorMessages;
     }
 
     async getOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record) {
         // TODO: If there are performance issues with lots of old checkout records,
         //  this could be optimized further if there was already a pre-configured linked record column in the inventory table that used an "open checkout" view filter.
-        //  However - if the open checkout view itself is modified to not do it's original job anymore, then the code relying on it would break..
+        //  However - if the open checkout view itself is modified to not do it's original job anymore, then the code relying on it would break.. This could be a future configuration setting?
         const config = this.linkedInventoryTableField.config;
         let reverseLinkedField = undefined;
         if (config.type === FieldType.MULTIPLE_RECORD_LINKS) {

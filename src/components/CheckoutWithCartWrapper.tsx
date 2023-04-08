@@ -1,6 +1,6 @@
 import {ExtensionConfiguration, TablesAndFieldsConfigurationIds, ValidationResult} from "../types/ConfigurationTypes";
 import React from "react";
-import CheckoutWithCart from "./CheckoutWithCart";
+import CheckoutCart from "./CheckoutCart";
 import {TransactionService} from "../services/TransactionService";
 import {loadCSSFromString, Text} from "@airtable/blocks/ui";
 
@@ -41,7 +41,7 @@ const CheckoutWithCartWrapper = ({
             Something has changed with your base schema and your extension configuration is now invalid. Please correct
             it in the
             settings page.</Text></div> :
-        <CheckoutWithCart
+        <CheckoutCart
             transactionService={new TransactionService(validationResult.configuration, extensionConfiguration.otherConfiguration.deleteOpenCheckoutsUponCheckIn)}
             tablesAndFields={validationResult.configuration}
             otherConfiguration={extensionConfiguration.otherConfiguration}

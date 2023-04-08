@@ -86,7 +86,7 @@ export const About = () => {
         <Text as='h3' fontWeight={600} size='xlarge'>Support:</Text>
         <br/>
         <Box paddingLeft='1rem'>
-            Bug reports, questions, and consultation/customization inquiries can be sent to the developer at&nbsp;
+            Any feedback, feature requests, bug reports, questions, and consultation/customization inquiries can be sent to the developer at&nbsp;
             <Link href='mailto:zakeyf@protonmail.com'>zakeyf@protonmail.com</Link>
             <br/>
             <br/>

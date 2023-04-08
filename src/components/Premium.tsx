@@ -1,8 +1,9 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Box, Button, FormField, Icon, Input, Link, loadCSSFromString, Loader, Text} from "@airtable/blocks/ui";
-import toast, {ToastPosition} from "react-hot-toast";
+import toast from "react-hot-toast";
 import {GlobalConfig} from "@airtable/blocks/types";
-import {airtableMutationWrapper} from "../utils/RandomUtils";
+import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
+import {Toast} from "./Toaster";
 
 loadCSSFromString(`
 .centered-premium-container {
@@ -39,17 +40,19 @@ loadCSSFromString(`
 }
 `);
 
-const licenseVerificationToastStyles = {
-    position: 'top-center' as ToastPosition,
-    style: {marginTop: '1rem', marginBottom: 0}
-};
-
 export const Premium = ({isPremiumUser, globalConfig}: {
     isPremiumUser: boolean, globalConfig: GlobalConfig
 }) => {
     const [licenseKey, setLicenseKey] = useState('');
     const [verifyButtonDisabledState, setVerifyButtonDisabledState] = useState(false);
 
+    // Clear toasts on component mount and unmount
+    useEffect(() => {
+        toast.remove();
+        return () => toast.remove();
+    }, [])
+
+    // TODO: Factor out license verification logic from error toast calls to make unit testable.
     const verifyLicense = () => {
         setVerifyButtonDisabledState(true);
         fetch('https://api.gumroad.com/v2/licenses/verify',
@@ -69,55 +72,57 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             .then(responseJson => {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
                 if (responseSuccessful) {
-                    responseJson.uses >= 2
-                        ? toast.error(`This license has already been redeemed. Licenses can only be used once per base.
-                         
-                                                 If you accidentally deleted and reinstalled the extension and need another license, please contact the developer.`, licenseVerificationToastStyles)
-                        : airtableMutationWrapper(() => globalConfig.setAsync('isPremiumUser', true))
-                            .then(() => toast.success('License verified! You are now a premium user!', licenseVerificationToastStyles))
-                            .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.', licenseVerificationToastStyles))
-                } else toast.error('Invalid license key!', licenseVerificationToastStyles)
+                    if (responseJson.uses >= 2) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
+                    else if (globalConfig.hasPermissionToSet('isPremiumUser', true)) asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true))
+                        .then(() => toast.success('License verified! You are now a premium user!'))
+                        .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.'))
+                    else toast.error("You must have base editor permissions to update extension settings.")
+                } else toast.error('Invalid license key!')
             })
-            .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.', licenseVerificationToastStyles))
+            .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.',))
             .finally(() => setVerifyButtonDisabledState(false))
     }
 
-    return <Box className='centered-premium-container'>
-        <Text size='large'>
-            Upgrade to premium to enable cart sizes larger than 3 items!
-        </Text>
-        <Box className='premium-form'>
-            <FormField
-                label={
-                    <>
-                        <Icon name="premium" size={12}/> Premium License Key <Icon name="premium" size={12}/>
-                    </>
-                }>
-                <Box className='premium-input-box'>
-                    <Input value={isPremiumUser ? "✅  You've already upgraded!" : licenseKey}
-                           disabled={isPremiumUser}
-                           placeholder='Enter license key here..'
-                           onChange={e => setLicenseKey(e.target.value)} type='text'></Input>
-                    <Button variant='default'
-                            className='premium-submit-button'
-                            type='submit'
-                            disabled={isPremiumUser || verifyButtonDisabledState}
-                            onClick={verifyLicense}>
-                        {verifyButtonDisabledState && !isPremiumUser ? <>Verifying.. <Loader
-                            scale={0.3}/></> : 'Verify License'}
-                    </Button>
+    return <>
+        <Box className='centered-premium-container'>
+            <Text size='large'>
+                Upgrade to premium to enable cart sizes larger than 3 items!
+            </Text>
+            <Box className='premium-form'>
+                <FormField
+                    label={
+                        <>
+                            <Icon name="premium" size={12}/> Premium License Key <Icon name="premium" size={12}/>
+                        </>
+                    }>
+                    <Box className='premium-input-box'>
+                        <Input value={isPremiumUser ? "✅  You've already upgraded!" : licenseKey}
+                               disabled={isPremiumUser}
+                               placeholder='Enter license key here..'
+                               onChange={e => setLicenseKey(e.target.value)} type='text'></Input>
+                        <Button variant='default'
+                                className='premium-submit-button'
+                                type='submit'
+                                disabled={isPremiumUser || verifyButtonDisabledState}
+                                onClick={verifyLicense}>
+                            {verifyButtonDisabledState && !isPremiumUser ? <>Verifying.. <Loader
+                                scale={0.3}/></> : 'Verify License'}
+                        </Button>
+                    </Box>
+                    <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between
+                        bases.</Text></Box>
+                </FormField>
+                <Box display='flex' alignContent='center' justifyContent='center'>
+                    <Link
+                        href="https://airtablecheckoutcart.gumroad.com/l/checkout-cart"
+                        target="_blank">
+                        <Button variant='primary'>
+                            Purchase License
+                        </Button>
+                    </Link>
                 </Box>
-                <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between bases.</Text></Box>
-            </FormField>
-            <Box display='flex' alignContent='center' justifyContent='center'>
-                <Link
-                    href="https://airtablecheckoutcart.gumroad.com/l/checkout-cart"
-                    target="_blank">
-                    <Button variant='primary'>
-                        Purchase License
-                    </Button>
-                </Link>
             </Box>
+            <Toast top='2rem'/>
         </Box>
-    </Box>
+    </>
 }

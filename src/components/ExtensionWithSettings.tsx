@@ -17,14 +17,13 @@ loadCSSFromString(`
     align-items: center;
     justify-content: center;
     background-color: white;
-    overflow: auto;
     gap: 1.5rem;
     height: 100%;
 }
 
 .react-tabs {
     -webkit-tap-highlight-color: transparent;
-    width: 80%
+    width: 90%
 }
 
 .react-tabs__tab-list {
@@ -68,6 +67,7 @@ loadCSSFromString(`
 
 .react-tabs__tab-panel--selected {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     border-color: black;
     border-left: 1px solid #aaa;
@@ -103,20 +103,22 @@ loadCSSFromString(`
 
 /*
     TODO:
-        - Add info in about page that write permissions and network access are required for the extension to work.
-        - For user of the extension that don't have permission to write to the table - need to have a permissions check w/ error message
-        - Add solicitation of feedback/usecases in the about page.
-        ---
+        - Flesh out error handling logic of transactions - Show failures/successes per record for executeTransaction.
+            - It seems transactions fail with improper permissions, but there are no error messages being shown.
         - Create schema generation button
         - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Add schema visualization in settings page
         ---
+        - Add empty placeholder options in configuration selectors to stop unnecessary console messages.
         - Look into iots for type checking
+        - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Add landing page, and documentation blog/videos
         - Increase test coverage of extension
-        - Show failures/successes per record for executeTransaction.
         - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
         - Add in a "How to use this extension" description
+        - Put icons for field type of each field in settings page
+        - Extract more styles into css classes
+        - Extract all strings into a separate file.
  */
 
 export function ExtensionWithSettings() {
@@ -138,27 +140,29 @@ export function ExtensionWithSettings() {
                 <Tab><Icon name="premium" size={12}/> Premium <Icon fillColor='black' name="premium" size={12}/></Tab>
                 <Tab><Icon name="help" size={12}/> About</Tab>
             </TabList>
-            <TabPanel>
-                <Suspense fallback={
-                    <Box className='tab-loading-state'>
-                        <Loader scale={0.5}/>
-                    </Box>}>
-                    <CheckoutWithCartWrapper
-                        extensionConfiguration={extensionConfig}
-                        configurationValidator={configurationValidator}
-                        isPremiumUser={isPremiumUser}
-                        transactionIsProcessing={transactionIsProcessing}
-                        setTransactionIsProcessing={setTransactionIsProcessing}/>
-                </Suspense>
-            </TabPanel>
+            <div>
+                <TabPanel>
+                    <Suspense fallback={
+                        <Box className='tab-loading-state'>
+                            <Loader scale={0.5}/>
+                        </Box>}>
+                        <CheckoutWithCartWrapper
+                            extensionConfiguration={extensionConfig}
+                            configurationValidator={configurationValidator}
+                            isPremiumUser={isPremiumUser}
+                            transactionIsProcessing={transactionIsProcessing}
+                            setTransactionIsProcessing={setTransactionIsProcessing}/>
+                    </Suspense>
+                </TabPanel>
+            </div>
             <TabPanel>
                 <Settings currentTableAndFieldIds={extensionConfig?.tableAndFieldIds}
                           currentOtherConfiguration={extensionConfig?.otherConfiguration}
                           base={base}
                           validateTablesAndFields={configurationValidator}
                           globalConfig={globalConfig}
-                configurationUpdatePending={configurationUpdatePending}
-                setConfigurationUpdatePending={setConfigurationUpdatePending}/>
+                          configurationUpdatePending={configurationUpdatePending}
+                          setConfigurationUpdatePending={setConfigurationUpdatePending}/>
             </TabPanel>
             <TabPanel><Premium isPremiumUser={isPremiumUser} globalConfig={globalConfig}/></TabPanel>
             <TabPanel><About/></TabPanel>
