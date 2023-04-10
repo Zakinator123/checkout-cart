@@ -17,8 +17,9 @@ export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T,
 
 export const getRecordCardWidth = (viewportWidth: number) => Math.min(850, (viewportWidth > 600 ? viewportWidth - 250 : viewportWidth - 180));
 
+export const generateRandomPositiveInteger = (): number => Math.floor(Math.random() * 1000);
 
-export const asyncAirtableOperationWrapper = (asyncAirtableOperation: () => Promise<unknown>): Promise<unknown> => {
+export const asyncAirtableOperationWrapper = <T>(asyncAirtableOperation: () => Promise<T>): Promise<T> => {
     /*
     * This function wraps an async Airtable operation so that an alert is shown after 15 seconds if the promise is still pending.
     * The original promise from the async operation is forwarded to the caller.

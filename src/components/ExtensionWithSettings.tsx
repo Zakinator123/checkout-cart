@@ -105,11 +105,12 @@ loadCSSFromString(`
     TODO:
         - Flesh out error handling logic of transactions - Show failures/successes per record for executeTransaction.
             - It seems transactions fail with improper permissions, but there are no error messages being shown.
-        - Create schema generation button
-        - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Add schema visualization in settings page
+        - Polish up the settings page with more info/collapsible sections
         ---
+        - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Look into iots for type checking
+        - Figure out UTC date situation for date fields..
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Add landing page, and documentation blog/videos
         - Increase test coverage of extension
@@ -119,6 +120,7 @@ loadCSSFromString(`
         - Extract more styles into css classes
         - Extract all strings into a separate file.
         - Extract css for this file into a separate CSS file
+        - Ask airtable community on license verification strategy. Should I prepare for adversaries?
  */
 
 export function ExtensionWithSettings() {
