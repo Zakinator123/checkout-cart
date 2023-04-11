@@ -1,14 +1,8 @@
 import React from "react";
-import Collapsible from "react-collapsible";
 import {Box, Text} from "@airtable/blocks/ui";
-import {CollapsibleSectionHeader} from "./CollapsibleSectionHeader";
 
 
 export const ConfigurationInstructions = () =>
-    <Collapsible
-        trigger={CollapsibleSectionHeader(false, 'Required Minimum Schema')}
-        triggerWhenOpen={CollapsibleSectionHeader(true, 'Required Minimum Schema')}
-    >
         <Box border='default' margin='1rem' padding='1rem'>
             <br/>
             This extension requires your base to have a certain minimum schema to work properly. This schema may be
@@ -56,5 +50,4 @@ export const ConfigurationInstructions = () =>
                 </ol>
             </div>
         </Box>
-    </Collapsible>
 ;

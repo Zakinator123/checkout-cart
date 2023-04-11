@@ -8,6 +8,7 @@ import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import CheckoutWithCartWrapper from "./CheckoutWithCartWrapper";
 import {About} from "./About";
 import {Premium} from "./Premium";
+import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
 
 loadCSSFromString(`
 .container {
@@ -19,6 +20,7 @@ loadCSSFromString(`
     background-color: white;
     gap: 1.5rem;
     height: 100%;
+    overflow: hidden;
 }
 
 .react-tabs {
@@ -68,11 +70,9 @@ loadCSSFromString(`
 .react-tabs__tab-panel--selected {
     display: flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
     border-color: black;
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-    border-bottom: 1px solid #aaa;
     margin-bottom: 3rem;
 }
 
@@ -88,6 +88,12 @@ loadCSSFromString(`
 
     .react-tabs__tab--selected {
         border-radius: 5px 5px 0 0;
+    }
+    
+    .react-tabs__tab-panel--selected {
+        border-left: 1px solid #aaa;
+        border-right: 1px solid #aaa;
+        border-bottom: 1px solid #aaa;
     }
 }
 
@@ -107,12 +113,20 @@ loadCSSFromString(`
             - It seems transactions fail with improper permissions, but there are no error messages being shown.
         - Add schema visualization in settings page
         - Polish up the settings page with more info/collapsible sections
+        - Test out toast messages with macbook viewport
         ---
+        - disable config field changes if configuration update is pending
+        - Make form validation error messages that reference table names and/or field types more user friendly.
+        - Set up github sponsors page/info
         - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Look into iots for type checking
+        - SEO Research for 'building library systems on airtable' ?
+        - Purchase domain name(s)?
+        - Create email address with custom domain for support page
         - Figure out UTC date situation for date fields..
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Add landing page, and documentation blog/videos
+        - Create use case videos/blogs for how to run a library business, rental equipment business, gear inventory business, etc.
         - Increase test coverage of extension
         - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
         - Add in a "How to use this extension" description
@@ -146,7 +160,7 @@ export function ExtensionWithSettings() {
                 <TabPanel>
                     <Suspense fallback={
                         <Box className='tab-loading-state'>
-                            <Loader scale={0.5} fillColor='green'/>
+                            <Loader scale={0.5} fillColor='#888'/>
                         </Box>}>
                         <CheckoutWithCartWrapper
                             extensionConfiguration={extensionConfig}
@@ -162,7 +176,7 @@ export function ExtensionWithSettings() {
                           currentOtherConfiguration={extensionConfig?.otherConfiguration}
                           base={base}
                           validateTablesAndFields={configurationValidator}
-                          globalConfig={globalConfig}
+                          validateConfigUpdateAndSaveToGlobalConfig={getExtensionConfigSaver(globalConfig, configurationValidator)}
                           configurationUpdatePending={configurationUpdatePending}
                           setConfigurationUpdatePending={setConfigurationUpdatePending}/>
             </TabPanel>

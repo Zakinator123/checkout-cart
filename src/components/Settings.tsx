@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {
     Box,
     Button,
@@ -23,14 +23,16 @@ import {
     ExtensionConfiguration,
     OtherConfigurationKey,
     OtherExtensionConfiguration,
-    TableAndFieldsConfigurationKey, TablesAndFieldsConfigurationErrors,
+    TableAndFieldsConfigurationKey,
+    TablesAndFieldsConfigurationErrors,
     TablesAndFieldsConfigurationIds,
     ValidationResult
 } from "../types/ConfigurationTypes";
 import {FieldSelectorGroup} from "./FieldSelectorGroup";
 import {SelectOptionValue} from "@airtable/blocks/dist/types/src/ui/select_and_select_buttons_helpers";
-import {GlobalConfig} from "@airtable/blocks/types";
-import toast from "react-hot-toast";
+import {Id, toast} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
 import {FormFieldLabelWithTooltip} from "./FormFieldLabelWithTooltip";
 import {
     getNewFormErrorStateForSelectorChange,
@@ -39,8 +41,12 @@ import {
     validateFormAndGetFormValidationErrors
 } from "../utils/SettingsFormUtils";
 import {asyncAirtableOperationWrapper, generateRandomPositiveInteger} from "../utils/RandomUtils";
-import {Toast} from "./Toaster";
 import {createSchema} from "../services/SchemaGeneratorService";
+import {CollapsibleSectionHeader} from "./CollapsibleSectionHeader";
+import Collapsible from "react-collapsible";
+import {OfflineToastMessage} from "./OfflineToastMessage";
+import {Toast} from "./Toast";
+import {ExtensionConfigurationUpdateResult} from "../types/OtherTypes";
 
 loadCSSFromString(`
 .settings-container {
@@ -50,40 +56,63 @@ loadCSSFromString(`
     justify-content: center;
     background-color: white;
     padding: 1rem;
-    margin-bottom: 1rem;
     overflow: auto;
-    gap: 1.5rem;
     height: 100%;
     max-width: 1000px;
 }`)
 
-const validateAndSubmitConfigurationUpdate = (extensionConfiguration: ExtensionConfiguration, globalConfig: GlobalConfig, validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,): { validationErrorsOccurred: true, errorToast: string, newFormErrorState: TablesAndFieldsConfigurationErrors } | { validationErrorsOccurred: false, globalConfigPromise: Promise<void> } => {
-    const validationResult = validateTablesAndFields(extensionConfiguration.tableAndFieldIds);
-    if (validationResult.errorsPresent) {
-        return {
-            validationErrorsOccurred: true,
-            errorToast: 'There are error(s) with your configuration.',
-            newFormErrorState: validationResult.errors
-        }
-    } else {
-        const hasPermission: boolean = globalConfig.hasPermissionToSet('extensionConfiguration', extensionConfiguration)
-        return hasPermission ? {
-            validationErrorsOccurred: false,
-            globalConfigPromise: asyncAirtableOperationWrapper(() => globalConfig.setAsync('extensionConfiguration', extensionConfiguration))
-        } : {
-            validationErrorsOccurred: true,
-            errorToast: 'You must have base editor permissions to update extension settings.',
-            newFormErrorState: blankErrorState
-        };
-    }
-}
+const attemptConfigUpdateAndShowToast = (
+    extensionConfiguration: ExtensionConfiguration,
+    toastContainerId: { containerId: Id },
+    setConfigurationUpdatePending: (pending: boolean) => void,
+    setFormErrorState: (formErrorState: TablesAndFieldsConfigurationErrors) => void,
+    validateConfigUpdateAndSaveToGlobalConfig: (extensionConfiguration: ExtensionConfiguration) => Promise<ExtensionConfigurationUpdateResult>
+) => {
+    setConfigurationUpdatePending(true);
+
+    const configurationUpdateToastId = toast.loading('Attempting to save configuration..', toastContainerId);
+    asyncAirtableOperationWrapper(() => validateConfigUpdateAndSaveToGlobalConfig(extensionConfiguration),
+        () => toast.loading(<OfflineToastMessage/>, {autoClose: false, containerId: toastContainerId.containerId}))
+        .then((configurationUpdateResult) => {
+            if (configurationUpdateResult.errorsOccurred) {
+                toast.update(configurationUpdateToastId, {
+                    render: configurationUpdateResult.errorMessage,
+                    type: 'error',
+                    autoClose: 5000,
+                    isLoading: false,
+                    containerId: toastContainerId.containerId,
+                    closeButton: true
+                });
+                setFormErrorState(configurationUpdateResult.tablesAndFieldsConfigurationErrors);
+            } else {
+                toast.update(configurationUpdateToastId, {
+                    render: 'Configuration saved successfully!',
+                    type: 'success',
+                    autoClose: 3000,
+                    isLoading: false,
+                    containerId: toastContainerId.containerId,
+                    closeButton: true
+                });
+                setFormErrorState(blankErrorState);
+            }
+        })
+        .catch(() => toast.update(configurationUpdateToastId, {
+            render: 'An unexpected error occurred.',
+            type: 'error',
+            autoClose: 3000,
+            isLoading: false,
+            containerId: toastContainerId.containerId,
+            closeButton: true
+        }))
+        .finally(() => setConfigurationUpdatePending(false));
+};
 
 export const Settings = ({
                              currentTableAndFieldIds,
                              currentOtherConfiguration,
                              base,
                              validateTablesAndFields,
-                             globalConfig,
+                             validateConfigUpdateAndSaveToGlobalConfig,
                              configurationUpdatePending,
                              setConfigurationUpdatePending
                          }:
@@ -92,41 +121,20 @@ export const Settings = ({
                                  currentOtherConfiguration: OtherExtensionConfiguration | undefined,
                                  base: Base,
                                  validateTablesAndFields: (configurationData: TablesAndFieldsConfigurationIds) => ValidationResult,
-                                 globalConfig: GlobalConfig,
+                                 validateConfigUpdateAndSaveToGlobalConfig: (extensionConfiguration: ExtensionConfiguration) => Promise<ExtensionConfigurationUpdateResult>,
                                  configurationUpdatePending: boolean,
                                  setConfigurationUpdatePending: (pending: boolean) => void
                              }) => {
     const [tablesAndFieldsFormState, setTablesAndFieldsFormState] = useState(currentTableAndFieldIds === undefined ? blankConfigurationState : currentTableAndFieldIds);
-    const [tablesAndFieldsFormErrorState, setFormErrorState] = useState(currentTableAndFieldIds === undefined ? blankErrorState : validateFormAndGetFormValidationErrors(currentTableAndFieldIds, validateTablesAndFields));
+    const [tablesAndFieldsFormErrorState, setFormErrorState] = useState(currentTableAndFieldIds === undefined ? blankErrorState : () => validateFormAndGetFormValidationErrors(currentTableAndFieldIds, validateTablesAndFields));
     const [otherConfigurationFormState, setOtherConfigurationFormState] = useState(currentOtherConfiguration === undefined ? defaultOtherConfigurationState : currentOtherConfiguration);
     const [schemaGenerationDialogOpen, setSchemaGenerationDialogOpen] = useState(false);
-    const [autoGeneratedSchemaId, setAutoGeneratedSchemaId] = useState(generateRandomPositiveInteger());
+    const [autoGeneratedSchemaId, setAutoGeneratedSchemaId] = useState(generateRandomPositiveInteger);
 
-    // Clear toasts on component mount and unmount
-    useEffect(() => {
-        toast.remove();
-        return () => toast.remove();
-    }, [])
+    const [schemaGenerationToastId, manualConfigurationToastId] = [{containerId: 'schema-generation-toast'}, {containerId: 'manual-configuration-toast'}];
 
     const result = getUpdatedFormErrorStateIfStaleErrorsExist(tablesAndFieldsFormErrorState, validateTablesAndFields, tablesAndFieldsFormState)
     if (result.staleErrorsExist) setFormErrorState(result.newFormErrorState);
-
-    const attemptConfigUpdateAndShowToast = (extensionConfiguration: ExtensionConfiguration) => {
-        setConfigurationUpdatePending(true);
-        const submissionResult = validateAndSubmitConfigurationUpdate(extensionConfiguration, globalConfig, validateTablesAndFields);
-        if (submissionResult.validationErrorsOccurred) {
-            toast.error(submissionResult.errorToast);
-            setFormErrorState(submissionResult.newFormErrorState);
-            setConfigurationUpdatePending(false);
-        } else {
-            toast.promise(submissionResult.globalConfigPromise, {
-                loading: 'Attempting to save configuration..',
-                success: 'Configuration saved successfully!',
-                error: 'An error occurred saving the configuration.',
-            });
-            submissionResult.globalConfigPromise.finally(() => setConfigurationUpdatePending(false));
-        }
-    };
 
     const selectorChangeHandler = (fieldOrTableName: TableAndFieldsConfigurationKey, selectedOption: SelectOptionValue) => {
         let newFormState = getNewFormStateForSelectorChange(tablesAndFieldsFormState, fieldOrTableName, selectedOption);
@@ -136,148 +144,178 @@ export const Settings = ({
         setFormErrorState(newFormErrorState)
     }
 
-    /* TODO:
-         - Check if user has permissions to create the tables.
-    */
     const openSchemaGenerationDialog = () => {
-        const randomSchemaId = generateRandomPositiveInteger();
-        setAutoGeneratedSchemaId(randomSchemaId);
-        setSchemaGenerationDialogOpen(true);
+        if (!base.hasPermissionToCreateTable()) {
+            toast.error('You do not have permission to create tables or fields in this base.', {containerId: 'schema-generation-toast'});
+        } else {
+            const randomSchemaId = generateRandomPositiveInteger();
+            setAutoGeneratedSchemaId(randomSchemaId);
+            setSchemaGenerationDialogOpen(true);
+        }
     }
 
     const generateSchema = (autoGeneratedSchemaRandomSuffix: number) => {
         setConfigurationUpdatePending(true);
-        createSchema(base, autoGeneratedSchemaRandomSuffix)
+        const schemaCreationPromise = asyncAirtableOperationWrapper(() => createSchema(base, autoGeneratedSchemaRandomSuffix),
+            () => toast.loading(<OfflineToastMessage/>, {
+                autoClose: false,
+                containerId: schemaGenerationToastId.containerId
+            }))
             .then(extensionConfiguration => {
                 setTablesAndFieldsFormState(extensionConfiguration.tableAndFieldIds);
                 setOtherConfigurationFormState(extensionConfiguration.otherConfiguration);
-                attemptConfigUpdateAndShowToast(extensionConfiguration);
-                // - Set currently viewed table to be checkouts table
+                attemptConfigUpdateAndShowToast(extensionConfiguration, schemaGenerationToastId, setConfigurationUpdatePending, setFormErrorState, validateConfigUpdateAndSaveToGlobalConfig);
+                // TODO: - Set currently viewed table to be checkouts table
             })
-            .catch(() => toast.error('An error occurred generating the schema.'))
             .finally(() => setConfigurationUpdatePending(false));
+
+        toast.promise(schemaCreationPromise, {
+            pending: 'Attempting to generate schema..',
+            success: {render: 'Schema generated successfully!', autoClose: 3000},
+            error: 'An error occurred generating the schema.',
+        }, schemaGenerationToastId);
     }
 
     return <>
         <Box className='settings-container'>
-            <ConfigurationInstructions/>
+            <Collapsible
+                trigger={CollapsibleSectionHeader(false, 'Required Minimum Schema')}
+                triggerWhenOpen={CollapsibleSectionHeader(true, 'Required Minimum Schema')}
+            >
+                <ConfigurationInstructions/>
+            </Collapsible>
             <Box margin='1rem'>
                 <Button onClick={openSchemaGenerationDialog}>Generate Schema</Button>
             </Box>
-            <div>
-                <Text as='strong' fontWeight='600' fontSize={14}>Extension Configuration</Text>
-                <Box padding='1.5rem' maxWidth={800}>
-                    {settingsFormSchema.schemaConfiguration.map(({
-                                                                     tableName,
-                                                                     tablePickerLabel,
-                                                                     tablePickerTooltip,
-                                                                     requiredFields = [],
-                                                                     optionalFields = []
-                                                                 }, index) => {
-                        const tableSelector = (
-                            <FormField key={index}
-                                       label={<FormFieldLabelWithTooltip fieldLabel={tablePickerLabel}
-                                                                         fieldLabelTooltip={tablePickerTooltip}/>}>
-                                <Box border='default'
-                                     borderColor={tablesAndFieldsFormErrorState[tableName] !== '' ? 'red' : ''}>
-                                    <Select
-                                        options={[{disabled: true, value: '', label: ''}, ...base.tables.map(table => ({
-                                            value: table.id,
-                                            label: table.name
-                                        }))]}
-                                        name={tableName}
-                                        id={tableName}
-                                        onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
-                                        value={tablesAndFieldsFormState[tableName]}
-                                    />
-                                </Box>
-                                <Text textColor='red'>{tablesAndFieldsFormErrorState[tableName]}</Text>
-                            </FormField>)
+            <Toast {...schemaGenerationToastId}/>
 
-
-                        if (requiredFields.length !== 0 || optionalFields.length !== 0) {
-                            const table = base.getTableByIdIfExists(tablesAndFieldsFormState[tableName]) ?? undefined;
-
-                            return <Box key={index} maxWidth={500} border='thick' padding='1rem'>
-                                {tableSelector}
-                                <br/>
-
-                                {
-                                    table && <>
-                                        <FieldSelectorGroup
-                                            required={true}
-                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
-                                            fields={requiredFields}
-                                            formState={tablesAndFieldsFormState}
-                                            formErrorState={tablesAndFieldsFormErrorState}
-                                            selectorChangeHandler={selectorChangeHandler}
+            <Collapsible
+                trigger={CollapsibleSectionHeader(false, 'Manual Configuration')}
+                triggerWhenOpen={CollapsibleSectionHeader(true, 'Manual Configuration')}
+            >
+                <Box marginTop='1rem'>
+                    <Text as='strong' fontWeight='600' fontSize={14}>Extension Configuration</Text>
+                    <Box padding='1.5rem' maxWidth={800}>
+                        {settingsFormSchema.schemaConfiguration.map(({
+                                                                         tableName,
+                                                                         tablePickerLabel,
+                                                                         tablePickerTooltip,
+                                                                         requiredFields = [],
+                                                                         optionalFields = []
+                                                                     }, index) => {
+                            const tableSelector = (
+                                <FormField key={index}
+                                           label={<FormFieldLabelWithTooltip fieldLabel={tablePickerLabel}
+                                                                             fieldLabelTooltip={tablePickerTooltip}/>}>
+                                    <Box border='default'
+                                         borderColor={tablesAndFieldsFormErrorState[tableName] !== '' ? 'red' : ''}>
+                                        <Select
+                                            options={[{
+                                                disabled: true,
+                                                value: '',
+                                                label: ''
+                                            }, ...base.tables.map(table => ({
+                                                value: table.id,
+                                                label: table.name
+                                            }))]}
+                                            name={tableName}
+                                            id={tableName}
+                                            onChange={selectedOption => selectorChangeHandler(tableName, selectedOption)}
+                                            value={tablesAndFieldsFormState[tableName]}
                                         />
+                                    </Box>
+                                    <Text textColor='red'>{tablesAndFieldsFormErrorState[tableName]}</Text>
+                                </FormField>)
 
-                                        <FieldSelectorGroup
-                                            required={false}
-                                            table={base.getTable(tablesAndFieldsFormState[tableName])}
-                                            fields={optionalFields}
-                                            formState={tablesAndFieldsFormState}
-                                            formErrorState={tablesAndFieldsFormErrorState}
-                                            selectorChangeHandler={selectorChangeHandler}/>
-                                    </>
-                                }
-                            </Box>;
-                        }
-                        return tableSelector;
-                    })}
-                    <br/>
-                    <br/>
-                    <FormField
-                        label={<FormFieldLabelWithTooltip fieldLabel='Delete Open Checkouts Upon Check-In: CAUTION!'
-                                                          fieldLabelTooltip='See the "About" tab. Only enable if you understand the implications!'
-                                                          dangerous={true}/>}>
-                        <Switch
-                            value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn}
-                            onChange={newValue => setOtherConfigurationFormState({
-                                ...otherConfigurationFormState,
-                                [OtherConfigurationKey.deleteOpenCheckoutsUponCheckIn]: newValue
-                            })}
-                            label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn ? 'Enabled' : 'Disabled'}
-                            variant='danger'
-                        />
-                    </FormField>
-                    <br/>
-                    <br/>
 
-                    <FormField
-                        label={<FormFieldLabelWithTooltip
-                            fieldLabel='Default Due Date (expressed in # of days from Checkout creation)'
-                            fieldLabelTooltip='For newly created Checkouts. Due Date field must be enabled.'/>}>
-                        <Input
-                            value={tablesAndFieldsFormState.dateDueField === '' ? '' : otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
-                            onChange={e => setOtherConfigurationFormState({
-                                ...otherConfigurationFormState,
-                                [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: Number(e.target.value)
-                            })}
-                            placeholder='N/A: Enable the "Date Due" field to populate.'
-                            type='number'
-                            min={0}
-                            disabled={tablesAndFieldsFormState.dateDueField === ''}
-                        />
-                    </FormField>
-                    <br/>
-                    <Box display='flex' justifyContent='center'>
-                        <Button disabled={configurationUpdatePending} variant='primary'
-                                onClick={() => attemptConfigUpdateAndShowToast({
-                                    tableAndFieldIds: tablesAndFieldsFormState,
-                                    otherConfiguration: otherConfigurationFormState
-                                })}>
-                            {configurationUpdatePending
-                                ? <Loader scale={0.2} fillColor='white'/>
-                                : <Text textColor='white'>Save Configuration</Text>
+                            if (requiredFields.length !== 0 || optionalFields.length !== 0) {
+                                const table = base.getTableByIdIfExists(tablesAndFieldsFormState[tableName]) ?? undefined;
+
+                                return <Box key={index} maxWidth={500} border='thick' padding='1rem'>
+                                    {tableSelector}
+                                    <br/>
+
+                                    {
+                                        table && <>
+                                            <FieldSelectorGroup
+                                                required={true}
+                                                table={base.getTable(tablesAndFieldsFormState[tableName])}
+                                                fields={requiredFields}
+                                                formState={tablesAndFieldsFormState}
+                                                formErrorState={tablesAndFieldsFormErrorState}
+                                                selectorChangeHandler={selectorChangeHandler}
+                                            />
+
+                                            <FieldSelectorGroup
+                                                required={false}
+                                                table={base.getTable(tablesAndFieldsFormState[tableName])}
+                                                fields={optionalFields}
+                                                formState={tablesAndFieldsFormState}
+                                                formErrorState={tablesAndFieldsFormErrorState}
+                                                selectorChangeHandler={selectorChangeHandler}/>
+                                        </>
+                                    }
+                                </Box>;
                             }
-                        </Button>
+                            return tableSelector;
+                        })}
+                        <br/>
+                        <br/>
+                        <FormField
+                            label={<FormFieldLabelWithTooltip fieldLabel='Delete Open Checkouts Upon Check-In: CAUTION!'
+                                                              fieldLabelTooltip='See the "About" tab. Only enable if you understand the implications!'
+                                                              dangerous={true}/>}>
+                            <Switch
+                                value={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn}
+                                onChange={newValue => setOtherConfigurationFormState({
+                                    ...otherConfigurationFormState,
+                                    [OtherConfigurationKey.deleteOpenCheckoutsUponCheckIn]: newValue
+                                })}
+                                label={otherConfigurationFormState.deleteOpenCheckoutsUponCheckIn ? 'Enabled' : 'Disabled'}
+                                variant='danger'
+                            />
+                        </FormField>
+                        <br/>
+                        <br/>
+
+                        <FormField
+                            label={<FormFieldLabelWithTooltip
+                                fieldLabel='Default Due Date (expressed in # of days from Checkout creation)'
+                                fieldLabelTooltip='For newly created Checkouts. Due Date field must be enabled.'/>}>
+                            <Input
+                                value={tablesAndFieldsFormState.dateDueField === '' ? '' : otherConfigurationFormState.defaultNumberOfDaysFromTodayForDueDate.toString()}
+                                onChange={e => setOtherConfigurationFormState({
+                                    ...otherConfigurationFormState,
+                                    [OtherConfigurationKey.defaultNumberOfDaysFromTodayForDueDate]: Number(e.target.value)
+                                })}
+                                placeholder='N/A: Enable the "Date Due" field to populate.'
+                                type='number'
+                                min={0}
+                                disabled={tablesAndFieldsFormState.dateDueField === ''}
+                            />
+                        </FormField>
+                        <br/>
+                        <Box display='flex' justifyContent='center'>
+                            <Button disabled={configurationUpdatePending} variant='primary'
+                                    onClick={() => attemptConfigUpdateAndShowToast({
+                                            tableAndFieldIds: tablesAndFieldsFormState,
+                                            otherConfiguration: otherConfigurationFormState
+                                        }, manualConfigurationToastId,
+                                        setConfigurationUpdatePending,
+                                        setFormErrorState,
+                                        validateConfigUpdateAndSaveToGlobalConfig
+                                    )}>
+                                {configurationUpdatePending
+                                    ? <Loader scale={0.2} fillColor='white'/>
+                                    : <Text textColor='white'>Save Configuration</Text>
+                                }
+                            </Button>
+                        </Box>
                     </Box>
                 </Box>
-            </div>
+                <Toast {...manualConfigurationToastId}/>
+            </Collapsible>
         </Box>
-        <Toast top='0rem'/>
 
         {schemaGenerationDialogOpen && (
             <ConfirmationDialog
@@ -289,6 +327,9 @@ export const Settings = ({
                         - Users Example #{autoGeneratedSchemaId}<br/>
                         - Checkouts Example #{autoGeneratedSchemaId}<br/>
 
+                        <br/>
+                        Table names and field names can be changed later.
+                        <br/>
                         {currentTableAndFieldIds === undefined
                             ? <><br/>The generated tables and fields will be used to configure the extensions settings.
                                 You can change the settings yourself later.<br/></>

@@ -9,7 +9,7 @@ loadCSSFromString(`
     flex-direction: column;
     justify-content: center;
     padding: 2rem;
-    max-width: 1000px;
+    max-width: 750px;
 }`);
 
 export const About = () => {

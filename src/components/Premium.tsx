@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {Box, Button, FormField, Icon, Input, Link, loadCSSFromString, Loader, Text} from "@airtable/blocks/ui";
-import toast from "react-hot-toast";
 import {GlobalConfig} from "@airtable/blocks/types";
 import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
-import {Toast} from "./Toaster";
+import {toast} from "react-toastify";
+import {OfflineToastMessage} from "./OfflineToastMessage";
+import {Toast} from "./Toast";
 
 loadCSSFromString(`
 .centered-premium-container {
@@ -25,8 +26,9 @@ loadCSSFromString(`
 .premium-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
     margin-bottom: 0;
+    width: 70vw;
+    max-width: 450px;
 }
 
 @media (min-width: 515px) {
@@ -45,12 +47,6 @@ export const Premium = ({isPremiumUser, globalConfig}: {
 }) => {
     const [licenseKey, setLicenseKey] = useState('');
     const [verifyButtonDisabledState, setVerifyButtonDisabledState] = useState(false);
-
-    // Clear toasts on component mount and unmount
-    useEffect(() => {
-        toast.remove();
-        return () => toast.remove();
-    }, [])
 
     // TODO: Factor out license verification logic from error toast calls to make unit testable.
     const verifyLicense = () => {
@@ -72,8 +68,9 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             .then(responseJson => {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
                 if (responseSuccessful) {
-                    if (responseJson.uses >= 2) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
-                    else if (globalConfig.hasPermissionToSet('isPremiumUser', true)) asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true))
+                    if (responseJson.uses >= 100) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
+                    else if (globalConfig.hasPermissionToSet('isPremiumUser', true)) asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true), () => toast.error(
+                        <OfflineToastMessage/>))
                         .then(() => toast.success('License verified! You are now a premium user!'))
                         .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.'))
                     else toast.error("You must have base editor permissions to update extension settings.")
@@ -90,6 +87,7 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             </Text>
             <Box className='premium-form'>
                 <FormField
+                    marginBottom={0}
                     label={
                         <>
                             <Icon name="premium" size={12}/> Premium License Key <Icon name="premium" size={12}/>
@@ -112,7 +110,8 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                     <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between
                         bases.</Text></Box>
                 </FormField>
-                <Box display='flex' alignContent='center' justifyContent='center'>
+                <Toast/>
+                <Box marginTop={2} display='flex' alignContent='center' justifyContent='center'>
                     <Link
                         href="https://airtablecheckoutcart.gumroad.com/l/checkout-cart"
                         target="_blank">
@@ -122,7 +121,6 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                     </Link>
                 </Box>
             </Box>
-            <Toast top='2rem'/>
         </Box>
     </>
 }

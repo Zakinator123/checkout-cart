@@ -49,9 +49,9 @@ export class TransactionService {
                                                                                     transactionUser
                                                                                 }) => {
         let errorMessages: Array<string> = [];
-        if (cartRecords.length === 0) errorMessages.push("Please populate the cart with items to execute a transaction");
+        if (cartRecords.length === 0) errorMessages.push("The cart must have at least one record.");
         if (transactionType === transactionTypes.checkout.value) {
-            if (transactionUser === null) errorMessages.push("Please select a member to associate with the transaction");
+            if (transactionUser === null) errorMessages.push("A user must be associated with the cart.");
             const hasPermissionToCreateCheckouts: boolean = this.checkoutsTable.hasPermissionToCreateRecord();
             if (!hasPermissionToCreateCheckouts) errorMessages.push("You do not have permission to create new checkout records.");
         }
