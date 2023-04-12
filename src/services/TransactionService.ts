@@ -6,10 +6,11 @@ import {
 } from "../types/TransactionTypes";
 import {Field, FieldType, Record, Table} from "@airtable/blocks/models";
 import {RecordId} from "@airtable/blocks/types";
-import {allSettled} from "../utils/RandomUtils";
 import {ValidatedTablesAndFieldsConfiguration} from "../types/ConfigurationTypes";
+import {AirtableMutationService} from "./AirtableMutationService";
 
 export class TransactionService {
+    private readonly airtableMutationService: AirtableMutationService;
     private readonly checkoutsTable: Table;
     private readonly linkedInventoryTableField: Field;
     private readonly linkedUserTableField: Field;
@@ -20,7 +21,8 @@ export class TransactionService {
     private readonly cartGroupField?: Field;
     private readonly deleteOpenCheckoutsUponCheckIn: boolean;
 
-    constructor({
+    constructor(airtableMutationService: AirtableMutationService,
+                {
                     checkoutsTable,
                     checkedInField,
                     dateCheckedInField,
@@ -31,6 +33,7 @@ export class TransactionService {
                     cartGroupField
                 }: ValidatedTablesAndFieldsConfiguration,
                 deleteOpenCheckoutsUponCheckIn: boolean) {
+        this.airtableMutationService = airtableMutationService;
         this.checkoutsTable = checkoutsTable;
         this.checkedInField = checkedInField;
         this.dateCheckedInField = dateCheckedInField;
@@ -44,15 +47,15 @@ export class TransactionService {
 
 
     validateTransaction: (transactionData: TransactionData) => ReadonlyArray<string> = ({
-                                                                                    cartRecords,
-                                                                                    transactionType,
-                                                                                    transactionUser
-                                                                                }) => {
+                                                                                            cartRecords,
+                                                                                            transactionType,
+                                                                                            transactionUser
+                                                                                        }) => {
         let errorMessages: Array<string> = [];
         if (cartRecords.length === 0) errorMessages.push("The cart must have at least one record.");
         if (transactionType === transactionTypes.checkout.value) {
-            if (transactionUser === null) errorMessages.push("A user must be associated with the cart.");
-            const hasPermissionToCreateCheckouts: boolean = this.checkoutsTable.hasPermissionToCreateRecord();
+            if (transactionUser === undefined) errorMessages.push("A user must be associated with the cart.");
+            const hasPermissionToCreateCheckouts = this.checkoutsTable.hasPermissionToCreateRecord();
             if (!hasPermissionToCreateCheckouts) errorMessages.push("You do not have permission to create new checkout records.");
         }
 
@@ -61,7 +64,7 @@ export class TransactionService {
         return errorMessages;
     }
 
-    async getOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record) {
+    async getRecordIdsOfOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record): Promise<RecordId[]> {
         // TODO: If there are performance issues with lots of old checkout records,
         //  this could be optimized further if there was already a pre-configured linked record column in the inventory table that used an "open checkout" view filter.
         //  However - if the open checkout view itself is modified to not do it's original job anymore, then the code relying on it would break.. This could be a future configuration setting?
@@ -94,31 +97,29 @@ export class TransactionService {
     }));
 
     async handleOpenCheckoutsAssociatedWithCartRecord(cartRecord: Record) {
-        const openCheckoutsAssociatedWithCartRecord = await this.getOpenCheckoutsAssociatedWithCartRecord(cartRecord);
+        const openCheckoutsAssociatedWithCartRecord: RecordId[] = await this.getRecordIdsOfOpenCheckoutsAssociatedWithCartRecord(cartRecord);
         if (openCheckoutsAssociatedWithCartRecord.length !== 0)
             await (this.deleteOpenCheckoutsUponCheckIn
-                ? this.checkoutsTable.deleteRecordsAsync(openCheckoutsAssociatedWithCartRecord)
-                : this.checkoutsTable.updateRecordsAsync(this.formatCheckoutRecordsToBeCheckedIn(openCheckoutsAssociatedWithCartRecord)));
+                ? this.airtableMutationService.deleteRecordsInTableAsync(this.checkoutsTable, openCheckoutsAssociatedWithCartRecord)
+                : this.airtableMutationService.updateRecordsInTableAsync(this.checkoutsTable, this.formatCheckoutRecordsToBeCheckedIn(openCheckoutsAssociatedWithCartRecord)));
     }
 
-    async executeCheckInsAndCheckOutsForCartRecord(cartRecord: Record, transactionMetadata: TransactionMetadata, cartGroupNumber: number) {
+    executeCheckInsAndCheckOutsForCartRecord: (cartRecord: Record, transactionMetadata: TransactionMetadata, cartGroupNumber: number) => Promise<Record> = async (cartRecord: Record, transactionMetadata: TransactionMetadata, cartGroupNumber: number) => {
         await this.handleOpenCheckoutsAssociatedWithCartRecord(cartRecord);
-        if (transactionMetadata.transactionType == 'checkout') {
-            // TODO: See if the type assertion can be removed below with some other strategy.
-            await this.checkoutsTable.createRecordAsync(this.getCheckoutRecordToBeCreated(cartRecord, <CheckoutTransactionMetadata>transactionMetadata, cartGroupNumber));
-        }
+        if (transactionMetadata.transactionType == 'checkout')
+            await this.airtableMutationService.createRecordInTableAsync(this.checkoutsTable, this.getCheckoutRecordToBeCreated(cartRecord, <CheckoutTransactionMetadata>transactionMetadata, cartGroupNumber));
         return cartRecord;
-    }
+    };
 
-    async executeTransaction(transactionData: TransactionData, removeRecordFromCart: (recordId: RecordId) => void) {
+    executeTransaction = async (transactionData: TransactionData, removeRecordFromCart: (recordId: RecordId) => void): Promise<Record[]> => {
         const cartGroupNumber = Math.floor(Math.random() * 1000000000);
-
-        await allSettled(
-            transactionData.cartRecords.map(cartRecord =>
+        const recordsWithErrors: Record[] = [];
+        await Promise.all(
+            transactionData.cartRecords.slice().reverse().map(cartRecord =>
                 this.executeCheckInsAndCheckOutsForCartRecord(cartRecord, transactionData, cartGroupNumber)
-                    .then(cartRecord => {
-                        removeRecordFromCart(cartRecord.id)
-                        return cartRecord;
-                    })))
-    }
+                    .then(() => removeRecordFromCart(cartRecord.id))
+                    .catch(() => recordsWithErrors.push(cartRecord))))
+
+        return recordsWithErrors;
+    };
 }

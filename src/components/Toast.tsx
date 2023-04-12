@@ -8,6 +8,7 @@ loadCSSFromString(`
   --toastify-toast-min-height: 55px; 
   --toastify-toast-background: #fff;
   --toastify-color-dark: #002;
+  --toastify-toast-max-height: 10000px;
 }
 
 .Toastify {

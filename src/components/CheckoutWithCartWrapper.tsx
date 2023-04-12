@@ -2,7 +2,8 @@ import {ExtensionConfiguration, TablesAndFieldsConfigurationIds, ValidationResul
 import React from "react";
 import CheckoutCart from "./CheckoutCart";
 import {TransactionService} from "../services/TransactionService";
-import {loadCSSFromString, Text} from "@airtable/blocks/ui";
+import {Box, loadCSSFromString, Text} from "@airtable/blocks/ui";
+import {AirtableMutationService} from "../services/AirtableMutationService";
 
 loadCSSFromString(`
 .centered-container {
@@ -16,6 +17,7 @@ loadCSSFromString(`
 `);
 
 const CheckoutWithCartWrapper = ({
+                                     airtableMutationService,
                                      extensionConfiguration,
                                      configurationValidator,
                                      isPremiumUser,
@@ -23,6 +25,7 @@ const CheckoutWithCartWrapper = ({
                                      setTransactionIsProcessing
                                  }:
                                      {
+                                         airtableMutationService: AirtableMutationService,
                                          extensionConfiguration: ExtensionConfiguration | undefined,
                                          configurationValidator: (configIds: TablesAndFieldsConfigurationIds) => ValidationResult,
                                          isPremiumUser: boolean,
@@ -31,18 +34,20 @@ const CheckoutWithCartWrapper = ({
                                      }) => {
 
     if (extensionConfiguration === undefined) {
-        return <div className='centered-container'><Text size="large">You must configure the extension in the settings
-            tab before you can use it!</Text></div>;
+        return <Box className='centered-container'>
+            <Text size="large">You must configure the extension in the settings tab before you can use it!</Text>
+        </Box>;
     }
 
     const validationResult = configurationValidator(extensionConfiguration.tableAndFieldIds);
     return validationResult.errorsPresent ?
-        <div className='centered-container'><Text>
+        <Box className='centered-container'><Text>
             Something has changed with your base schema and your extension configuration is now invalid. Please correct
             it in the
-            settings page.</Text></div> :
+            settings page.</Text>
+        </Box> :
         <CheckoutCart
-            transactionService={new TransactionService(validationResult.configuration, extensionConfiguration.otherConfiguration.deleteOpenCheckoutsUponCheckIn)}
+            transactionService={new TransactionService(airtableMutationService, validationResult.configuration, extensionConfiguration.otherConfiguration.deleteOpenCheckoutsUponCheckIn)}
             tablesAndFields={validationResult.configuration}
             otherConfiguration={extensionConfiguration.otherConfiguration}
             isPremiumUser={isPremiumUser}

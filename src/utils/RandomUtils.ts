@@ -1,15 +1,4 @@
-// "Polyfill" for Promise.allSettled
-
-
 import {Id, toast} from "react-toastify";
-
-export const allSettled = (promises: Promise<any>[]) => {
-    let wrappedPromises = promises.map(p => Promise.resolve(p)
-        .then(
-            val => ({status: 'fulfilled', value: val}),
-            err => ({status: 'rejected', reason: err})));
-    return Promise.all(wrappedPromises);
-};
 
 export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T, v: T[keyof T]) => V) {
     return Object.fromEntries(
@@ -17,7 +6,7 @@ export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T,
     ) as { [K in keyof T]: V };
 }
 
-export const getRecordCardWidth = (viewportWidth: number) => Math.min(850, (viewportWidth > 600 ? viewportWidth - 250 : viewportWidth - 180));
+export const getRecordCardWidth = (viewportWidth: number) => Math.min(850, (viewportWidth > 600 ? viewportWidth - 250 : viewportWidth - 200));
 
 export const generateRandomPositiveInteger = (): number => Math.floor(Math.random() * 1000);
 
@@ -33,12 +22,12 @@ export const generateRandomPositiveInteger = (): number => Math.floor(Math.rando
 * Thus, it may be helpful in some cases to give the user some feedback that they should fix their internet connection and that they may need
 *  to refresh the browser and retry the operation (so that they're not just left hanging for 4 minutes even after network connection is restored).
 */
-export const asyncAirtableOperationWrapper = <T>(asyncAirtableOperation: () => Promise<T>, triggerPoorNetworkConnectionToastMessage: () => Id): Promise<T> => {
+export const asyncAirtableOperationWrapper = <T>(asyncAirtableOperation: () => Promise<T>, triggerPoorNetworkConnectionToastMessage: () => Id, defaultDelayUntilToastMessageTriggered= 20000): Promise<T> => {
     return new Promise((resolve, reject) => {
         let toastId: Id | undefined = undefined;
         const timeout = setTimeout(() => {
             toastId = triggerPoorNetworkConnectionToastMessage();
-        }, 15000);
+        }, defaultDelayUntilToastMessageTriggered);
 
         return asyncAirtableOperation()
             .then((fulfilledPromise) => resolve(fulfilledPromise))

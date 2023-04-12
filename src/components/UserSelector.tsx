@@ -29,11 +29,11 @@ const UserSelector = ({
                           selectUser,
                           viewportWidth,
                           transactionIsProcessing
-                      }: { currentTransactionUser: Record | null; viewportWidth: number; selectUser: () => Promise<void>, transactionIsProcessing: boolean }) =>
-    <div className='user-selector-container'>
+                      }: { currentTransactionUser: Record | undefined; viewportWidth: number; selectUser: () => Promise<void>, transactionIsProcessing: boolean }) =>
+    <Box className='user-selector-container'>
         <Label> User Associated with Cart: </Label>
         <Box className='user-selector' border='thick'>
-            {currentTransactionUser === null
+            {currentTransactionUser === undefined
                 ? <Box> No user is currently associated with the cart!</Box>
                 : <Box>
                     <RecordCard
@@ -55,6 +55,6 @@ const UserSelector = ({
                 />
             </Tooltip>
         </Box>
-    </div>;
+    </Box>;
 
 export default UserSelector;

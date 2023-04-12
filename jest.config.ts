@@ -11,7 +11,8 @@ const config: Config = {
   ],
   coverageDirectory: "test/coverage",
   coverageReporters: ['text', 'text-summary', 'json-summary'],
-  testMatch: ['**/test/**/*.test.{ts,tsx}']
+  testMatch: ['**/test/**/*.test.{ts,tsx}'],
+  silent: false,
 };
 
 export default config;

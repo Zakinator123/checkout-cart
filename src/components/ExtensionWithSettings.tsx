@@ -9,6 +9,8 @@ import CheckoutWithCartWrapper from "./CheckoutWithCartWrapper";
 import {About} from "./About";
 import {Premium} from "./Premium";
 import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
+import {RateLimiter} from "../utils/RateLimiter";
+import {AirtableMutationService} from "../services/AirtableMutationService";
 
 loadCSSFromString(`
 .container {
@@ -109,14 +111,16 @@ loadCSSFromString(`
 
 /*
     TODO:
-        - Flesh out error handling logic of transactions - Show failures/successes per record for executeTransaction.
-            - It seems transactions fail with improper permissions, but there are no error messages being shown.
-        - Add schema visualization in settings page
         - Polish up the settings page with more info/collapsible sections
-        - Test out toast messages with macbook viewport
+        - Add in a "How to use this extension" description
+        - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
+        - Ask airtable community on license verification strategy. Should I prepare for adversaries?
+        - Disable config fields when configurationUpdate is pending
         ---
-        - disable config field changes if configuration update is pending
+        - Update verbiage of app to use "recipient" instead of "user" to allow for checkouts to locations or other entities.
+        - Add schema visualization in settings page
         - Make form validation error messages that reference table names and/or field types more user friendly.
+        - Put icons for field type of each field in settings page
         - Set up github sponsors page/info
         - Investigate use of base template instead of or in addition to "create schema for me" button?'
         - Look into iots for type checking
@@ -124,17 +128,12 @@ loadCSSFromString(`
         - Purchase domain name(s)?
         - Create email address with custom domain for support page
         - Figure out UTC date situation for date fields..
-        - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Add landing page, and documentation blog/videos
         - Create use case videos/blogs for how to run a library business, rental equipment business, gear inventory business, etc.
         - Increase test coverage of extension
-        - Test out behavior with 50+ items in cart - and include error message to prevent if errors occur.
-        - Add in a "How to use this extension" description
-        - Put icons for field type of each field in settings page
         - Extract more styles into css classes
         - Extract all strings into a separate file.
         - Extract css for this file into a separate CSS file
-        - Ask airtable community on license verification strategy. Should I prepare for adversaries?
  */
 
 export function ExtensionWithSettings() {
@@ -144,10 +143,13 @@ export function ExtensionWithSettings() {
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     const configurationValidator = getConfigurationValidatorForBase(base);
+    const rateLimiter = new RateLimiter(15, 1000);
+    const airtableMutationService = new AirtableMutationService(rateLimiter);
+
     const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
     const isPremiumUser: boolean = (globalConfig.get('isPremiumUser') as boolean | undefined) ?? false;
 
-    return <div className='container'>
+    return <Box className='container'>
         <Heading>🚀 Checkout Cart 🚀</Heading>
         <Tabs defaultIndex={extensionConfig === undefined ? 1 : 0}>
             <TabList>
@@ -156,13 +158,14 @@ export function ExtensionWithSettings() {
                 <Tab><Icon name="premium" size={12}/> Premium <Icon fillColor='black' name="premium" size={12}/></Tab>
                 <Tab><Icon name="help" size={12}/> About</Tab>
             </TabList>
-            <div>
+            <Box>
                 <TabPanel>
                     <Suspense fallback={
                         <Box className='tab-loading-state'>
                             <Loader scale={0.5} fillColor='#888'/>
                         </Box>}>
                         <CheckoutWithCartWrapper
+                            airtableMutationService={airtableMutationService}
                             extensionConfiguration={extensionConfig}
                             configurationValidator={configurationValidator}
                             isPremiumUser={isPremiumUser}
@@ -170,7 +173,7 @@ export function ExtensionWithSettings() {
                             setTransactionIsProcessing={setTransactionIsProcessing}/>
                     </Suspense>
                 </TabPanel>
-            </div>
+            </Box>
             <TabPanel>
                 <Settings currentTableAndFieldIds={extensionConfig?.tableAndFieldIds}
                           currentOtherConfiguration={extensionConfig?.otherConfiguration}
@@ -183,5 +186,5 @@ export function ExtensionWithSettings() {
             <TabPanel><Premium isPremiumUser={isPremiumUser} globalConfig={globalConfig}/></TabPanel>
             <TabPanel><About/></TabPanel>
         </Tabs>
-    </div>
+    </Box>
 }

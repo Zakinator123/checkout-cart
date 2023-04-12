@@ -39,7 +39,6 @@ loadCSSFromString(`
     justify-content: center;
     background-color: white;
     padding: 1rem;
-    overflow: auto;
     gap: 0.5rem;
     height: 100%;
     width: 100%;
@@ -77,7 +76,7 @@ function CheckoutCart({
     // Transaction State
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
     const [cartRecords, setCartRecords] = useState<Array<Record>>([]);
-    const [transactionUser, setTransactionUser] = useState<Record | null>(null);
+    const [transactionUser, setTransactionUser] = useState<Record | undefined>(undefined);
     const [transactionDueDate, setTransactionDueDate] = useState<Date>(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate));
 
     const [transactionSubmissionToastId, cartErrorToastId] = [{containerId: 'transactionSubmissionToast'}, {containerId: 'cartErrorToast'}];
@@ -90,7 +89,7 @@ function CheckoutCart({
     };
 
     // Transaction State Mutators
-    const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user));
+    const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user ?? undefined));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
     const addRecordToCart = () => {
         if (!isPremiumUser && cartRecords.length >= maxNumberOfCartRecordsForFreeUsers) {
@@ -112,10 +111,8 @@ function CheckoutCart({
         }
     };
     const clearTransactionData = () => {
-        // TODO: Leave cart records when there are errors associated with their transaction?
         setTransactionDueDate(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate))
-        // TODO: If there are errors associated with the transaction, then perhaps the user should not be cleared?
-        setTransactionUser(null);
+        setTransactionUser(undefined);
     }
 
     const attemptToExecuteTransaction = () => {
@@ -123,18 +120,35 @@ function CheckoutCart({
         if (errorMessages.length === 0) {
             setTransactionIsProcessing(true);
 
-            // Show user notifications for settled Promises.
             const transactionPromise = asyncAirtableOperationWrapper(() => transactionService.executeTransaction({...transactionData}, removeRecordFromCart),
-                () => toast.loading(<OfflineToastMessage/>, {
-                    autoClose: false,
-                    containerId: transactionSubmissionToastId.containerId
-                })).then(() => clearTransactionData())
+                () => toast.loading(
+                    <OfflineToastMessage/>, {autoClose: false, ...transactionSubmissionToastId}), transactionData.cartRecords.length < 50 ? 30000 : 100000)
+                .then((errorRecords) => {
+                    if (errorRecords.length === 0) {
+                        clearTransactionData()
+                    } else {
+                        throw errorRecords;
+                    }
+                })
                 .finally(() => setTimeout(() => setTransactionIsProcessing(false), 1000))
 
             toast.promise(transactionPromise, {
-                pending: 'Attempting to execute transaction.',
-                success: {render: `${transactionTypes[transactionData.transactionType].label} successful!`, autoClose: 2000},
-                error: 'An error occurred with the transaction.',
+                pending: 'Attempting to execute transaction. This may take a while...',
+                success: {
+                    render: `${transactionTypes[transactionData.transactionType].label} successful!`,
+                    autoClose: 2000
+                },
+                error: {
+                    autoClose: false,
+                    render({data}) {
+                        const errorRecords = data as Array<Record>;
+                        return <>
+                            Errors occurred during the transaction. The following records were not processed
+                            correctly: <br/>
+                            <ul>{errorRecords.map((errorRecord, index) => <li key={index}>{errorRecord.name}</li>)}</ul>
+                        </>;
+                    }
+                },
             }, transactionSubmissionToastId);
         } else {
             toast.error(<><Text

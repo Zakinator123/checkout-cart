@@ -82,7 +82,7 @@ export const Premium = ({isPremiumUser, globalConfig}: {
 
     return <>
         <Box className='centered-premium-container'>
-            <Text size='large'>
+            <Text marginBottom={3} size='large'>
                 Upgrade to premium to enable cart sizes larger than 3 items!
             </Text>
             <Box className='premium-form'>
