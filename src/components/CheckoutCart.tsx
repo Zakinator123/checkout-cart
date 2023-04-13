@@ -136,7 +136,7 @@ function CheckoutCart({
                 pending: 'Attempting to execute transaction. This may take a while...',
                 success: {
                     render: `${transactionTypes[transactionData.transactionType].label} successful!`,
-                    autoClose: 2000
+                    autoClose: 3000
                 },
                 error: {
                     autoClose: false,

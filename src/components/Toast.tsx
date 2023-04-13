@@ -6,9 +6,12 @@ import {loadCSSFromString} from "@airtable/blocks/ui";
 loadCSSFromString(`
 :root {
   --toastify-toast-min-height: 55px; 
-  --toastify-toast-background: #fff;
-  --toastify-color-dark: #002;
   --toastify-toast-max-height: 10000px;
+}
+
+.Toastify__toast-theme--colored.Toastify__toast--default {
+    background: #f9f9f9,
+    color: #565656
 }
 
 .Toastify {
@@ -46,7 +49,7 @@ export const Toast = (toastContainerId?: { containerId?: string }) => {
         ...toastContainerId
     }
     return <ToastContainer
-        theme="dark"
+        theme="colored"
         {...(toastContainerId ? multiContainerProps : {})}
         transition={Zoom}
         style={{

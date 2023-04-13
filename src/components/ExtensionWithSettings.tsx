@@ -110,20 +110,22 @@ loadCSSFromString(`
 `);
 
 /*
-    TODO:
+       TODO:
         - Polish up the settings page with more info/collapsible sections
         - Add in a "How to use this extension" description
+        - Figma screenshots and video walkthrough
+        - Disable config fields when configurationUpdate is pending
+        -------
+
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Ask airtable community on license verification strategy. Should I prepare for adversaries?
-        - Disable config fields when configurationUpdate is pending
-        ---
         - Update verbiage of app to use "recipient" instead of "user" to allow for checkouts to locations or other entities.
         - Add schema visualization in settings page
         - Make form validation error messages that reference table names and/or field types more user friendly.
-        - Put icons for field type of each field in settings page
         - Set up github sponsors page/info
-        - Investigate use of base template instead of or in addition to "create schema for me" button?'
+        - Investigate use of base template in addition to "generate schema" button?'
         - Look into iots for type checking
+        - Put icons for field type of each field in settings page
         - SEO Research for 'building library systems on airtable' ?
         - Purchase domain name(s)?
         - Create email address with custom domain for support page
