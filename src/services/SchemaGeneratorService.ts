@@ -42,10 +42,10 @@ export async function createSchema(base: Base, randomSchemaId: number) {
     const extensionConfiguration: ExtensionConfiguration = {
         tableAndFieldIds: {
             [TableName.inventoryTable]: inventoryTable.id,
-            [TableName.userTable]: userTable.id,
+            [TableName.recipientTable]: userTable.id,
             [TableName.checkoutsTable]: checkoutsTable.id,
             [CheckoutTableRequiredFieldName.linkedInventoryTableField]: (await linkedInventoryTableField).id,
-            [CheckoutTableRequiredFieldName.linkedUserTableField]: (await linkedUserTableField).id,
+            [CheckoutTableRequiredFieldName.linkedRecipientTableField]: (await linkedUserTableField).id,
             [CheckoutTableRequiredFieldName.checkedInField]: (await checkedInField).id,
             [CheckoutTableOptionalFieldName.dateCheckedOutField]: (await checkedOutDateField).id,
             [CheckoutTableOptionalFieldName.dateDueField]: (await dateDueField).id,

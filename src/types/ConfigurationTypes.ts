@@ -3,13 +3,13 @@ import {FieldId, TableId} from "@airtable/blocks/types";
 
 export enum TableName {
     inventoryTable = 'inventoryTable',
-    userTable = 'userTable',
+    recipientTable = 'recipientTable',
     checkoutsTable = 'checkoutsTable'
 }
 
 export enum CheckoutTableRequiredFieldName {
     linkedInventoryTableField = 'linkedInventoryTableField',
-    linkedUserTableField = 'linkedUserTableField',
+    linkedRecipientTableField = 'linkedRecipientTableField',
     checkedInField = 'checkedInField',
 }
 
@@ -29,10 +29,10 @@ export type TableAndFieldsConfigurationKey = TableName | CheckoutTableRequiredFi
 
 type TablesAndFieldsConfiguration<TableOrTableIdOrErrorMessage, FieldOrFieldIdOrErrorMessage, OptionalFieldOrFieldIdOrErrorMessage> = {
     [TableName.inventoryTable]: TableOrTableIdOrErrorMessage,
-    [TableName.userTable]: TableOrTableIdOrErrorMessage,
+    [TableName.recipientTable]: TableOrTableIdOrErrorMessage,
     [TableName.checkoutsTable]: TableOrTableIdOrErrorMessage,
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldOrFieldIdOrErrorMessage,
-    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldOrFieldIdOrErrorMessage,
+    [CheckoutTableRequiredFieldName.linkedRecipientTableField]: FieldOrFieldIdOrErrorMessage,
     [CheckoutTableRequiredFieldName.checkedInField]: FieldOrFieldIdOrErrorMessage,
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: OptionalFieldOrFieldIdOrErrorMessage,
     [CheckoutTableOptionalFieldName.dateDueField]: OptionalFieldOrFieldIdOrErrorMessage,

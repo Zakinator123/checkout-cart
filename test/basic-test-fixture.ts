@@ -122,8 +122,8 @@ export const basicTestFixture: FixtureData = {
                 ],
             },
             {
-                id: 'tblTestUsers',
-                name: 'Test Users',
+                id: 'tblTestRecipients',
+                name: 'Test Recipients',
                 description: '',
                 fields: [
                     {
@@ -262,7 +262,7 @@ export const basicTestFixture: FixtureData = {
                         description: '',
                         type: FieldType.MULTIPLE_RECORD_LINKS,
                         options: {
-                            linkedTableId: 'tblTestUsers',
+                            linkedTableId: 'tblTestRecipients',
                             isReversed: false,
                             prefersSingleRecordLink: true,
                             inverseLinkFieldId: 'fldTestChecko2',

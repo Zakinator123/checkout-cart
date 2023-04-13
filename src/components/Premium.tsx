@@ -23,6 +23,10 @@ loadCSSFromString(`
     margin: 1rem 0 0 0;
 }
 
+.premium-form-field {
+    margin: 0 0 1rem 0;
+}
+
 .premium-form {
     display: flex;
     flex-direction: column;
@@ -35,6 +39,10 @@ loadCSSFromString(`
     .premium-input-box {
         flex-direction: row;
     }
+    
+    .premium-form-field {
+    margin: 0;
+}
     
     .premium-submit-button {
         margin: 0 0 0 1rem;
@@ -51,6 +59,13 @@ export const Premium = ({isPremiumUser, globalConfig}: {
     // TODO: Factor out license verification logic from error toast calls to make unit testable.
     const verifyLicense = () => {
         setVerifyButtonDisabledState(true);
+
+        if (!globalConfig.hasPermissionToSet('isPremiumUser', true)) {
+            toast.error("You must have base editor permissions to upgrade this extension to premium.", {autoClose: 5000})
+            setVerifyButtonDisabledState(false);
+            return;
+        }
+
         fetch('https://api.gumroad.com/v2/licenses/verify',
             {
                 method: 'POST',
@@ -69,14 +84,13 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
                 if (responseSuccessful) {
                     if (responseJson.uses >= 100) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
-                    else if (globalConfig.hasPermissionToSet('isPremiumUser', true)) asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true), () => toast.error(
+                    asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true), () => toast.error(
                         <OfflineToastMessage/>))
-                        .then(() => toast.success('License verified! You are now a premium user!'))
+                        .then(() => toast.success('License verified! You are now a premium user! 🎉🎉', {autoClose: 5000}))
                         .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.'))
-                    else toast.error("You must have base editor permissions to update extension settings.")
                 } else toast.error('Invalid license key!')
             })
-            .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.',))
+            .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.'))
             .finally(() => setVerifyButtonDisabledState(false))
     }
 
@@ -87,6 +101,7 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             </Text>
             <Box className='premium-form'>
                 <FormField
+                    className='premium-form-field'
                     marginBottom={0}
                     label={
                         <>
@@ -103,15 +118,15 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                                 type='submit'
                                 disabled={isPremiumUser || verifyButtonDisabledState}
                                 onClick={verifyLicense}>
-                            {verifyButtonDisabledState && !isPremiumUser ? <>Verifying.. <Loader
-                                scale={0.3}/></> : 'Verify License'}
+                            {verifyButtonDisabledState && !isPremiumUser ? <Loader
+                                scale={0.3}/> : 'Verify License'}
                         </Button>
                     </Box>
                     <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between
                         bases.</Text></Box>
                 </FormField>
                 <Toast/>
-                <Box marginTop={2} display='flex' alignContent='center' justifyContent='center'>
+                <Box marginTop={3} display='flex' alignContent='center' justifyContent='center'>
                     <Link
                         href="https://airtablecheckoutcart.gumroad.com/l/checkout-cart"
                         target="_blank">

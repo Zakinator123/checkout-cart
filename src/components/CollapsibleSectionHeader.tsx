@@ -1,12 +1,13 @@
 import {Box, Icon, Text} from "@airtable/blocks/ui";
 import React from "react";
 
-export const CollapsibleSectionHeader = (isOpen: boolean, headerText: string) => {
+export const CollapsibleSectionHeader = (isOpen: boolean, headerText: string, leftRightMargin = '1rem') => {
     return <Box borderRadius='5px'
-                backgroundColor='teal'
+                backgroundColor='#0000007d'
                 border='default'
                 padding='10px'
                 display='flex'
+                margin={`0 ${leftRightMargin} 0 ${leftRightMargin}}`}
                 justifyContent='space-between'>
         <Text textColor='white'
               as='h2'

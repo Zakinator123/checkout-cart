@@ -8,38 +8,75 @@ loadCSSFromString(`
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 2rem;
+    padding: 1rem;
     max-width: 750px;
+    margin-top: 1rem;
+}
+
+.explanation-section {
+    padding-left: 1rem;
+}
+
+@media (min-width: 515px) {
+    .centered-about-container {
+        padding: 3rem;
+        margin-top: 0;
+    }
+    
+    .explanation-section {
+        padding-left: 2rem;
+    }
 }`);
 
 export const About = () => {
     return <Box className='centered-about-container'>
+        <Text as='h3' fontWeight={600} size='xlarge'>About:</Text>
+        <Box padding='0.7rem'>
+            <Text>
+                Checkout Cart helps you manage library-style inventories where items are &#39;checked out&#39; or &#39;checked in&#39;
+                by recipients.
+                The cart interface allows you to quickly check out items to recipients, and check them back in.
+                The extension is highly configurable, and can be used for a variety of inventory management use cases.
+                <br/>
+                <br/>
+                To get started, configure the extension in the settings tab, then start using the checkout cart!
+            </Text>
+        </Box>
+        <br/>
+
         <Text as='h3' fontWeight={600} size='xlarge'>How this extension works:</Text>
         <br/>
 
         <Collapsible
-            trigger={CollapsibleSectionHeader(false, 'Check-Outs:')}
-            triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Outs:')}
+            trigger={CollapsibleSectionHeader(false, 'Check-Outs:', '0')}
+            triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Outs:', '0')}
         >
             <br/>
-            <Box paddingLeft='2rem'>
+            <Box className='explanation-section'>
                 When the transaction type is set to &quot;Check Out&quot;, items are added to the cart,
-                a user is associated with the cart, and the &quot;Check Out Items&quot; button is pressed,
+                a recipient is associated with the cart, and the &quot;Check Out Items&quot; button is pressed,
                 this extension will:
                 <ol>
-                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; (called &quot;Open Checkouts&quot;)
-                        and mark them as checked in with the configured checkbox field. This prevents the item from having multiple open checkouts simultaneously.
+                    <li>Find checkouts associated with items in the cart that are not &quot;checked
+                        in&quot; (called &quot;Open Checkouts&quot;)
+                        and mark them as checked in with the configured checkbox field. This prevents the item from
+                        having multiple open checkouts simultaneously.
                         (E.g. A book cannot be checked out to two different people at the same time.)
                         <br/>
                         <br/>
-                        <ul><li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is enabled: </strong>
-                            Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts will be deleted entirely.
-                            Existing checkouts associated with the item that are already marked as &quot;checked in&quot; will not be deleted.
-                            </li></ul>
+                        <ul>
+                            <li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is
+                                enabled: </strong>
+                                Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts
+                                will be deleted entirely.
+                                Existing checkouts associated with the item that are already marked as &quot;checked
+                                in&quot; will not be deleted.
+                            </li>
+                        </ul>
                     </li>
                     <br/>
                     <li>For every item in the cart, create a new checkout record that is linked to that item and linked
-                        to the user associated with the cart.
+                        to the recipient associated with the cart.
                     </li>
                     <br/>
                     <li>
@@ -58,22 +95,29 @@ export const About = () => {
         <br/>
 
         <Collapsible
-            trigger={CollapsibleSectionHeader(false, 'Check-Ins:')}
-            triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Ins:')}
+            trigger={CollapsibleSectionHeader(false, 'Check-Ins:', '0')}
+            triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Ins:', '0')}
         >
             <br/>
-            <Box paddingLeft='2rem'>
+            <Box className='explanation-section'>
                 When the transaction type is set to &quot;Check In&quot;, items are added to the cart,
                 and the &quot;Check In Items&quot; button is pressed, this extension will:
                 <ol>
-                    <li>Find checkouts associated with items in the cart that are not &quot;checked in&quot; (called &quot;Open Checkouts&quot;)
-                        and mark them as checked in with the configured checkbox field. (Same as step 1 above for Check-Outs)
+                    <li>Find checkouts associated with items in the cart that are not &quot;checked
+                        in&quot; (called &quot;Open Checkouts&quot;)
+                        and mark them as checked in with the configured checkbox field. (Same as step 1 above for
+                        Check-Outs)
                         <br/>
                         <br/>
-                        <ul><li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is enabled: </strong>
-                            Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts will be deleted entirely.
-                            Existing checkouts associated with the item that are already marked as &quot;checked in&quot; will not be deleted.
-                        </li></ul>
+                        <ul>
+                            <li><strong>If the &quot;Delete Open Checkouts Upon Check-In&quot; setting is
+                                enabled: </strong>
+                                Instead of being marked as &quot;checked in&quot; the <strong>Open</strong> Checkouts
+                                will be deleted entirely.
+                                Existing checkouts associated with the item that are already marked as &quot;checked
+                                in&quot; will not be deleted.
+                            </li>
+                        </ul>
                     </li>
                     <br/>
                     <li>If configured in the settings, the extension can also populate the &quot;Date Checked
@@ -84,10 +128,10 @@ export const About = () => {
         </Collapsible>
         <br/>
         <Text as='h3' fontWeight={600} size='xlarge'>Support:</Text>
-        <br/>
-        <Box paddingLeft='1rem'>
-            Any feedback, feature requests, bug reports, questions, and consultation/customization inquiries can be sent to the developer at&nbsp;
-            <Link href='mailto:zakeyf@protonmail.com'>zakeyf@protonmail.com</Link>
+        <Box padding='0.7rem'>
+            Any feedback, feature requests, bug reports, questions, and consultation/customization inquiries can be sent
+            to the developer at&nbsp;
+            <Link href='mailto:support@checkout-cart.app'>support@checkout-cart.app</Link>
             <br/>
             <br/>
             <Text>
@@ -102,8 +146,7 @@ export const About = () => {
         </Box>
         <br/>
         <Text fontWeight={600} size='xlarge'>Source Code:</Text>
-        <br/>
-        <Text paddingLeft='1rem'>
+        <Text padding='0.7rem'>
             This extension is open source and can be viewed on
             <Link target='_blank' href='https://github.com/Zakinator123/checkout-cart'>&nbsp;Github</Link>
             <br/>

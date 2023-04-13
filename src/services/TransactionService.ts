@@ -13,7 +13,7 @@ export class TransactionService {
     private readonly airtableMutationService: AirtableMutationService;
     private readonly checkoutsTable: Table;
     private readonly linkedInventoryTableField: Field;
-    private readonly linkedUserTableField: Field;
+    private readonly linkedRecipientTableField: Field;
     private readonly checkedInField: Field;
     private readonly dateCheckedInField?: Field;
     private readonly dateCheckedOutField?: Field;
@@ -29,7 +29,7 @@ export class TransactionService {
                     dateCheckedOutField,
                     dateDueField,
                     linkedInventoryTableField,
-                    linkedUserTableField,
+                    linkedRecipientTableField,
                     cartGroupField
                 }: ValidatedTablesAndFieldsConfiguration,
                 deleteOpenCheckoutsUponCheckIn: boolean) {
@@ -40,7 +40,7 @@ export class TransactionService {
         this.dateCheckedOutField = dateCheckedOutField;
         this.dateDueField = dateDueField;
         this.linkedInventoryTableField = linkedInventoryTableField;
-        this.linkedUserTableField = linkedUserTableField;
+        this.linkedRecipientTableField = linkedRecipientTableField;
         this.cartGroupField = cartGroupField;
         this.deleteOpenCheckoutsUponCheckIn = deleteOpenCheckoutsUponCheckIn;
     }
@@ -49,18 +49,18 @@ export class TransactionService {
     validateTransaction: (transactionData: TransactionData) => ReadonlyArray<string> = ({
                                                                                             cartRecords,
                                                                                             transactionType,
-                                                                                            transactionUser
+                                                                                            transactionRecipient
                                                                                         }) => {
         let errorMessages: Array<string> = [];
         if (cartRecords.length === 0) errorMessages.push("The cart must have at least one record.");
         if (transactionType === transactionTypes.checkout.value) {
-            if (transactionUser === undefined) errorMessages.push("A user must be associated with the cart.");
+            if (transactionRecipient === undefined) errorMessages.push("A recipient must be associated with the cart.");
             const hasPermissionToCreateCheckouts = this.checkoutsTable.hasPermissionToCreateRecord();
             if (!hasPermissionToCreateCheckouts) errorMessages.push("You do not have permission to create new checkout records.");
         }
 
         const hasUpdateOrDeletePermission: boolean = this.deleteOpenCheckoutsUponCheckIn ? this.checkoutsTable.hasPermissionToDeleteRecords() : this.checkoutsTable.hasPermissionToUpdateRecords();
-        if (!hasUpdateOrDeletePermission) errorMessages.push("You do not have permission to update records in the checkouts table to check them in.");
+        if (!hasUpdateOrDeletePermission) errorMessages.push("You do not have permission to update records in the checkouts table.");
         return errorMessages;
     }
 
@@ -81,7 +81,7 @@ export class TransactionService {
 
     getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: CheckoutTransactionMetadata, cartGroupNumber: number) => ({
         [this.linkedInventoryTableField.id]: [{id: cartRecord.id}],
-        [this.linkedUserTableField.id]: [{id: transactionData.transactionUser.id}],
+        [this.linkedRecipientTableField.id]: [{id: transactionData.transactionRecipient.id}],
         [this.checkedInField.id]: false,
         ...(this.dateCheckedOutField ? {[this.dateCheckedOutField.id]: new Date()} : {}),
         ...(this.dateDueField ? {[this.dateDueField.id]: transactionData.transactionDueDate} : {}),

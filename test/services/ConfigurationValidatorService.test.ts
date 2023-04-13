@@ -28,12 +28,12 @@ describe('ConfigurationValidatorService', () => {
 
     it('Shows errors when some required fields are empty.', () => {
         const initialConfiguration: TablesAndFieldsConfigurationIds = {...blankConfigurationState};
-        initialConfiguration.userTable = 'someNonEmptyValue';
+        initialConfiguration.recipientTable = 'someNonEmptyValue';
         const validationResult = validateConfiguration(initialConfiguration);
         expect(validationResult.errorsPresent).toBeTruthy();
         if (validationResult.errorsPresent) {
             Object.values(combinedRequiredConfigKeys).forEach(configKey => {
-                const expectedErrorString = configKey === TableName.userTable ? '' : 'This value is required.';
+                const expectedErrorString = configKey === TableName.recipientTable ? '' : 'This value is required.';
                 expect(validationResult.errors[configKey]).toBe(expectedErrorString);
             });
             Object.values(CheckoutTableOptionalFieldName).forEach(configKey => expect(validationResult.errors[configKey]).toBe(''));
@@ -42,13 +42,13 @@ describe('ConfigurationValidatorService', () => {
 
     it('Shows errors when some required fields are empty and duplicate values exist.', () => {
         const initialConfiguration: TablesAndFieldsConfigurationIds = {...blankConfigurationState};
-        initialConfiguration.userTable = 'duplicateValue';
+        initialConfiguration.recipientTable = 'duplicateValue';
         initialConfiguration.inventoryTable = 'duplicateValue';
         const validationResult = validateConfiguration(initialConfiguration);
         expect(validationResult.errorsPresent).toBeTruthy();
         if (validationResult.errorsPresent) {
             Object.values(combinedRequiredConfigKeys).forEach(configKey => {
-                const expectedErrorString = configKey === TableName.userTable || configKey === TableName.inventoryTable ? 'Configuration values must be unique.' : 'This value is required.';
+                const expectedErrorString = configKey === TableName.recipientTable || configKey === TableName.inventoryTable ? 'Configuration values must be unique.' : 'This value is required.';
                 expect(validationResult.errors[configKey]).toBe(expectedErrorString);
             });
             Object.values(CheckoutTableOptionalFieldName).forEach(configKey => expect(validationResult.errors[configKey]).toBe(''));
@@ -65,8 +65,8 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "invalidFieldId2",
-            linkedUserTableField: "invalidFieldId3",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "invalidFieldId3",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
@@ -89,15 +89,15 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "fldCheckedOutItem",
-            linkedUserTableField: "fldCheckedOutToInvalid",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "fldCheckedOutToInvalid",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
         expect(validationResult.errorsPresent).toBeTruthy();
         if (validationResult.errorsPresent) {
             Object.values(combinedConfigKeys).forEach(configKey => {
-                const expectedErrorString = configKey === CheckoutTableRequiredFieldName.linkedUserTableField ? 'Field no longer exists' : '';
+                const expectedErrorString = configKey === CheckoutTableRequiredFieldName.linkedRecipientTableField ? 'Field no longer exists' : '';
                 expect(validationResult.errors[configKey]).toBe(expectedErrorString);
             });
         } else throw new Error('Validation Errors missing');
@@ -113,8 +113,8 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "invalidFieldId",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "fldCheckedOutItem",
-            linkedUserTableField: "fldCheckedOutTo",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "fldCheckedOutTo",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
@@ -137,8 +137,8 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "fldCheckedOutItem",
-            linkedUserTableField: "fldCheckedOutTo",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "fldCheckedOutTo",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
@@ -161,8 +161,8 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "fldCheckedOutTo",
-            linkedUserTableField: "fldCheckedOutItem",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "fldCheckedOutItem",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
@@ -170,8 +170,8 @@ describe('ConfigurationValidatorService', () => {
         if (validationResult.errorsPresent) {
             Object.values(combinedConfigKeys).forEach(configKey => {
                 let expectedErrorString: string;
-                if (configKey === CheckoutTableRequiredFieldName.linkedUserTableField) {
-                    expectedErrorString = "Field must link to the 'Test Users' table";
+                if (configKey === CheckoutTableRequiredFieldName.linkedRecipientTableField) {
+                    expectedErrorString = "Field must link to the 'Test Recipients' table";
                 } else if (configKey === CheckoutTableRequiredFieldName.linkedInventoryTableField) {
                     expectedErrorString = "Field must link to the 'Test Inventory' table";
                 } else expectedErrorString = '';
@@ -190,8 +190,8 @@ describe('ConfigurationValidatorService', () => {
             dateDueField: "",
             inventoryTable: "tblTestInventory",
             linkedInventoryTableField: "fldCheckedOutItem",
-            linkedUserTableField: "fldCheckedOutTo",
-            userTable: "tblTestUsers"
+            linkedRecipientTableField: "fldCheckedOutTo",
+            recipientTable: "tblTestRecipients"
         }
 
         const validationResult = validateConfiguration(configuration);
@@ -199,12 +199,12 @@ describe('ConfigurationValidatorService', () => {
         if (!validationResult.errorsPresent) {
             const config = validationResult.configuration;
             expect(config.inventoryTable).toBeInstanceOf(Table);
-            expect(config.userTable).toBeInstanceOf(Table);
+            expect(config.recipientTable).toBeInstanceOf(Table);
             expect(config.checkoutsTable).toBeInstanceOf(Table);
             expect(config.cartGroupField).toBeInstanceOf(Field);
             expect(config.checkedInField).toBeInstanceOf(Field);
             expect(config.linkedInventoryTableField).toBeInstanceOf(Field);
-            expect(config.linkedUserTableField).toBeInstanceOf(Field);
+            expect(config.linkedRecipientTableField).toBeInstanceOf(Field);
             expect(config.dateCheckedInField).toBeUndefined();
             expect(config.dateCheckedOutField).toBeUndefined();
             expect(config.dateDueField).toBeUndefined();

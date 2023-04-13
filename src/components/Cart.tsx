@@ -9,7 +9,7 @@ loadCSSFromString(`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #e7ffe7;
+    background-color: #2872e12b;
     padding: 1rem;
     height: 80%;
 }
@@ -53,7 +53,7 @@ const Cart = ({
         <Label> Cart: </Label>
         <Box className="cart" border="thick">
             {cartRecords.length === 0
-                ? <Text className="cart-item-record">The cart is currently empty.</Text>
+                ? <Text className="cart-item-record">The cart is empty</Text>
                 : cartRecords.map(record =>
                     <Box border='default' className="cart-item" key={record.id}>
                         <RecordCard

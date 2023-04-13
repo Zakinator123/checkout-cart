@@ -5,7 +5,7 @@ import {ExtensionConfiguration,} from "../types/ConfigurationTypes";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationValidatorService";
 // @ts-ignore
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-import CheckoutWithCartWrapper from "./CheckoutWithCartWrapper";
+import CheckoutCartWrapper from "./CheckoutCartWrapper";
 import {About} from "./About";
 import {Premium} from "./Premium";
 import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
@@ -20,14 +20,15 @@ loadCSSFromString(`
     align-items: center;
     justify-content: center;
     background-color: white;
-    gap: 1.5rem;
+    gap: 0.75rem;
     height: 100%;
     overflow: hidden;
 }
 
 .react-tabs {
     -webkit-tap-highlight-color: transparent;
-    width: 90%
+    width: 90%;
+    max-width: 1000px;
 }
 
 .react-tabs__tab-list {
@@ -78,6 +79,10 @@ loadCSSFromString(`
     margin-bottom: 3rem;
 }
 
+ol, ul {
+    padding-inline-start: 1.5rem;
+}
+
 @media (min-width: 515px) {
     .react-tabs__tab-list {
         flex-direction: row;
@@ -90,6 +95,10 @@ loadCSSFromString(`
 
     .react-tabs__tab--selected {
         border-radius: 5px 5px 0 0;
+    }
+    
+    ol, ul {
+        padding-inline-start: 2.5rem;
     }
     
     .react-tabs__tab-panel--selected {
@@ -111,15 +120,14 @@ loadCSSFromString(`
 
 /*
        TODO:
-        - Polish up the settings page with more info/collapsible sections
-        - Add in a "How to use this extension" description
         - Figma screenshots and video walkthrough
         - Disable config fields when configurationUpdate is pending
+        - Autonumber primary field?
         -------
 
+        - Premium license redemption limit
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Ask airtable community on license verification strategy. Should I prepare for adversaries?
-        - Update verbiage of app to use "recipient" instead of "user" to allow for checkouts to locations or other entities.
         - Add schema visualization in settings page
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info
@@ -153,7 +161,7 @@ export function ExtensionWithSettings() {
 
     return <Box className='container'>
         <Heading>🚀 Checkout Cart 🚀</Heading>
-        <Tabs defaultIndex={extensionConfig === undefined ? 1 : 0}>
+        <Tabs defaultIndex={extensionConfig === undefined ? 3 : 0}>
             <TabList>
                 <Tab>🛒 Checkout Cart </Tab>
                 <Tab><Icon name="cog" size={12}/> Settings</Tab>
@@ -166,7 +174,7 @@ export function ExtensionWithSettings() {
                         <Box className='tab-loading-state'>
                             <Loader scale={0.5} fillColor='#888'/>
                         </Box>}>
-                        <CheckoutWithCartWrapper
+                        <CheckoutCartWrapper
                             airtableMutationService={airtableMutationService}
                             extensionConfiguration={extensionConfig}
                             configurationValidator={configurationValidator}

@@ -15,7 +15,7 @@ import {
 
 import Cart from "./Cart";
 import {Record} from "@airtable/blocks/models";
-import UserSelector from "./UserSelector";
+import RecipientSelector from "./RecipientSelector";
 import {TransactionData, TransactionType, transactionTypes,} from "../types/TransactionTypes";
 import {TransactionService} from "../services/TransactionService";
 import {
@@ -30,6 +30,7 @@ import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
 import {toast} from "react-toastify";
 import {Toast} from "./Toast";
 import {OfflineToastMessage} from "./OfflineToastMessage";
+import {FormFieldLabelWithTooltip} from "./FormFieldLabelWithTooltip";
 
 loadCSSFromString(`
 .checkout-cart-container {
@@ -42,13 +43,20 @@ loadCSSFromString(`
     gap: 0.5rem;
     height: 100%;
     width: 100%;
-}`);
+}
+
+@media (min-width: 515px) {
+    .checkout-cart-container {
+        padding: 2rem;
+    }
+}
+`);
 
 function CheckoutCart({
                           transactionService,
                           tablesAndFields: {
                               inventoryTable,
-                              userTable,
+                              recipientTable,
                               dateDueField,
                           },
                           otherConfiguration,
@@ -70,13 +78,13 @@ function CheckoutCart({
     const viewportWidth = viewport.size.width;
     if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
 
-    const userRecords = useRecords(userTable);
+    const recipientRecords = useRecords(recipientTable);
     const inventoryTableRecords = useRecords(inventoryTable);
 
     // Transaction State
     const [transactionType, setTransactionType] = useState<TransactionType>(transactionTypes.checkout.value);
     const [cartRecords, setCartRecords] = useState<Array<Record>>([]);
-    const [transactionUser, setTransactionUser] = useState<Record | undefined>(undefined);
+    const [transactionRecipient, setTransactionRecipient] = useState<Record | undefined>(undefined);
     const [transactionDueDate, setTransactionDueDate] = useState<Date>(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate));
 
     const [transactionSubmissionToastId, cartErrorToastId] = [{containerId: 'transactionSubmissionToast'}, {containerId: 'cartErrorToast'}];
@@ -84,12 +92,12 @@ function CheckoutCart({
     const transactionData: TransactionData = {
         transactionType: transactionType,
         cartRecords: cartRecords,
-        transactionUser: transactionUser,
+        transactionRecipient: transactionRecipient,
         transactionDueDate: transactionDueDate,
     };
 
     // Transaction State Mutators
-    const selectUserForTransaction = () => expandRecordPickerAsync(userRecords).then(user => setTransactionUser(user ?? undefined));
+    const selectRecipientForTransaction = () => expandRecordPickerAsync(recipientRecords).then(recipient => setTransactionRecipient(recipient ?? undefined));
     const removeRecordFromCart = (recordId: RecordId) => setCartRecords(cartRecords => cartRecords.filter(record => record.id !== recordId));
     const addRecordToCart = () => {
         if (!isPremiumUser && cartRecords.length >= maxNumberOfCartRecordsForFreeUsers) {
@@ -112,7 +120,7 @@ function CheckoutCart({
     };
     const clearTransactionData = () => {
         setTransactionDueDate(getDateTimeVariableNumberOfDaysFromToday(otherConfiguration.defaultNumberOfDaysFromTodayForDueDate))
-        setTransactionUser(undefined);
+        setTransactionRecipient(undefined);
     }
 
     const attemptToExecuteTransaction = () => {
@@ -175,16 +183,20 @@ function CheckoutCart({
         <Toast {...cartErrorToastId}/>
 
         {transactionType === transactionTypes.checkout.value && <>
-            <UserSelector viewportWidth={viewportWidth}
-                          currentTransactionUser={transactionUser}
-                          selectUser={selectUserForTransaction}
-                          transactionIsProcessing={transactionIsProcessing}
+            <RecipientSelector viewportWidth={viewportWidth}
+                               currentTransactionRecipient={transactionRecipient}
+                               selectRecipient={selectRecipientForTransaction}
+                               transactionIsProcessing={transactionIsProcessing}
             />
 
             {dateDueField !== undefined &&
-                <Box maxWidth='1000px' width='100%'>
+                <Box maxWidth='130px' width='100%'>
                     <FormField
-                        label={`Due Date (The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today):`}>
+                        label={
+                            <FormFieldLabelWithTooltip
+                                fieldLabel='Due Date'
+                                fieldLabelTooltip={`The configured default is ${otherConfiguration.defaultNumberOfDaysFromTodayForDueDate} days from today`}/>}
+                    >
                         <Input type='date'
                                value={getIsoDateString(transactionDueDate)}
                                onChange={e => setTransactionDueDate(convertLocalDateTimeStringToDate(e.target.value))}
@@ -194,15 +206,16 @@ function CheckoutCart({
             }
         </>
         }
-
+        <br/>
         <Button
             type='submit'
             variant='primary'
+            minWidth='175px'
             disabled={transactionIsProcessing}
             onClick={attemptToExecuteTransaction}
         >
             {transactionIsProcessing
-                ? <Loader scale={0.2} fillColor='white'/>
+                ? <Loader scale={0.25} fillColor='white'/>
                 : <Text textColor='white'>{transactionTypes[transactionType].label} Items</Text>
             }
         </Button>

@@ -21,15 +21,15 @@ export const FieldSelectorGroup = ({
     formErrorState: any,
     selectorChangeHandler: any
 }) =>
-    <>
+    <Box display='flex' flexDirection='column'>
         <Text textDecoration='underline' as='strong' fontWeight='600'
               paddingLeft='1rem'>{required ? 'Required' : 'Optional'} Fields</Text>
-        <Box padding='1rem' paddingLeft='1rem'>
+        <Box padding='1rem 1rem 1rem 0' >
             {fields.map(({fieldName, fieldPickerLabel, fieldPickerTooltip}) =>
-                (<FormField key={fieldName} paddingLeft='1.5rem'
+                (<FormField key={fieldName} paddingLeft='1rem'
                             label={<FormFieldLabelWithTooltip fieldLabel={fieldPickerLabel}
                                                               fieldLabelTooltip={fieldPickerTooltip}/>}>
-                    <div style={{display: 'flex', gap: '1rem'}}>
+                    <Box>
                         <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
                             <Select
                                 disabled={false}
@@ -39,9 +39,9 @@ export const FieldSelectorGroup = ({
                             />
                         </Box>
                         <Text textColor='red'>{formErrorState[fieldName]}</Text>
-                    </div>
+                    </Box>
                     <br/>
                 </FormField>))
             }
         </Box>
-    </>
+    </Box>

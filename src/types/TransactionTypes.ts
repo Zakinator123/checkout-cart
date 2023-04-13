@@ -5,7 +5,7 @@ import {RecordId} from "@airtable/blocks/types";
 
 export type TransactionMetadata = {
     transactionType: TransactionType,
-    transactionUser?: AirtableRecord,
+    transactionRecipient?: AirtableRecord,
     transactionDueDate: Date
 }
 

@@ -12,11 +12,18 @@ loadCSSFromString(`
     align-items: center;
     flex-direction: column;
     justify-content: center;
-    padding: 5rem;
+    padding: 2rem;
+    
+}
+
+@media (min-width: 515px) {
+    .centered-container {
+        padding: 5rem;
+    }
 }
 `);
 
-const CheckoutWithCartWrapper = ({
+const CheckoutCartWrapper = ({
                                      airtableMutationService,
                                      extensionConfiguration,
                                      configurationValidator,
@@ -56,4 +63,4 @@ const CheckoutWithCartWrapper = ({
         />;
 }
 
-export default CheckoutWithCartWrapper;
+export default CheckoutCartWrapper;

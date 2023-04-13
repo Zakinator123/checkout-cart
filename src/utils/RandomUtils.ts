@@ -6,7 +6,7 @@ export function mapValues<T extends object, V>(obj: T, valueMapper: (k: keyof T,
     ) as { [K in keyof T]: V };
 }
 
-export const getRecordCardWidth = (viewportWidth: number) => Math.min(850, (viewportWidth > 600 ? viewportWidth - 250 : viewportWidth - 200));
+export const getRecordCardWidth = (viewportWidth: number) => Math.min(850, (viewportWidth > 600 ? viewportWidth - 250 : viewportWidth - 205));
 
 export const generateRandomPositiveInteger = (): number => Math.floor(Math.random() * 1000);
 
@@ -36,5 +36,16 @@ export const asyncAirtableOperationWrapper = <T>(asyncAirtableOperation: () => P
                 clearTimeout(timeout);
                 if (toastId !== undefined) toast.dismiss(toastId);
             });
+    });
+}
+
+export const changeLoadingToastToErrorToast = (errorMessage: string, toastId: Id, toastContainerId = {}) => {
+    toast.update(toastId, {
+        render: errorMessage,
+        type: 'error',
+        autoClose: 5000,
+        isLoading: false,
+        ...toastContainerId,
+        closeButton: true
     });
 }

@@ -11,10 +11,10 @@ export const maxNumberOfCartRecordsForFreeUsers: number = 3;
 
 export const blankConfigurationState: Readonly<TablesAndFieldsConfigurationIds> = {
     [TableName.inventoryTable]: '',
-    [TableName.userTable]: '',
+    [TableName.recipientTable]: '',
     [TableName.checkoutsTable]: '',
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: '',
-    [CheckoutTableRequiredFieldName.linkedUserTableField]: '',
+    [CheckoutTableRequiredFieldName.linkedRecipientTableField]: '',
     [CheckoutTableRequiredFieldName.checkedInField]: '',
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: '',
     [CheckoutTableOptionalFieldName.dateDueField]: '',
@@ -34,7 +34,7 @@ export const blankErrorState: Readonly<TablesAndFieldsConfigurationErrors> = bla
 
 export const ExpectedAppConfigFieldTypeMapping: Readonly<Record<CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, FieldType>> = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: FieldType.MULTIPLE_RECORD_LINKS,
-    [CheckoutTableRequiredFieldName.linkedUserTableField]: FieldType.MULTIPLE_RECORD_LINKS,
+    [CheckoutTableRequiredFieldName.linkedRecipientTableField]: FieldType.MULTIPLE_RECORD_LINKS,
     [CheckoutTableRequiredFieldName.checkedInField]: FieldType.CHECKBOX,
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: FieldType.DATE,
     [CheckoutTableOptionalFieldName.dateDueField]: FieldType.DATE,
@@ -44,7 +44,7 @@ export const ExpectedAppConfigFieldTypeMapping: Readonly<Record<CheckoutTableReq
 
 export const fieldTypeLinks: Readonly<Record<CheckoutTableRequiredFieldName | CheckoutTableOptionalFieldName, TableName | undefined>> = {
     [CheckoutTableRequiredFieldName.linkedInventoryTableField]: TableName.inventoryTable,
-    [CheckoutTableRequiredFieldName.linkedUserTableField]: TableName.userTable,
+    [CheckoutTableRequiredFieldName.linkedRecipientTableField]: TableName.recipientTable,
     [CheckoutTableRequiredFieldName.checkedInField]: undefined,
     [CheckoutTableOptionalFieldName.dateCheckedOutField]: undefined,
     [CheckoutTableOptionalFieldName.dateDueField]: undefined,
@@ -62,9 +62,9 @@ export const settingsFormSchema: ExtensionConfigurationFormSchema = {
                 tablePickerTooltip: 'This table contains the items to be checked out.',
             },
             {
-                tableName: TableName.userTable,
-                tablePickerLabel: 'User Table:',
-                tablePickerTooltip: 'This table contains the users that items will be checked out to.',
+                tableName: TableName.recipientTable,
+                tablePickerLabel: 'Recipient Table:',
+                tablePickerTooltip: 'This table contains the recipients that items will be checked out to.',
             },
             {
                 tableName: TableName.checkoutsTable,
@@ -77,9 +77,9 @@ export const settingsFormSchema: ExtensionConfigurationFormSchema = {
                         fieldPickerTooltip: 'This field must link to the inventory table configured above.'
                     },
                     {
-                        fieldName: CheckoutTableRequiredFieldName.linkedUserTableField,
-                        fieldPickerLabel: 'Linked Record Field to Users Table:',
-                        fieldPickerTooltip: 'This field must link to the users table configured above.'
+                        fieldName: CheckoutTableRequiredFieldName.linkedRecipientTableField,
+                        fieldPickerLabel: 'Linked Record Field to Recipients Table:',
+                        fieldPickerTooltip: 'This field must link to the recipients table configured above.'
                     },
                     {
                         fieldName: CheckoutTableRequiredFieldName.checkedInField,

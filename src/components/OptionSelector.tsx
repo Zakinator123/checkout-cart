@@ -21,11 +21,12 @@ const OptionSelector = ({
                         }: { currentOption: SelectOptionValue; setOption: any; options: SelectOption[], transactionIsProcessing: boolean }) =>
     <div className='option-selector'>
         <div>
-            <Label>Select the transaction type:</Label>
+            <Label>Transaction Type:</Label>
             <SelectButtons
                 value={currentOption}
                 onChange={(newValue) => setOption(newValue)}
                 options={options}
+                minWidth='175px'
                 maxWidth={400}
                 disabled={transactionIsProcessing}
             />

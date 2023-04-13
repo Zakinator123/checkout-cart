@@ -9,10 +9,10 @@ export const FormFieldLabelWithTooltip = ({
     <>
         {fieldLabel}
         <Tooltip
-            fitInWindowMode={Tooltip.fitInWindowModes.NUDGE}
+            fitInWindowMode={Tooltip.fitInWindowModes.NONE}
             content={fieldLabelTooltip}
-            placementX={Tooltip.placements.CENTER}
-            placementY={Tooltip.placements.BOTTOM}>
+            placementX={Tooltip.placements.RIGHT}
+            placementY={Tooltip.placements.CENTER}>
             <Icon fillColor={dangerous ? 'red' : 'black'} name="info" size={12} marginLeft='0.5rem'/>
         </Tooltip>
     </>
