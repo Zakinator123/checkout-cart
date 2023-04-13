@@ -76,7 +76,7 @@ function CheckoutCart({
     // Viewport Data
     const viewport = useViewport();
     const viewportWidth = viewport.size.width;
-    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 800});
+    if (viewport.maxFullscreenSize.width == null) viewport.addMaxFullscreenSize({width: 900});
 
     const recipientRecords = useRecords(recipientTable);
     const inventoryTableRecords = useRecords(inventoryTable);

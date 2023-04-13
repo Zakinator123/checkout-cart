@@ -121,11 +121,7 @@ ol, ul {
 /*
        TODO:
         - Figma screenshots and video walkthrough
-        - Disable config fields when configurationUpdate is pending
-        - Autonumber primary field?
         -------
-
-        - Premium license redemption limit
         - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
         - Ask airtable community on license verification strategy. Should I prepare for adversaries?
         - Add schema visualization in settings page

@@ -1,5 +1,5 @@
 import {Record} from "@airtable/blocks/models";
-import {Box, Button, Icon, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
+import {Box, Button, Label, loadCSSFromString, RecordCard, Tooltip} from "@airtable/blocks/ui";
 import React from "react";
 import {getRecordCardWidth} from "../utils/RandomUtils";
 
@@ -49,9 +49,10 @@ const RecipientSelector = ({
                 <Button
                     className='recipient-search-button'
                     aria-label="Search and select a recipient to associate with the transaction."
-                    icon={<Icon fillColor='black' name='search'/>}
+                    icon='search'
                     disabled={transactionIsProcessing}
                     onClick={selectRecipient}
+                    maxWidth='33px'
                 />
             </Tooltip>
         </Box>

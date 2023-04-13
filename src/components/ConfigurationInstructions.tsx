@@ -1,9 +1,17 @@
 import React from "react";
-import {Box, Button, Text} from "@airtable/blocks/ui";
+import {Box, Button, Loader, Text} from "@airtable/blocks/ui";
 import {Toast} from "./Toast";
 
-export const ConfigurationInstructions = ({openSchemaGenerationDialog, schemaGenerationToastId}:
-                                              { openSchemaGenerationDialog: () => void, schemaGenerationToastId: { containerId: string } }) =>
+export const ConfigurationInstructions = ({
+                                              openSchemaGenerationDialog,
+                                              schemaGenerationToastId,
+                                              configurationUpdatePending
+                                          }:
+                                              {
+                                                  openSchemaGenerationDialog: () => void,
+                                                  schemaGenerationToastId: { containerId: string },
+                                                  configurationUpdatePending: boolean
+                                              }) =>
     <Box border='default' margin='0.5rem 1rem 0 1rem' padding='1rem'>
         <div>
             You must have at least 3 tables:
@@ -20,10 +28,15 @@ export const ConfigurationInstructions = ({openSchemaGenerationDialog, schemaGen
                 </li>
                 <br/>
                 <li>
-                    <Text display='inline' fontWeight={600}>Checkouts Table</Text> - Contains links to the above two
+                    <Text display='inline' fontWeight={600}>Checkouts Table (Junction Table)</Text> - Contains links to
+                    the above two
                     tables and is where checkouts and
                     checkins are tracked.
-                    This extension creates, updates, and optionally deletes records in this table. <br/><br/>
+                    This extension creates, updates, and optionally deletes records in this table.
+                    <br/><br/>
+                    The primary field can be any type (autonumber is recommended), but if it is a number field,
+                    this extension will populate it with a random number for
+                    any newly created checkouts. <br/><br/>
 
                     <div>
                         This table must have the
@@ -50,8 +63,12 @@ export const ConfigurationInstructions = ({openSchemaGenerationDialog, schemaGen
         <Box marginTop={4} display='flex' flexDirection='column' justifyContent='center' alignItems='center'>
             <Text margin='0 3rem 2rem 3rem'>If you would like the extension to generate these tables and fields for you,
                 click &quot;Auto-Generate Required Schema&quot;.</Text>
-            <Button variant='danger' onClick={openSchemaGenerationDialog}>Auto-Generate Required
-                Schema</Button>
+            <Button variant='danger' onClick={openSchemaGenerationDialog}>
+                {configurationUpdatePending
+                    ? <Loader scale={0.2} fillColor='white'/>
+                    : <Text textColor='white'>Auto-Generate Required Schema</Text>
+                }
+            </Button>
             <Toast {...schemaGenerationToastId}/>
         </Box>
     </Box>

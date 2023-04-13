@@ -72,5 +72,7 @@ export const Toast = ({containerId, styles}: { containerId?: string, styles?: Ob
         position="top-center"
         closeButton={true}
         hideProgressBar={true}
+        closeOnClick={false}
+        limit={10}
     />;
 };

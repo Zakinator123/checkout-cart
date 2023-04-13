@@ -7,6 +7,7 @@ import {FormFieldLabelWithTooltip} from "./FormFieldLabelWithTooltip";
 import {getValidFieldOptionsForFieldSelector} from "../utils/SettingsFormUtils";
 
 export const FieldSelectorGroup = ({
+                                       configurationUpdatePending,
                                        required,
                                        table,
                                        fields,
@@ -14,6 +15,7 @@ export const FieldSelectorGroup = ({
                                        formErrorState,
                                        selectorChangeHandler
                                    }: {
+    configurationUpdatePending: boolean,
     required: boolean,
     table: Table,
     fields: ReadonlyArray<FieldConfiguration>,
@@ -24,7 +26,7 @@ export const FieldSelectorGroup = ({
     <Box display='flex' flexDirection='column'>
         <Text textDecoration='underline' as='strong' fontWeight='600'
               paddingLeft='1rem'>{required ? 'Required' : 'Optional'} Fields</Text>
-        <Box padding='1rem 1rem 1rem 0' >
+        <Box padding='1rem 1rem 1rem 0'>
             {fields.map(({fieldName, fieldPickerLabel, fieldPickerTooltip}) =>
                 (<FormField key={fieldName} paddingLeft='1rem'
                             label={<FormFieldLabelWithTooltip fieldLabel={fieldPickerLabel}
@@ -32,7 +34,7 @@ export const FieldSelectorGroup = ({
                     <Box>
                         <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
                             <Select
-                                disabled={false}
+                                disabled={configurationUpdatePending}
                                 options={getValidFieldOptionsForFieldSelector(table, ExpectedAppConfigFieldTypeMapping[fieldName], fieldTypeLinks[fieldName], formState, required)}
                                 onChange={selectedOption => selectorChangeHandler(fieldName, selectedOption)}
                                 value={formState[fieldName]}

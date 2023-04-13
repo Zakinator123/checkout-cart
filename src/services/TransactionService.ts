@@ -79,14 +79,27 @@ export class TransactionService {
             .map(record => record.id);
     }
 
-    getCheckoutRecordToBeCreated = (cartRecord: Record, transactionData: CheckoutTransactionMetadata, cartGroupNumber: number) => ({
-        [this.linkedInventoryTableField.id]: [{id: cartRecord.id}],
-        [this.linkedRecipientTableField.id]: [{id: transactionData.transactionRecipient.id}],
-        [this.checkedInField.id]: false,
-        ...(this.dateCheckedOutField ? {[this.dateCheckedOutField.id]: new Date()} : {}),
-        ...(this.dateDueField ? {[this.dateDueField.id]: transactionData.transactionDueDate} : {}),
-        ...(this.cartGroupField ? {[this.cartGroupField.id]: cartGroupNumber} : {})
-    });
+    getCheckoutRecordToBeCreated = (cartRecord: Record,
+                                    transactionData: CheckoutTransactionMetadata,
+                                    cartGroupNumber: number) => {
+        const checkoutsTablePrimaryField = this.checkoutsTable.primaryField;
+        let primaryFieldOfNewCheckoutRecord = {};
+        if (checkoutsTablePrimaryField.type === FieldType.NUMBER) {
+            console.log("Number primary field");
+            const randomId = Math.floor(Math.random() * 1000000000);
+            primaryFieldOfNewCheckoutRecord = {[checkoutsTablePrimaryField.id]: randomId};
+        }
+
+        return ({
+            ...primaryFieldOfNewCheckoutRecord,
+            [this.linkedInventoryTableField.id]: [{id: cartRecord.id}],
+            [this.linkedRecipientTableField.id]: [{id: transactionData.transactionRecipient.id}],
+            [this.checkedInField.id]: false,
+            ...(this.dateCheckedOutField ? {[this.dateCheckedOutField.id]: new Date()} : {}),
+            ...(this.dateDueField ? {[this.dateDueField.id]: transactionData.transactionDueDate} : {}),
+            ...(this.cartGroupField ? {[this.cartGroupField.id]: cartGroupNumber} : {})
+        });
+    };
 
     formatCheckoutRecordsToBeCheckedIn = (openCheckoutsAssociatedWithCartRecord: Array<RecordId>) => openCheckoutsAssociatedWithCartRecord.map(checkoutRecordId => ({
         id: checkoutRecordId,

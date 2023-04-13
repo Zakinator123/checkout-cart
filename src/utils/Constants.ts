@@ -68,7 +68,7 @@ export const settingsFormSchema: ExtensionConfigurationFormSchema = {
             },
             {
                 tableName: TableName.checkoutsTable,
-                tablePickerLabel: 'Checkouts Table:',
+                tablePickerLabel: 'Checkouts Table (Junction Table):',
                 tablePickerTooltip: 'This table contains the checkout records.',
                 requiredFields: [
                     {

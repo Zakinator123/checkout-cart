@@ -83,9 +83,9 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             .then(responseJson => {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
                 if (responseSuccessful) {
-                    if (responseJson.uses >= 100) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
-                    asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true), () => toast.error(
-                        <OfflineToastMessage/>))
+                    if (responseJson.uses >= 2) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
+                    else asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true),
+                        () => toast.error(<OfflineToastMessage/>))
                         .then(() => toast.success('License verified! You are now a premium user! 🎉🎉', {autoClose: 5000}))
                         .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.'))
                 } else toast.error('Invalid license key!')
