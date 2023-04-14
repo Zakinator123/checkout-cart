@@ -74,5 +74,6 @@ export const Toast = ({containerId, styles}: { containerId?: string, styles?: Ob
         hideProgressBar={true}
         closeOnClick={false}
         limit={10}
+        pauseOnFocusLoss={false}
     />;
 };

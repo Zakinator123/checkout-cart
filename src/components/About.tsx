@@ -138,10 +138,7 @@ export const About = () => {
                 If you would like to support the development of this extension, please consider purchasing a
                 <Link target='_blank' href='https://airtablecheckoutcart.gumroad.com/l/checkout-cart'>
                     &nbsp;premium license
-                </Link> or
-                <Link href='https://www.buymeacoffee.com/zakey' target='_blank'>
-                    &nbsp;buying me a coffee
-                </Link>!
+                </Link>.
             </Text>
         </Box>
         <br/>

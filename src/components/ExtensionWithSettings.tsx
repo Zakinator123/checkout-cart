@@ -1,4 +1,4 @@
-import {Box, Heading, Icon, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
+import {Box, Heading, Icon, Text, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
 import React, {Suspense, useState} from 'react';
 import {Settings} from "./Settings";
 import {ExtensionConfiguration,} from "../types/ConfigurationTypes";
@@ -11,6 +11,7 @@ import {Premium} from "./Premium";
 import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
 import {RateLimiter} from "../utils/RateLimiter";
 import {AirtableMutationService} from "../services/AirtableMutationService";
+import {IconName} from "@airtable/blocks/dist/types/src/ui/icon_config";
 
 loadCSSFromString(`
 .container {
@@ -120,10 +121,14 @@ ol, ul {
 
 /*
        TODO:
-        - Figma screenshots and video walkthrough
-        -------
-        - Solicit feedback from AT community on pricing - subscription vs one time payment? How much?
-        - Ask airtable community on license verification strategy. Should I prepare for adversaries?
+        - Add premium subscription checking code
+        - Figure out UTC date situation for date fields..
+        - Add landing page, and documentation blog/videos
+        - Increase test coverage of extension
+        - Purchase domain name(s)?
+        - Create email address with custom domain for support page
+
+        - Add a "reset to default" button in settings page?
         - Add schema visualization in settings page
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info
@@ -131,12 +136,7 @@ ol, ul {
         - Look into iots for type checking
         - Put icons for field type of each field in settings page
         - SEO Research for 'building library systems on airtable' ?
-        - Purchase domain name(s)?
-        - Create email address with custom domain for support page
-        - Figure out UTC date situation for date fields..
-        - Add landing page, and documentation blog/videos
         - Create use case videos/blogs for how to run a library business, rental equipment business, gear inventory business, etc.
-        - Increase test coverage of extension
         - Extract more styles into css classes
         - Extract all strings into a separate file.
         - Extract css for this file into a separate CSS file
@@ -145,24 +145,55 @@ ol, ul {
 export function ExtensionWithSettings() {
     const base = useBase();
     const globalConfig = useGlobalConfig();
+
     const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
+    const [premiumUpdatePending, setPremiumUpdatePending] = useState(false);
+
+    const updatePending = configurationUpdatePending || transactionIsProcessing || premiumUpdatePending;
 
     const configurationValidator = getConfigurationValidatorForBase(base);
     const rateLimiter = new RateLimiter(15, 1000);
     const airtableMutationService = new AirtableMutationService(rateLimiter);
 
     const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
-    const isPremiumUser: boolean = (globalConfig.get('isPremiumUser') as boolean | undefined) ?? false;
+    const premiumLicense: string | undefined = (globalConfig.get('premiumLicense') as string | undefined);
+
+    const isPremiumUser = premiumLicense !== undefined && premiumLicense !== '';
+
+    const [tabIndex, setTabIndex] = useState(extensionConfig === undefined ? 3 : 0);
+
+    const TabText = ({text}: { text: string }) =>
+        <Text display='inline-block'
+              textColor={updatePending ? 'lightgray' : 'black'}>
+            &nbsp;{text}&nbsp;
+        </Text>
+
+    const TabIcon = ({iconName}: { iconName: IconName}) =>
+        <Icon fillColor={updatePending ? 'lightgray' : 'black'} name={iconName} size={12}/>
+
 
     return <Box className='container'>
-        <Heading>🚀 Checkout Cart 🚀</Heading>
-        <Tabs defaultIndex={extensionConfig === undefined ? 3 : 0}>
+        <Heading size='large'>🚀 &nbsp; Library Cart &nbsp; 🚀</Heading>
+        <Tabs selectedIndex={tabIndex} onSelect={(index: number) => {
+            if (!updatePending)
+                setTabIndex(index);
+        }}>
             <TabList>
-                <Tab>🛒 Checkout Cart </Tab>
-                <Tab><Icon name="cog" size={12}/> Settings</Tab>
-                <Tab><Icon name="premium" size={12}/> Premium <Icon fillColor='black' name="premium" size={12}/></Tab>
-                <Tab><Icon name="help" size={12}/> About</Tab>
+                <Tab>🛒 <TabText text='Checkout Cart'/></Tab>
+                <Tab>
+                    <TabIcon iconName="cog"/>
+                    <TabText text='Settings'/>
+                </Tab>
+                <Tab>
+                    <TabIcon iconName="premium"/>
+                    <TabText text='Premium'/>
+                    <TabIcon iconName="premium"/>
+                </Tab>
+                <Tab>
+                    <TabIcon iconName="help"/>
+                    <TabText text='About'/>
+                </Tab>
             </TabList>
             <Box>
                 <TabPanel>
@@ -181,15 +212,22 @@ export function ExtensionWithSettings() {
                 </TabPanel>
             </Box>
             <TabPanel>
-                <Settings currentTableAndFieldIds={extensionConfig?.tableAndFieldIds}
-                          currentOtherConfiguration={extensionConfig?.otherConfiguration}
-                          base={base}
-                          validateTablesAndFields={configurationValidator}
-                          validateConfigUpdateAndSaveToGlobalConfig={getExtensionConfigSaver(globalConfig, configurationValidator)}
-                          configurationUpdatePending={configurationUpdatePending}
-                          setConfigurationUpdatePending={setConfigurationUpdatePending}/>
+                <Settings
+                    currentTableAndFieldIds={extensionConfig?.tableAndFieldIds}
+                    currentOtherConfiguration={extensionConfig?.otherConfiguration}
+                    base={base}
+                    validateTablesAndFields={configurationValidator}
+                    validateConfigUpdateAndSaveToGlobalConfig={getExtensionConfigSaver(globalConfig, configurationValidator)}
+                    configurationUpdatePending={configurationUpdatePending}
+                    setConfigurationUpdatePending={setConfigurationUpdatePending}/>
             </TabPanel>
-            <TabPanel><Premium isPremiumUser={isPremiumUser} globalConfig={globalConfig}/></TabPanel>
+            <TabPanel>
+                <Premium
+                    isPremiumUser={isPremiumUser}
+                    premiumUpdatePending={premiumUpdatePending}
+                    setPremiumUpdatePending={setPremiumUpdatePending}
+                    globalConfig={globalConfig}/>
+            </TabPanel>
             <TabPanel><About/></TabPanel>
         </Tabs>
     </Box>

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import TransactionTypeSelector from "./OptionSelector";
 import {
     Box,
@@ -72,6 +72,8 @@ function CheckoutCart({
                               transactionIsProcessing: boolean,
                               setTransactionIsProcessing: (transactionIsProcessing: boolean) => void
                           }) {
+    useEffect(() => () => toast.dismiss(), []);
+
 
     // Viewport Data
     const viewport = useViewport();

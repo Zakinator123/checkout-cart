@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Box, Button, FormField, Icon, Input, Link, loadCSSFromString, Loader, Text} from "@airtable/blocks/ui";
 import {GlobalConfig} from "@airtable/blocks/types";
 import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
@@ -50,19 +50,22 @@ loadCSSFromString(`
 }
 `);
 
-export const Premium = ({isPremiumUser, globalConfig}: {
-    isPremiumUser: boolean, globalConfig: GlobalConfig
+export const Premium = ({isPremiumUser, premiumUpdatePending, setPremiumUpdatePending, globalConfig}: {
+    isPremiumUser: boolean,
+    premiumUpdatePending: boolean,
+    setPremiumUpdatePending: (pending: boolean) => void,
+    globalConfig: GlobalConfig
 }) => {
     const [licenseKey, setLicenseKey] = useState('');
-    const [verifyButtonDisabledState, setVerifyButtonDisabledState] = useState(false);
+    useEffect(() => () => toast.dismiss(), []);
 
     // TODO: Factor out license verification logic from error toast calls to make unit testable.
     const verifyLicense = () => {
-        setVerifyButtonDisabledState(true);
+        setPremiumUpdatePending(true);
 
         if (!globalConfig.hasPermissionToSet('isPremiumUser', true)) {
             toast.error("You must have base editor permissions to upgrade this extension to premium.", {autoClose: 5000})
-            setVerifyButtonDisabledState(false);
+            setPremiumUpdatePending(false);
             return;
         }
 
@@ -71,7 +74,7 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    product_id: '0MHZr1PU0NoUFRufCkqCng==',
+                    product_id: 'N40miII8tlIn0Kijr8HFuw==',
                     license_key: licenseKey
                 })
             })
@@ -83,15 +86,15 @@ export const Premium = ({isPremiumUser, globalConfig}: {
             .then(responseJson => {
                 const responseSuccessful: boolean = responseJson?.success ?? false;
                 if (responseSuccessful) {
-                    if (responseJson.uses >= 2) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
-                    else asyncAirtableOperationWrapper(() => globalConfig.setAsync('isPremiumUser', true),
-                        () => toast.error(<OfflineToastMessage/>))
+                    if (responseJson.uses >= 20) toast.error(`This license has already been redeemed. Licenses can only be used once per base.`)
+                    else asyncAirtableOperationWrapper(() => globalConfig.setAsync('premiumLicense', licenseKey),
+                        () => toast.loading(<OfflineToastMessage/>, {autoClose: false}))
                         .then(() => toast.success('License verified! You are now a premium user! 🎉🎉', {autoClose: 5000}))
                         .catch(() => toast.error('Your license is valid, but there was an error saving it! Contact the developer for support.'))
                 } else toast.error('Invalid license key!')
             })
             .catch(() => toast.error('An error occurred verifying the license. Please check your network connection or try again later.'))
-            .finally(() => setVerifyButtonDisabledState(false))
+            .finally(() => setPremiumUpdatePending(false))
     }
 
     return <>
@@ -116,9 +119,9 @@ export const Premium = ({isPremiumUser, globalConfig}: {
                         <Button variant='default'
                                 className='premium-submit-button'
                                 type='submit'
-                                disabled={isPremiumUser || verifyButtonDisabledState}
+                                disabled={isPremiumUser || premiumUpdatePending}
                                 onClick={verifyLicense}>
-                            {verifyButtonDisabledState && !isPremiumUser ? <Loader
+                            {premiumUpdatePending && !isPremiumUser ? <Loader
                                 scale={0.3}/> : 'Verify License'}
                         </Button>
                     </Box>
