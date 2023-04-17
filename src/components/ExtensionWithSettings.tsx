@@ -1,5 +1,5 @@
-import {Box, Heading, Icon, Text, loadCSSFromString, Loader, useBase, useGlobalConfig} from '@airtable/blocks/ui';
-import React, {Suspense, useState} from 'react';
+import {Box, Heading, Icon, loadCSSFromString, Loader, Text, useBase, useGlobalConfig} from '@airtable/blocks/ui';
+import React, {Suspense, useEffect, useState} from 'react';
 import {Settings} from "./Settings";
 import {ExtensionConfiguration,} from "../types/ConfigurationTypes";
 import {getConfigurationValidatorForBase} from "../services/ConfigurationValidatorService";
@@ -12,6 +12,9 @@ import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
 import {RateLimiter} from "../utils/RateLimiter";
 import {AirtableMutationService} from "../services/AirtableMutationService";
 import {IconName} from "@airtable/blocks/dist/types/src/ui/icon_config";
+import {GumroadLicenseVerificationService, PremiumStatus} from "../services/LicenseVerificationService";
+import {toast} from "react-toastify";
+import {Toast} from "./Toast";
 
 loadCSSFromString(`
 .container {
@@ -121,15 +124,13 @@ ol, ul {
 
 /*
        TODO:
-        - Add premium subscription checking code
         - Figure out UTC date situation for date fields..
         - Add landing page, and documentation blog/videos
         - Increase test coverage of extension
         - Purchase domain name(s)?
         - Create email address with custom domain for support page
+        - Fix rate limiter tests being flaky
 
-        - Add a "reset to default" button in settings page?
-        - Add schema visualization in settings page
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info
         - Investigate use of base template in addition to "generate schema" button?'
@@ -146,22 +147,36 @@ export function ExtensionWithSettings() {
     const base = useBase();
     const globalConfig = useGlobalConfig();
 
+    const premiumLicense: string | undefined = (globalConfig.get('premiumLicense') as string | undefined);
+    const premiumLicenseDefined: boolean = premiumLicense !== undefined;
+    const [premiumStatus, setPremiumStatus] = useState<PremiumStatus>(premiumLicenseDefined ? 'premium' : 'free');
+
+    const [premiumUpdatePending, setPremiumUpdatePending] = useState(false);
     const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
-    const [premiumUpdatePending, setPremiumUpdatePending] = useState(false);
-
-    const updatePending = configurationUpdatePending || transactionIsProcessing || premiumUpdatePending;
-
-    const configurationValidator = getConfigurationValidatorForBase(base);
-    const rateLimiter = new RateLimiter(15, 1000);
-    const airtableMutationService = new AirtableMutationService(rateLimiter);
 
     const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
-    const premiumLicense: string | undefined = (globalConfig.get('premiumLicense') as string | undefined);
-
-    const isPremiumUser = premiumLicense !== undefined && premiumLicense !== '';
 
     const [tabIndex, setTabIndex] = useState(extensionConfig === undefined ? 3 : 0);
+
+    const updatePending = configurationUpdatePending || transactionIsProcessing || premiumUpdatePending;
+    const configurationValidator = getConfigurationValidatorForBase(base);
+
+    const rateLimiter = new RateLimiter(15, 1000);
+    const airtableMutationService = new AirtableMutationService(rateLimiter);
+    const licenseVerificationService = new GumroadLicenseVerificationService();
+
+    useEffect(() => {
+        if (premiumLicense !== undefined) {
+            licenseVerificationService.verifyLicense(premiumLicense, false)
+                .then((result) => {
+                    if (result.premiumStatus !== 'premium') {
+                        setPremiumStatus(result.premiumStatus);
+                        toast.error(result.message, {containerId: 'topLevelToast', autoClose: 10000});
+                    }
+                })
+        }
+    });
 
     const TabText = ({text}: { text: string }) =>
         <Text display='inline-block'
@@ -169,12 +184,13 @@ export function ExtensionWithSettings() {
             &nbsp;{text}&nbsp;
         </Text>
 
-    const TabIcon = ({iconName}: { iconName: IconName}) =>
+    const TabIcon = ({iconName}: { iconName: IconName }) =>
         <Icon fillColor={updatePending ? 'lightgray' : 'black'} name={iconName} size={12}/>
 
 
     return <Box className='container'>
-        <Heading size='large'>🚀 &nbsp; Library Cart &nbsp; 🚀</Heading>
+        <Toast containerId='topLevelToast'/>
+        <Heading size='xlarge'>🚀 &nbsp; Checkout Cart &nbsp; 🚀</Heading>
         <Tabs selectedIndex={tabIndex} onSelect={(index: number) => {
             if (!updatePending)
                 setTabIndex(index);
@@ -205,7 +221,7 @@ export function ExtensionWithSettings() {
                             airtableMutationService={airtableMutationService}
                             extensionConfiguration={extensionConfig}
                             configurationValidator={configurationValidator}
-                            isPremiumUser={isPremiumUser}
+                            isPremiumUser={premiumStatus === 'premium'}
                             transactionIsProcessing={transactionIsProcessing}
                             setTransactionIsProcessing={setTransactionIsProcessing}/>
                     </Suspense>
@@ -223,10 +239,13 @@ export function ExtensionWithSettings() {
             </TabPanel>
             <TabPanel>
                 <Premium
-                    isPremiumUser={isPremiumUser}
+                    licenseVerificationService={licenseVerificationService}
+                    premiumStatus={premiumStatus}
+                    setPremiumStatus={setPremiumStatus}
                     premiumUpdatePending={premiumUpdatePending}
                     setPremiumUpdatePending={setPremiumUpdatePending}
-                    globalConfig={globalConfig}/>
+                    globalConfig={globalConfig}
+                    currentPremiumLicense={premiumLicense}/>
             </TabPanel>
             <TabPanel><About/></TabPanel>
         </Tabs>
