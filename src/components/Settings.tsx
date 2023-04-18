@@ -208,6 +208,7 @@ export const Settings = ({
                 <br/>
             </Text>
             <Collapsible
+                transitionTime={200}
                 trigger={CollapsibleSectionHeader(false, 'Required Schema')}
                 triggerWhenOpen={CollapsibleSectionHeader(true, 'Required Schema')}
             >

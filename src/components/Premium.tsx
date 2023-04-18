@@ -5,7 +5,8 @@ import {asyncAirtableOperationWrapper} from "../utils/RandomUtils";
 import {toast} from "react-toastify";
 import {OfflineToastMessage} from "./OfflineToastMessage";
 import {Toast} from "./Toast";
-import {GumroadLicenseVerificationService, PremiumStatus} from "../services/LicenseVerificationService";
+import {GumroadLicenseVerificationService} from "../services/LicenseVerificationService";
+import {PremiumStatus} from "../types/OtherTypes";
 
 loadCSSFromString(`
 .centered-premium-container {
@@ -111,32 +112,62 @@ export const Premium = ({
         }
     }
 
+    const removeLicense = () => {
+        setPremiumUpdatePending(true);
+        if (globalConfig.hasPermissionToSet('premiumLicense', true)) {
+            asyncAirtableOperationWrapper(() => globalConfig.setAsync('premiumLicense', undefined),
+                () => toast.loading(<OfflineToastMessage/>, {
+                    autoClose: false,
+                    containerId: premiumToastContainerId
+                }))
+                .then(() => {
+                    setPremiumStatus('free');
+                    setLicenseKey('');
+                    return toast.success('Successfully removed premium license.', {
+                        autoClose: 5000,
+                        containerId: premiumToastContainerId
+                    });
+                })
+                .catch(() => {
+                    toast.error('There was an error removing your premium license. Please try again.', {
+                        autoClose: 8000,
+                        containerId: premiumToastContainerId
+                    });
+                })
+                .finally(() => setPremiumUpdatePending(false))
+        } else {
+            toast.error("You must have base editor permissions to remove a premium license.", {
+                autoClose: 5000,
+                containerId: premiumToastContainerId
+            });
+            setPremiumUpdatePending(false);
+        }
+    }
+
     let infoMessage;
     switch (premiumStatus) {
         case 'premium':
-            infoMessage = "✅  You've already upgraded!";
+            infoMessage = "✅  You are a premium user!";
+            break;
+        case "invalid":
+            infoMessage = "❌  Your premium license is no longer valid.";
             break;
         case 'expired':
-            infoMessage = "❌  Your premium subscription is no longer active. Purchase and verify a new subscription license to continue using premium features.";
+            infoMessage = "❌  Your premium subscription is no longer active." +
+                " Either restart your existing subscription on Gumroad or purchase and verify a new subscription license to continue using premium features.";
             break;
         case 'unable-to-verify':
             infoMessage = "❌  Unable to verify license. Check your network connection and reload the extension.";
             break;
         case 'free':
-            infoMessage = '';
+            infoMessage = 'Upgrade to premium to enable cart sizes larger than 3 items!';
     }
-
 
     return <>
         <Box className='centered-premium-container'>
-            <Text marginBottom={3} size='large'>
-                Upgrade to premium to enable cart sizes larger than 3 items!
+            <Text size='large' maxWidth='450px' marginBottom='1rem'>
+                {infoMessage}
             </Text>
-            {infoMessage &&
-                <Text maxWidth='450px' marginBottom='1rem'>
-                    {infoMessage}
-                </Text>
-            }
             <Box className='premium-form'>
                 <FormField
                     className='premium-form-field'
@@ -146,20 +177,31 @@ export const Premium = ({
                     }>
                     <Box className='premium-input-box'>
                         <Input value={licenseKey}
-                               disabled={premiumStatus === 'premium' || (premiumStatus === 'unable-to-verify' && currentPremiumLicense !== undefined) || premiumUpdatePending}
+                               disabled={premiumStatus !== 'free' || premiumUpdatePending}
                                placeholder='Enter license key here..'
                                onChange={e => setLicenseKey(e.target.value)} type='text'></Input>
-                        <Button variant='default'
-                                className='premium-submit-button'
-                                type='submit'
-                                disabled={premiumStatus === 'premium' || (premiumStatus === 'unable-to-verify' && currentPremiumLicense !== undefined) || premiumUpdatePending}
-                                onClick={verifyLicense}>
-                            {premiumUpdatePending ? <Loader
-                                scale={0.3}/> : 'Verify License'}
-                        </Button>
+                        {
+                            premiumStatus !== 'free'
+                                ? <Button variant='default'
+                                          className='premium-submit-button'
+                                          type='submit'
+                                          disabled={premiumUpdatePending}
+                                          onClick={removeLicense}>
+                                    {premiumUpdatePending ? <Loader
+                                        scale={0.2}/> : 'Remove License'}
+                                </Button>
+                                : <Button variant='default'
+                                          className='premium-submit-button'
+                                          type='submit'
+                                          disabled={premiumUpdatePending}
+                                          onClick={verifyLicense}>
+                                    {premiumUpdatePending ? <Loader
+                                        scale={0.3}/> : 'Verify License'}
+                                </Button>
+                        }
                     </Box>
                     <Box margin={2}><Text size='small' textColor='gray'>Premium licenses are not transferable between
-                        bases.</Text></Box>
+                        bases and can only be redeemed once.</Text></Box>
                 </FormField>
                 <Toast containerId={premiumToastContainerId}/>
                 <Box marginTop={3} display='flex' alignContent='center' justifyContent='center'>

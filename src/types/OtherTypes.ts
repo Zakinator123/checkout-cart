@@ -5,3 +5,5 @@ export type ExtensionConfigurationUpdateResult = {
     errorMessage: string,
     tablesAndFieldsConfigurationErrors: TablesAndFieldsConfigurationErrors
 } | { errorsOccurred: false }
+
+export type PremiumStatus = 'premium' | 'invalid' | 'expired' | 'unable-to-verify' | 'free';

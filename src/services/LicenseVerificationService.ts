@@ -1,4 +1,4 @@
-export type PremiumStatus = 'premium' | 'free' | 'expired' | 'unable-to-verify';
+import {PremiumStatus} from "../types/OtherTypes";
 
 export class GumroadLicenseVerificationService {
     private readonly gumroadApiUrl = 'https://api.gumroad.com/v2/licenses/';
@@ -39,7 +39,7 @@ export class GumroadLicenseVerificationService {
         }
 
         if (verificationResponse.status === 404) {
-            return {premiumStatus: "free", message: 'Invalid premium license. Please check your license key and try again.'};
+            return {premiumStatus: "invalid", message: 'Invalid premium license. Please check your license key and try again.'};
         }
 
         if (verificationResponse.status !== 200) {
@@ -51,8 +51,15 @@ export class GumroadLicenseVerificationService {
 
             if (responseJson.success === false) {
                 return {
-                    premiumStatus: "free",
+                    premiumStatus: "invalid",
                     message: 'Invalid premium license. Please check your license key and try again.'
+                };
+            }
+
+            if (responseJson.uses >= 2) {
+                return {
+                    premiumStatus: 'invalid',
+                    message: 'Your premium license has already been redeemed. Licenses can only be redeemed once.'
                 };
             }
 
@@ -60,15 +67,9 @@ export class GumroadLicenseVerificationService {
             if (subscriptionEndedAt !== null || subscriptionCancelledAt !== null || subscriptionFailedAt !== null) {
                 return {
                     premiumStatus: 'expired',
-                    message: 'Your premium subscription is no longer active. Purchase and verify a new subscription license to continue using premium features.'
+                    message: 'Your premium subscription is no longer active. Restart your existing subscription or purchase and verify a new subscription license to continue using premium features.'
                 };
-            }
 
-            if (responseJson.uses >= 2) {
-                return {
-                    premiumStatus: 'free',
-                    message: 'Your premium license has already been redeemed. Licenses can only be redeemed once.'
-                };
             }
 
         } catch (e) {

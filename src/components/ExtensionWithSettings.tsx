@@ -9,12 +9,12 @@ import CheckoutCartWrapper from "./CheckoutCartWrapper";
 import {About} from "./About";
 import {Premium} from "./Premium";
 import {getExtensionConfigSaver} from "../services/GlobalConfigUpdateService";
-import {RateLimiter} from "../utils/RateLimiter";
 import {AirtableMutationService} from "../services/AirtableMutationService";
 import {IconName} from "@airtable/blocks/dist/types/src/ui/icon_config";
-import {GumroadLicenseVerificationService, PremiumStatus} from "../services/LicenseVerificationService";
+import {GumroadLicenseVerificationService} from "../services/LicenseVerificationService";
 import {toast} from "react-toastify";
 import {Toast} from "./Toast";
+import {PremiumStatus} from "../types/OtherTypes";
 
 loadCSSFromString(`
 .container {
@@ -130,6 +130,10 @@ ol, ul {
         - Purchase domain name(s)?
         - Create email address with custom domain for support page
         - Fix rate limiter tests being flaky
+        - Deploy a test version to ODC
+        - Use airtable form for support link?
+        - Give user option to remove license if expired so that they stop getting the error message
+        - Prevent user from reverifying an expired license (only let them reverify if they remove the license)
 
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info
@@ -143,40 +147,41 @@ ol, ul {
         - Extract css for this file into a separate CSS file
  */
 
-export function ExtensionWithSettings() {
+export function ExtensionWithSettings({
+                                          airtableMutationService,
+                                          licenseVerificationService
+                                      }: { airtableMutationService: AirtableMutationService, licenseVerificationService: GumroadLicenseVerificationService }) {
     const base = useBase();
     const globalConfig = useGlobalConfig();
-
-    const premiumLicense: string | undefined = (globalConfig.get('premiumLicense') as string | undefined);
-    const premiumLicenseDefined: boolean = premiumLicense !== undefined;
-    const [premiumStatus, setPremiumStatus] = useState<PremiumStatus>(premiumLicenseDefined ? 'premium' : 'free');
 
     const [premiumUpdatePending, setPremiumUpdatePending] = useState(false);
     const [configurationUpdatePending, setConfigurationUpdatePending] = useState(false);
     const [transactionIsProcessing, setTransactionIsProcessing] = useState<boolean>(false);
 
     const extensionConfig = globalConfig.get('extensionConfiguration') as ExtensionConfiguration | undefined;
+    const premiumLicense: string | undefined = (globalConfig.get('premiumLicense') as string | undefined);
+    const premiumLicenseDefined: boolean = premiumLicense !== undefined;
+    const [premiumStatus, setPremiumStatus] = useState<PremiumStatus>(premiumLicenseDefined ? 'premium' : 'free');
 
     const [tabIndex, setTabIndex] = useState(extensionConfig === undefined ? 3 : 0);
 
     const updatePending = configurationUpdatePending || transactionIsProcessing || premiumUpdatePending;
     const configurationValidator = getConfigurationValidatorForBase(base);
 
-    const rateLimiter = new RateLimiter(15, 1000);
-    const airtableMutationService = new AirtableMutationService(rateLimiter);
-    const licenseVerificationService = new GumroadLicenseVerificationService();
-
     useEffect(() => {
         if (premiumLicense !== undefined) {
             licenseVerificationService.verifyLicense(premiumLicense, false)
                 .then((result) => {
+                    setPremiumStatus(result.premiumStatus);
                     if (result.premiumStatus !== 'premium') {
-                        setPremiumStatus(result.premiumStatus);
-                        toast.error(result.message, {containerId: 'topLevelToast', autoClose: 10000});
+                        toast.error(result.message, {
+                            containerId: 'topLevelToast',
+                            autoClose: 10000
+                        });
                     }
                 })
         }
-    });
+    }, [premiumLicense, licenseVerificationService]);
 
     const TabText = ({text}: { text: string }) =>
         <Text display='inline-block'
@@ -192,8 +197,7 @@ export function ExtensionWithSettings() {
         <Toast containerId='topLevelToast'/>
         <Heading size='xlarge'>🚀 &nbsp; Checkout Cart &nbsp; 🚀</Heading>
         <Tabs selectedIndex={tabIndex} onSelect={(index: number) => {
-            if (!updatePending)
-                setTabIndex(index);
+            if (!updatePending) setTabIndex(index);
         }}>
             <TabList>
                 <Tab>🛒 <TabText text='Checkout Cart'/></Tab>

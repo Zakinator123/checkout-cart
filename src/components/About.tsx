@@ -48,6 +48,7 @@ export const About = () => {
         <br/>
 
         <Collapsible
+            transitionTime={200}
             trigger={CollapsibleSectionHeader(false, 'Check-Outs:', '0')}
             triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Outs:', '0')}
         >
@@ -95,6 +96,7 @@ export const About = () => {
         <br/>
 
         <Collapsible
+            transitionTime={200}
             trigger={CollapsibleSectionHeader(false, 'Check-Ins:', '0')}
             triggerWhenOpen={CollapsibleSectionHeader(true, 'Check-Ins:', '0')}
         >
