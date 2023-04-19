@@ -129,11 +129,8 @@ ol, ul {
         - Increase test coverage of extension
         - Purchase domain name(s)?
         - Create email address with custom domain for support page
-        - Fix rate limiter tests being flaky
         - Deploy a test version to ODC
         - Use airtable form for support link?
-        - Give user option to remove license if expired so that they stop getting the error message
-        - Prevent user from reverifying an expired license (only let them reverify if they remove the license)
 
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info

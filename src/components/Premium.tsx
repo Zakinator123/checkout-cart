@@ -206,7 +206,7 @@ export const Premium = ({
                 <Toast containerId={premiumToastContainerId}/>
                 <Box marginTop={3} display='flex' alignContent='center' justifyContent='center'>
                     <Link
-                        href="https://airtablecheckoutcart.gumroad.com/l/checkout-cart"
+                        href="https://zoftware.gumroad.com/l/checkoutcart"
                         target="_blank">
                         <Button variant='primary'>
                             Purchase License

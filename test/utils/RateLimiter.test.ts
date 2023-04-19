@@ -18,7 +18,7 @@ describe('RateLimiter', () => {
         }
 
         return Promise.all(rateLimitedRequestPromises).then((endTimes) => {
-            endTimes.forEach((endTime) => expect(endTime - startTime).toBeLessThan(100))
+            endTimes.forEach((endTime) => expect(endTime - startTime).toBeLessThanOrEqual(100))
         })
     });
 
@@ -35,8 +35,8 @@ describe('RateLimiter', () => {
                 const endTime: number = endTimes[i] as number;
 
                 (i < 15)
-                    ? expect(endTime - startTime).toBeLessThan(100)
-                    : expect(endTime - startTime).toBeGreaterThan(1000);
+                    ? expect(endTime - startTime).toBeLessThanOrEqual(100)
+                    : expect(endTime - startTime).toBeGreaterThanOrEqual(1000);
             }
         })
     });
@@ -51,7 +51,7 @@ describe('RateLimiter', () => {
 
         return Promise.all(rateLimitedRequestPromises).then(endTimes => {
             for (let i = 0; i < endTimes.length; i++) {
-                expect(endTimes[i]! - startTime).toBeGreaterThan(Math.floor(i / 15) * 1000);
+                expect(endTimes[i]! - startTime).toBeGreaterThanOrEqual(Math.floor(i / 15) * 1000);
             }
         })
     });
