@@ -127,10 +127,10 @@ ol, ul {
         - Figure out UTC date situation for date fields..
         - Add landing page, and documentation blog/videos
         - Increase test coverage of extension
-        - Purchase domain name(s)?
-        - Create email address with custom domain for support page
         - Deploy a test version to ODC
-        - Use airtable form for support link?
+        - Give ODC unique number generator script
+        - Update name label on email to be Zakey @ Zoftware Solutions
+        - Integrate gumroad premium button into landing page?
 
         - Make form validation error messages that reference table names and/or field types more user friendly.
         - Set up github sponsors page/info
@@ -139,8 +139,6 @@ ol, ul {
         - Put icons for field type of each field in settings page
         - SEO Research for 'building library systems on airtable' ?
         - Create use case videos/blogs for how to run a library business, rental equipment business, gear inventory business, etc.
-        - Extract more styles into css classes
-        - Extract all strings into a separate file.
         - Extract css for this file into a separate CSS file
  */
 

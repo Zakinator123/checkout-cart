@@ -1,4 +1,5 @@
 import {PremiumStatus} from "../types/OtherTypes";
+import 'whatwg-fetch';
 
 export class GumroadLicenseVerificationService {
     private readonly gumroadApiUrl = 'https://api.gumroad.com/v2/licenses/';

@@ -206,7 +206,7 @@ export const Premium = ({
                 <Toast containerId={premiumToastContainerId}/>
                 <Box marginTop={3} display='flex' alignContent='center' justifyContent='center'>
                     <Link
-                        href="https://zoftware.gumroad.com/l/checkoutcart"
+                        href="https://www.zoftware-solutions.com/l/checkoutcart"
                         target="_blank">
                         <Button variant='primary'>
                             Purchase License

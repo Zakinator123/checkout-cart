@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "@airtable/blocks": "1.16.0",
+    "isomorphic-fetch": "^3.0.0",
     "react": "^16.9.0",
     "react-collapsible": "^2.10.0",
     "react-dom": "^16.9.0",
     "react-tabs": "4.2.1",
-    "react-toastify": "^9.1.2"
+    "react-toastify": "^9.1.2",
+    "whatwg-fetch": "^3.6.2"
   },
   "devDependencies": {
     "@airtable/blocks-testing": "^0.0.5",
@@ -33,6 +35,7 @@
     "jest-environment-jsdom": "^29.4.3",
     "jsdom": "21.1.0",
     "make-coverage-badge": "1.2.0",
+    "msw": "^1.2.1",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5"

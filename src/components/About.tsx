@@ -133,7 +133,7 @@ export const About = () => {
         <Box padding='0.7rem'>
             Any feedback, feature requests, bug reports, questions, and consultation/customization inquiries can be sent
             to the developer at&nbsp;
-            <Link href='mailto:support@checkout-cart.app'>support@checkout-cart.app</Link>
+            <Link href='mailto:support@checkout-cart.app'>support@zoftware-solutions.com</Link>
             <br/>
             <br/>
             <Text>
