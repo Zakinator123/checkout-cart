@@ -12,7 +12,7 @@ export class GumroadLicenseVerificationService {
             body: JSON.stringify({
                 product_id: this.productId,
                 license_key: license,
-                increment_uses_count: incrementUsesCount
+                increment_uses_count: `${incrementUsesCount}`,
             })
         });
     }

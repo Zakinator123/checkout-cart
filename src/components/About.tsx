@@ -133,12 +133,12 @@ export const About = () => {
         <Box padding='0.7rem'>
             Any feedback, feature requests, bug reports, questions, and consultation/customization inquiries can be sent
             to the developer at&nbsp;
-            <Link href='mailto:support@checkout-cart.app'>support@zoftware-solutions.com</Link>
+            <Link href='mailto:support@zoftware-solutions.com'>support@zoftware-solutions.com</Link>
             <br/>
             <br/>
             <Text>
                 If you would like to support the development of this extension, please consider purchasing a
-                <Link target='_blank' href='https://airtablecheckoutcart.gumroad.com/l/checkout-cart'>
+                <Link target='_blank' href='https://www.zoftware-solutions.com/l/checkoutcart'>
                     &nbsp;premium license
                 </Link>.
             </Text>
@@ -149,7 +149,7 @@ export const About = () => {
             This extension is open source and can be viewed on
             <Link target='_blank' href='https://github.com/Zakinator123/checkout-cart'>&nbsp;Github</Link>
             <br/>
-            Version 0.0.2
+            Version 1.0.0
         </Text>
     </Box>
 }

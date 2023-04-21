@@ -122,25 +122,6 @@ ol, ul {
 }
 `);
 
-/*
-       TODO:
-        - Figure out UTC date situation for date fields..
-        - Add landing page, and documentation blog/videos
-        - Increase test coverage of extension
-        - Deploy a test version to ODC
-        - Give ODC unique number generator script
-        - Integrate gumroad premium button into landing page?
-
-        - Make form validation error messages that reference table names and/or field types more user friendly.
-        - Set up github sponsors page/info
-        - Investigate use of base template in addition to "generate schema" button?'
-        - Look into iots for type checking
-        - Put icons for field type of each field in settings page
-        - SEO Research for 'building library systems on airtable' ?
-        - Create use case videos/blogs for how to run a library business, rental equipment business, gear inventory business, etc.
-        - Extract css for this file into a separate CSS file
- */
-
 export function ExtensionWithSettings({
                                           airtableMutationService,
                                           licenseVerificationService
