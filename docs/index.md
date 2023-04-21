@@ -2,122 +2,34 @@
 layout: default
 ---
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+Checkout Cart helps you manage library-style inventories where items are 'checked out' or 'checked in' by recipients.
+The cart interface allows you to quickly check out items to recipients, and check them back in. The extension is highly
+configurable, and can be used for a variety of inventory management use cases.
 
-[Link to another page](./another-page.html).
+To get started, install the extension on the Airtable marketplace, configure the extension in the settings tab, then
+start using the checkout cart!
 
-There should be whitespace between paragraphs.
+[//]: # ([Link to another page]&#40;./another-page.html&#41;.)
 
-There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
+## Features
 
-# Header 1
+* Execute bulk check-ins and check-outs in seconds.
+* Automatically track checkout dates, due dates, and check-in dates.
+* Group new checkout records by cart
 
-This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.
+## Get Premium!
+<br/>
+<script src="https://gumroad.com/js/gumroad.js"></script>
+<a class="gumroad-button" href="https://zoftware.gumroad.com/l/checkoutcart">Get a Premium License on</a>
 
-## Header 2
+## Support:
 
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
+Any feedback, feature requests, bug reports, and questions can be submitted via
+- [GitHub Issues](https://github.com/Zakinator123/checkout-cart/issues/new?assignees=&labels=question&template=04_SUPPORT_QUESTION.md&title=support%3A+)
+- Or Emailing me at support@zoftware-solutions.com
 
-### Header 3
+If you want to say **thank you** and/or support active development of Checkout Cart:
 
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
-```
-
-```ruby
-# Ruby code with syntax highlighting
-GitHubPages::Dependencies.gems.each do |gem, version|
-  s.add_dependency(gem, "= #{version}")
-end
-```
-
-#### Header 4
-
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
-
-##### Header 5
-
-1.  This is an ordered list following a header.
-2.  This is an ordered list following a header.
-3.  This is an ordered list following a header.
-
-###### Header 6
-
-| head1        | head two          | three |
-|:-------------|:------------------|:------|
-| ok           | good swedish fish | nice  |
-| out of stock | good and plenty   | nice  |
-| ok           | good `oreos`      | hmm   |
-| ok           | good `zoute` drop | yumm  |
-
-### There's a horizontal rule below this.
-
-* * *
-
-### Here is an unordered list:
-
-*   Item foo
-*   Item bar
-*   Item baz
-*   Item zip
-
-### And an ordered list:
-
-1.  Item one
-1.  Item two
-1.  Item three
-1.  Item four
-
-### And a nested list:
-
-- level 1 item
-    - level 2 item
-    - level 2 item
-        - level 3 item
-        - level 3 item
-- level 1 item
-    - level 2 item
-    - level 2 item
-    - level 2 item
-- level 1 item
-    - level 2 item
-    - level 2 item
-- level 1 item
-
-### Small image
-
-![Octocat](https://github.githubassets.com/images/icons/emoji/octocat.png)
-
-### Large image
-
-![Branching](https://guides.github.com/activities/hello-world/branching.png)
-
-
-### Definition lists can be used with HTML syntax.
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
-
-```
-Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-```
-
-```
-The final element.
-```
+- Add a [GitHub Star](https://github.com/Zakinator123/checkout-cart) to the project.
+- Consider purchasing a [premium license](https://www.zoftware-solutions.com/l/checkoutcart).
+- Consider [buying me a coffee](https://www.buymeacoffee.com/zakey) ☕️
