@@ -129,7 +129,6 @@ ol, ul {
         - Increase test coverage of extension
         - Deploy a test version to ODC
         - Give ODC unique number generator script
-        - Update name label on email to be Zakey @ Zoftware Solutions
         - Integrate gumroad premium button into landing page?
 
         - Make form validation error messages that reference table names and/or field types more user friendly.

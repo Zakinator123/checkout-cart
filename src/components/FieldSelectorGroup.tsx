@@ -28,12 +28,15 @@ export const FieldSelectorGroup = ({
               paddingLeft='1rem'>{required ? 'Required' : 'Optional'} Fields</Text>
         <Box padding='1rem 1rem 1rem 0'>
             {fields.map(({fieldName, fieldPickerLabel, fieldPickerTooltip}) =>
-                (<FormField key={fieldName} paddingLeft='1rem'
-                            label={<FormFieldLabelWithTooltip fieldLabel={fieldPickerLabel}
-                                                              fieldLabelTooltip={fieldPickerTooltip}/>}>
+                (<FormField
+                    htmlFor={fieldName}
+                    key={fieldName} paddingLeft='1rem'
+                    label={<FormFieldLabelWithTooltip fieldLabel={fieldPickerLabel}
+                                                      fieldLabelTooltip={fieldPickerTooltip}/>}>
                     <Box>
                         <Box border='default' borderColor={formErrorState[fieldName] !== '' ? 'red' : ''}>
                             <Select
+                                id={fieldName}
                                 disabled={configurationUpdatePending}
                                 options={getValidFieldOptionsForFieldSelector(table, ExpectedAppConfigFieldTypeMapping[fieldName], fieldTypeLinks[fieldName], formState, required)}
                                 onChange={selectedOption => selectorChangeHandler(fieldName, selectedOption)}
