@@ -1,12 +1,10 @@
 <h1 align="center">
   <a href="https://github.com/Zakinator123/checkout-cart">
-
-  <img src="https://raw.githubusercontent.com/Zakinator123/checkout-cart/main/assets/cart.svg" alt="Cart Logo" width="100" height="100">
+  <img src="assets/fire-shopping-cart.svg" alt="Cart Logo" width="100" height="100">
   </a>
 </h1>
-
 <div align="center">
-  <h1>🚀 Checkout Cart  🚀</h1>
+  <h1>🚀 Checkout Cart 🚀</h1>
   <br />
 
 <div align="center">
@@ -50,6 +48,7 @@ Simply install the extension from the official Airtable Extension Marketplace!
 ## Support
 
 Any feedback, feature requests, bug reports, and questions can be submitted via
+
 - [GitHub Issues](https://github.com/Zakinator123/checkout-cart/issues/new?assignees=&labels=question&template=04_SUPPORT_QUESTION.md&title=support%3A+)
 - Or Emailing me at support@zoftware-solutions.com
 

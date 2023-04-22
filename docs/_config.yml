@@ -3,5 +3,5 @@ plugins:
   - jekyll-remote-theme # add this line to the plugins list if you already have one
 
 title: 🚀 Checkout Cart 🚀
-description: An Airtable Extension to help you manage library-style inventories.
+description: Streamline your library inventory management on Airtable with bulk check-outs and check-ins.
 google_analytics: [Your Google Analytics tracking ID]
