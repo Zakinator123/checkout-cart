@@ -2,35 +2,31 @@
 layout: default
 ---
 
-Checkout Cart helps you manage library-style inventories where items are checked out/in by recipients.
-The cart interface enables fast bulk transactions, and the extension is highly
-configurable, and can be used for a variety of inventory management use cases.
+Checkout Cart helps you manage library-style inventories where items are checked-out and checked-in by recipients.
 
-To get started, install and configure the extension from the Airtable marketplace, then
-start using the checkout cart!
+The cart interface facilitates quick bulk transactions, while automatically recording check-out, check-in, and due
+dates.
+The extension can also auto-generate and configure the required tables and fields for you.
 
-Effortlessly manage library-style inventories with Checkout Cart's swift bulk transactions and versatile
-configuration options. Catering to a variety of inventory management use-cases, this extension simplifies tracking,
-organizing, and processing check-outs and check-ins.
+From tool/equipment libraries to book libraries, Checkout Cart can enhance a variety of library
+inventory management workflows.
+
+To get started, install the extension from the Airtable marketplace!
 
 ## Features
 
 * Perform speedy bulk check-outs and check-ins.
-* Auto-populate dates for check-outs, due dates, and check-ins.
-* Organize checkout records by cart.
+* Auto-populate check-out and check-in dates for checkout records.
+* Set a default due date for new checkouts or use a custom due date for each checkout.
+* Auto-populate a "Cart Id" for checkout records, enabling grouping checkouts by cart.
 * Enable deletion of checkout records upon check-in (optional).
-
-* Execute bulk check-ins and check-outs in seconds.
-* Automatically record checkout dates, due dates, and check-in dates within checkout records.
-* Group new checkout records by cart
-* Optionally delete checkout records upon check-in
+* Bring your own Airtable schema or have the extension auto-generate and configure one for you.
 
 [//]: # ([Link to another page]&#40;./another-page.html&#41;.)
 
-## Get Premium!
+## Premium
 
-<script src="https://gumroad.com/js/gumroad.js"></script>
-<a class="gumroad-button" href="https://zoftware.gumroad.com/l/checkoutcart">Get a Premium License via</a>
+A [premium license](https://www.zoftware-solutions.com/l/checkoutcart) is required in order to add more than 3 items to a cart.
 
 ## Support:
 

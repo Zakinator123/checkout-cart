@@ -33,10 +33,12 @@ export const About = () => {
         <Text as='h3' fontWeight={600} size='xlarge'>About:</Text>
         <Box padding='0.7rem'>
             <Text>
-                Checkout Cart helps you manage library-style inventories where items are &#39;checked out&#39; or &#39;checked in&#39;
-                by recipients.
-                The cart interface allows you to quickly check out items to recipients, and check them back in.
-                The extension is highly configurable, and can be used for a variety of inventory management use cases.
+                Checkout Cart helps you manage library-style inventories where items are checked-out and checked-in by
+                recipients.
+
+                The cart interface facilitates quick bulk transactions, while automatically recording check-out,
+                check-in, and due dates. The extension can also auto-generate and configure the required tables and
+                fields for you.
                 <br/>
                 <br/>
                 To get started, configure the extension in the settings tab, then start using the checkout cart!

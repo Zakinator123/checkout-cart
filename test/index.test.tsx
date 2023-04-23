@@ -29,7 +29,7 @@ describe('ExtensionWithSettings', () => {
     });
 
     it('should render.', () => {
-        screen.getByText('Checkout Cart');
+        screen.getByText('Settings');
     });
 
     it('should have tab navigation that works as expected.', async () => {

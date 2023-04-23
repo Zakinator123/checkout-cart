@@ -15,10 +15,11 @@ import {GumroadLicenseVerificationService} from "../services/LicenseVerification
 import {toast} from "react-toastify";
 import {Toast} from "./Toast";
 import {PremiumStatus} from "../types/OtherTypes";
+import {ShoppingCartIcon} from "./Shopping-Cart-Icon";
 
 loadCSSFromString(`
 .container {
-    padding-top: 2rem;
+    padding-top: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -170,7 +171,7 @@ export function ExtensionWithSettings({
 
     return <Box className='container'>
         <Toast containerId='topLevelToast'/>
-        <Heading size='xlarge'>🚀 &nbsp; Checkout Cart &nbsp; 🚀</Heading>
+        <Heading size='xlarge'><ShoppingCartIcon/>  &nbsp; Checkout Cart</Heading>
         <Tabs selectedIndex={tabIndex} onSelect={(index: number) => {
             if (!updatePending) setTabIndex(index);
         }}>
