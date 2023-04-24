@@ -3,6 +3,8 @@ layout: default
 title: Checkout Cart
 ---
 
+<img src="./final-demo-gif.gif">
+
 Checkout Cart helps you manage library-style inventories where items are checked-out and checked-in by recipients.
 
 The cart interface facilitates quick bulk transactions, while automatically recording check-out, check-in, and due
@@ -22,8 +24,6 @@ To get started, install the extension from the Airtable marketplace!
 * Auto-populate a "Cart Id" for checkout records, enabling grouping checkouts by cart.
 * Enable deletion of checkout records upon check-in (optional).
 * Bring your own Airtable schema or have the extension auto-generate and configure one for you.
-
-[//]: # ([Link to another page]&#40;./another-page.html&#41;.)
 
 ## Premium
 

@@ -16,13 +16,20 @@ Streamline your library inventory management on Airtable with bulk check-outs an
 ![Code Coverage](https://raw.githubusercontent.com/Zakinator123/checkout-cart/main/assets/coverage-badge.svg)
 
 </div>
+<br/>
+<details>
+<summary>See it in Action</summary>
+<img src="./assets/screenshots/final-demo-gif.gif">
+<img src="./assets/screenshots/cart-screenshot.png" title="Home Page" width="100%"> <img src="./assets/screenshots/settings-screenshot.png" title="Login Page" width="100%"> 
+</details>
 </div>
 
 ## About
 
 Checkout Cart helps you manage library-style inventories where items are checked-out and checked-in by recipients.
 
-The cart interface facilitates quick bulk transactions, while automatically recording check-out, check-in, and due dates.
+The cart interface facilitates quick bulk transactions, while automatically recording check-out, check-in, and due
+dates.
 The extension can also auto-generate and configure the required tables and fields for you.
 
 From tool/equipment libraries to book libraries, Checkout Cart can enhance a variety of library
@@ -38,24 +45,6 @@ To get started, install the extension from the Airtable marketplace!
 * Auto-populate a "Cart Id" for checkout records, enabling grouping checkouts by cart.
 * Enable deletion of checkout records upon check-in (optional).
 * Bring your own Airtable schema or have the extension auto-generate and configure one for you.
-
-[//]: # (<details>)
-
-[//]: # (<summary>Screenshots</summary>)
-
-[//]: # (<br>)
-
-[//]: # ()
-
-[//]: # (|                               Home Page                               |                               Login Page                               |)
-
-[//]: # (|:---------------------------------------------------------------------:|:----------------------------------------------------------------------:|)
-
-[//]: # (| <img src="docs/images/screenshot.png" title="Home Page" width="100%"> | <img src="docs/images/screenshot.png" title="Login Page" width="100%"> |)
-
-[//]: # ()
-
-[//]: # (</details>)
 
 ## Support:
 
