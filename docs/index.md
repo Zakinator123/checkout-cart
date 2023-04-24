@@ -1,5 +1,6 @@
 ---
 layout: default
+title: Checkout Cart
 ---
 
 Checkout Cart helps you manage library-style inventories where items are checked-out and checked-in by recipients.
