@@ -7,7 +7,7 @@
   <h1>Checkout Cart</h1>
 Streamline your library inventory management on Airtable with bulk check-outs and check-ins.
   <br />
-
+<h5><a href="https://airtable.com/marketplace/blk1uzvEpSC9ywbth/checkout-cart-zoftware-solutions" target="_blank">View it on the Airtable Marketplace</a></h5>
 <div align="center">
 <br />
 
